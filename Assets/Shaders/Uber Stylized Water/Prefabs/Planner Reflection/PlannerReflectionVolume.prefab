@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &772597406905855093
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8010975151478646126}
+  - component: {fileID: 2062832743886062038}
+  m_Layer: 0
+  m_Name: PlannerReflectionVolume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8010975151478646126
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 772597406905855093}
+  serializedVersion: 2
+  m_LocalRotation: {x: -1, y: -0, z: -0, w: 0.000044494864}
+  m_LocalPosition: {x: 52.5, y: 20.37, z: 45.7}
+  m_LocalScale: {x: 1.4330997, y: 1.4331, z: 1.4330997}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: -179.995, y: 0, z: 0}
+--- !u!114 &2062832743886062038
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 772597406905855093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12a94c5ce6a6d9045a0372062fedfa6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  renderScale: 1
+  reflectionLayer:
+    serializedVersion: 2
+    m_Bits: 39
+  reflectSkybox: 1
+  reflectionTarget: {fileID: 0}
+  reflectionPlaneOffset: 0
+  hideReflectionCamera: 1
+  volumeSize: {x: 39.7, y: 11.5, z: 24.13}
+  blendDistance: 1.48
