@@ -12,13 +12,13 @@ The shaders is spereated in these sub-sections:
 
 - [Intersection foam ](usage-guide/shader-properties/shader-prop-intersection.md)
 
-- [Normal map ](usage-guide/shader-properties/shader-prop-normal.md)
-
-- [Lighting ](usage-guide/shader-properties/shader-prop-lighting.md)
+- [Shoreline effect ](usage-guide/shader-properties/shader-prop-shoreline.md)
 
 - [Underwater layer ](usage-guide/shader-properties/shader-prop-underwater.md)
 
-- [Shoreline effect ](usage-guide/shader-properties/shader-prop-shoreline.md)
+- [Normal map ](usage-guide/shader-properties/shader-prop-normal.md)
+
+- [Lighting ](usage-guide/shader-properties/shader-prop-lighting.md)
 
 - [Reflection ](usage-guide/shader-properties/shader-prop-reflection.md)
 

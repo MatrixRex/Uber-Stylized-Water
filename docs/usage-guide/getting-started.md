@@ -1,7 +1,5 @@
 # Water Shader for Unity URP - Getting Started
 
-Welcome to the **Uber Stylized Water Shader** documentation!
-
 ---
 
 ## Recommended Unity Version
@@ -21,15 +19,26 @@ Welcome to the **Uber Stylized Water Shader** documentation!
   ![alt text](../assets/images/getting-started-projectsetting-quality.jpg ":size=50%")
 - On the **Shadergraph** section, increase the 'Shader variant limit' to 500.
 
-    ![alt text](../assets/images/getting-started-projectsetting-shadergraph.jpg ":size=50%")
+  ![alt text](../assets/images/getting-started-projectsetting-shadergraph.jpg ":size=50%")
 
-### 2. Prferences Setup
+### 2. Preferences Setup
 
 - On the **Preferences**, under the **ShaderGraph** section, increase the 'Preview variant limit' to 500.
 
   ![alt text](../assets/images/getting-started-preferences-shadergraph.jpg ":size=50%")
 
-### 3. URP Asset Setup
+## Import the asset
+
+There are two ways to import the asset:
+
+1.  Download the reposetory as a zip file.
+
+    - Copy the `Assets/Shaders/Uber Stylized Water/ folder` to your project.
+
+2.  Get the unity package from release page.
+    - Import the package.
+
+### Configure the URP Asset
 
 Use the pre-configured Renderer Asset included in the `Demo/Settings` folder.
 

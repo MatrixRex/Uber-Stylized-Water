@@ -6,9 +6,9 @@ A highly customizable open-source stylized water shader for Unity 6.
 
 ---
 
-## Getting Started
+## How to use
 
-[See the full Guide ↗](usage-guide/Usage-Guide.md)
+[See the full Guide ↗](https://matrixrex.github.io/Uber-Stylized-Water/#/usage-guide/Usage-Guide)
 
 ## Inspiration 💡
 
