@@ -2,7 +2,7 @@
 
 This settings controls shadow settings and specular highlight settings. This shader employs **Phong shading** instead of physically-based rendering (PBR) to optimize performance and provide greater artistic control over the water's appearance.
 
-<video autoplay loop src="../../assets/images/shader-prop-lighting-show.mp4" title="Title"></video>
+![alt text](../../assets/images/shader-prop-lighting-show.gif)
 
 ---
 

@@ -16,7 +16,8 @@ This section controls the base water color, depth calculation, and shore fade se
 
 These color regions are detertmined by the `Water_Depth` parameter.
 
-<video controls src="../../assets/images/Shader-prop-base-colors.mp4" title="Title"></video>
+![alt text](../../assets/images/Shader-prop-base-colors.gif)
+
 
 ### World Space depth
 

@@ -2,7 +2,7 @@
 
 The **Wave Settings** in this shader implement the **Gerstner Wave Formula**, allowing the simulation of realistic water surface motion. The shader supports two individually controllable waves for added complexity and detail.
 
-<video autoplay loop src="../../assets/images/shader-prop-wave-show.mp4" title="Title"></video>
+![alt text](../../assets/images/shader-prop-wave-show.gif)
 
 ---
 
@@ -27,4 +27,3 @@ The **Wave Settings** in this shader implement the **Gerstner Wave Formula**, al
   A vector that dictates the movement direction of the wave. Modify the **X** and **Z** components to orient the wave in the desired direction.
 
 ---
-

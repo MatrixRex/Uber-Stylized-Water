@@ -2,7 +2,7 @@
 
 This effect creates a foam effect on the intersection between water and other objects.
 
-<video autoplay loop src="../../assets/images/shader-prop-intersec-show.mp4" title="Title"></video>
+![alt text](../../assets/images/shader-prop-intersec-show.gif)
 
 ---
 

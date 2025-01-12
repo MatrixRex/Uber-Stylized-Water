@@ -2,7 +2,7 @@
 
 The **Caustics Effect** adds animated light patterns typically seen in shallow water, enhancing underwater visuals.
 
-<video autoplay loop src="../../assets/images/shader-prop-caustics-show.mp4" title="Title"></video>
+![alt text](../../assets/images/shader-prop-caustics-show.gif)
 
 ---
 

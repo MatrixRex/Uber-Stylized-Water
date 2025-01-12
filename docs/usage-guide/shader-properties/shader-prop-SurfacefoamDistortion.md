@@ -2,7 +2,7 @@
 
 This effect creates a moving foam effect on the water surface.
 
-<video autoplay loop src="../../assets/images/shader-prop-surffoam-show.mp4" title="Title"></video>
+![alt text](../../assets/images/shader-prop-surffoam-show.gif)
 
 ## Unique Parameters
 
@@ -22,13 +22,14 @@ Using a blurry foam map, we can control the thickness of the foam using this set
 - **SurfFoam_Edge**: Controls the thickness of the foam edges.
 - **SurfFoam_EdgeSmooth**: Controls the edge smoothness. A subtle value will help to minimize jagged edges.
 
-<video controls src="../../assets/images/shader-prop-surffoam-edge.mp4" title="Title"></video>
+![alt text](../../assets/images/shader-prop-surffoam-edge.gif)
 
 ### 2. Surface Distortion
 
 - A texture is required in the `SurfaceDistortion_Map` slot for this effect to work.
 - This texture is used to distort the surface foam, adding extra motion to the water surface.
 
-<video controls src="../../assets/images/shader-prop-surffoam-distortion.mp4" title="Title"></video>
+![alt text](../../assets/images/shader-prop-surffoam-distortion.gif)
+
 
 ---

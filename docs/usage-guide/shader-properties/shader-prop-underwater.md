@@ -2,7 +2,7 @@
 
 The **Underwater Layer Effect** adds a secondary foam-like layer beneath the water surface. This effect can be used to simulate foam shadows or create additional layers of foam for a more dynamic look.
 
-<video autoplay loop src="../../assets/images/shader-prop-underwater-show.mp4" title="Title"></video>
+![alt text](../../assets/images/shader-prop-underwater-show.gif)
 
 ---
 
