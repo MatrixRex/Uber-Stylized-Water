@@ -31,12 +31,12 @@
 
 There are two ways to import the asset:
 
-1.  Download the reposetory as a zip file.
+1. Download the reposetory as a zip file.
 
-    - Copy the `Assets/Shaders/Uber Stylized Water/ folder` to your project.
+   - Copy the `Assets/Shaders/Uber Stylized Water/ folder` to your project.
 
-2.  Get the unity package from release page.
-    - Import the package.
+2. Get the latest unity package from [release](https://github.com/MatrixRex/Uber-Stylized-Water/releases) page.
+   - Import the package.
 
 ### Configure the URP Asset
 
