@@ -25,14 +25,15 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - _MAIN_LIGHT_SHADOWS
+  m_InvalidKeywords:
+  - _ENABLEINTERSECTION
   - _ENABLENORMAL
   - _ENABLEPLANERREFLECTION
   - _ENABLEREFRACTION
-  - _ENABLE_UNDERWATERLAYER
-  m_InvalidKeywords:
-  - _ENABLEINTERSECTION
   - _ENABLESURFACEFOAM
   - _ENABLEUNDERWATERLAYER
+  - _ENABLE_UNDERWATERLAYER
   - _ENVIRONMENTREFLECTIONS_OFF
   - _SURFACE_TYPE_TRANSPARENT
   - _WORLDSPACEDEPTH
@@ -189,6 +190,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - LIGHTMAP_SHADOW_MIXING: 0
+    - SHADOWS_SHADOWMASK: 0
     - _1st_Wave_Height: 0.01
     - _1st_Wave_Length: 3
     - _1st_Wave_Sharpness: 0.3
@@ -250,9 +253,16 @@ Material:
     - _ENABLEWAVE: 0
     - _ENABLE_UNDERWATERLAYER: 1
     - _ENVIRONMENTREFLECTIONS_OFF: 1
+    - _Enable_Caustics: 0
     - _Enable_Intersection: 1
+    - _Enable_NormalMap: 0
+    - _Enable_PlannerReflection: 0
+    - _Enable_Refraction: 0
+    - _Enable_ShoreLine: 0
     - _Enable_SurfaceFoam: 1
+    - _Enable_UnderWater: 0
     - _Environment_Reflections: 1
+    - _FORWARD_PLUS: 0
     - _FarColorDistance: 20
     - _FarColorMaskHardness: 10
     - _FarColorStartOffset: 0.08
@@ -295,6 +305,7 @@ Material:
     - _Intersection_Foam_depth: 0.13
     - _Intersection_foam_cutoff: 17.95
     - _Invert_SurfFoam: 0
+    - _MAIN_LIGHT: 0
     - _NormalPan: 0.1
     - _NormalStrength: 0.2
     - _NormalTile: 4
