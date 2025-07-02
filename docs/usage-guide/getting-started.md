@@ -17,13 +17,19 @@
 - Open the **Project Settings** and ensure that the **Graphics** and **Quality** section is set to **Universal Render Pipeline Asset**
   ![alt text](../assets/images/getting-started-projectsetting-graphics.jpg ":size=50%")
   ![alt text](../assets/images/getting-started-projectsetting-quality.jpg ":size=50%")
-- On the **Shadergraph** section, increase the 'Shader variant limit' to 500.
+- On the **Shadergraph** section,
+
+  **In Unity 6.0 :** increase the 'Shader variant limit' to 500.
+  **In Unity 6.1 :** increase the 'Shader variant limit' to 25000.
 
   ![alt text](../assets/images/getting-started-projectsetting-shadergraph.jpg ":size=50%")
 
 ### 2. Preferences Setup
 
-- On the **Preferences**, under the **ShaderGraph** section, increase the 'Preview variant limit' to 500.
+- On the **Preferences**, under the **ShaderGraph** section,
+
+  **In Unity 6.0 :** increase the 'Preview variant limit' to 500.
+  **In Unity 6.1 :** increase the 'Preview variant limit' to 25000.
 
   ![alt text](../assets/images/getting-started-preferences-shadergraph.jpg ":size=50%")
 
@@ -36,6 +42,7 @@ There are two ways to import the asset:
    - Copy the `Assets/Shaders/Uber Stylized Water/ folder` to your project.
 
 2. Get the latest unity package from [release](https://github.com/MatrixRex/Uber-Stylized-Water/releases) page.
+
    - Import the package.
 
 ### Configure the URP Asset
