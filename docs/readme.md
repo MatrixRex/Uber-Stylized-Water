@@ -2,7 +2,7 @@
 
 A highly customizable open-source stylized water shader for Unity 6.
 
-![alt text](assets/images/showcase1.gif)
+![alt text](assets/images/showcase1.webp)
 
 ---
 
@@ -62,16 +62,16 @@ Rendering Path : Forward, Forward+, Deferred
 
 All the showcase templates are included.
 
-![alt text](assets/images/showcase2.gif)
+![alt text](assets/images/showcase2.webp)
 
-![alt text](assets/images/showcase3.gif)
+![alt text](assets/images/showcase3.webp)
 
-![alt text](assets/images/showcase4.gif)
+![alt text](assets/images/showcase4.webp)
 
-![alt text](assets/images/showcase5.gif)
+![alt text](assets/images/showcase5.webp)
 
-![alt text](assets/images/showcase6.gif)
+![alt text](assets/images/showcase6.webp)
 
-![alt text](assets/images/showcase7.gif)
+![alt text](assets/images/showcase7.webp)
 
-![alt text](assets/images/showcase8.gif)
+![alt text](assets/images/showcase8.webp)

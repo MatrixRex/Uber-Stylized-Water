@@ -2,13 +2,13 @@
 
 This section controls the base water color, depth calculation, and shore fade settings.
 
-![alt text](../../assets/images/shader-prop-base-show.png)
+![alt text](../../assets/images/shader-prop-base-show.webp)
 
 ---
 
 ## Unique Parameters
 
-![alt text](../../assets/images/shader-prop-base.jpg)
+![alt text](../../assets/images/shader-prop-base.webp)
 
 ### Color
 
@@ -16,19 +16,18 @@ This section controls the base water color, depth calculation, and shore fade se
 
 These color regions are detertmined by the `Water_Depth` parameter.
 
-![alt text](../../assets/images/Shader-prop-base-colors.gif)
-
+![alt text](../../assets/images/Shader-prop-base-colors.webp)
 
 ### World Space depth
 
 `WorldSpaceDepth` enables depth calculation in **world space**. Disable this to use the **Screen Space** depth method instead. Screen Space depth changes with the camera rotation, while world space depth doesn't.
 
-![alt text](../../assets/images/shader-prop-base-depthoptions.jpg)
+![alt text](../../assets/images/shader-prop-base-depthoptions.webp)
 
 ### Shore fade
 
 **'ShoreFade'** Fades the water line near geometry intersection. This opacity is applied over every layer, and insn't affected by any other layer.
 
-![alt text](../../assets/images/shader-prop-base-shorefade.jpg)
+![alt text](../../assets/images/shader-prop-base-shorefade.webp)
 
 ---

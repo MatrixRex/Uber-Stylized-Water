@@ -15,9 +15,9 @@ This shader applies **features in a layer-like fashion**, with each feature addi
 ### **Feature Toggle**
 
 - **Enable\_(Feature)**:
-  Toggles the feature on or off.
+  Toggles the feature on or off. Recommended to turn off features you don't use to save performance.
 
-  ![alt text](../../assets/images/shader-prop-general-1.jpg)
+  ![alt text](../../assets/images/shader-prop-general-1.webp)
 
 ---
 
@@ -26,7 +26,7 @@ This shader applies **features in a layer-like fashion**, with each feature addi
 - **(Feature)\_Color**:
   Defines the color of the feature. The alpha channel typically adjusts the strength or opacity of the feature.
 
-  ![alt text](../../assets/images/shader-prop-general-2.jpg)
+  ![alt text](../../assets/images/shader-prop-general-2.webp)
 
 ---
 
@@ -35,17 +35,17 @@ This shader applies **features in a layer-like fashion**, with each feature addi
 - **(Feature)\_Mask**:
   (Optional) A texture slot used to mask specific areas where the feature will appear.
 
-  ![alt text](../../assets/images/shader-prop-general-3.jpg)
+  ![alt text](../../assets/images/shader-prop-general-3.webp)
 
 - **(Feature)\_Map**:
   (Required) A texture slot that defines the main pattern or texture for the feature.
 
-  ![alt text](../../assets/images/shader-prop-general-4.jpg)
+  ![alt text](../../assets/images/shader-prop-general-4.webp)
 
-  - **Invert\_(Feature)**:
-    Inverts the mask texture of the feature.
+- **Invert\_(Feature)**:
+  Inverts the mask texture of the feature.
 
-  ![alt text](../../assets/images/shader-prop-general-5.jpg)
+  ![alt text](../../assets/images/shader-prop-general-5.webp)
 
 ---
 
@@ -54,17 +54,17 @@ This shader applies **features in a layer-like fashion**, with each feature addi
 - **Feature_Pan**:  
   Controls the movement of the feature. Adjust **X** and **Y** fields to set speed in each direction.
 
-  ![alt text](../../assets/images/shader-prop-general-6.jpg)
+  ![alt text](../../assets/images/shader-prop-general-6.webp)
 
 - **Feature_Scale**:  
   Resizes the texture pattern for the feature.
 
-  ![alt text](../../assets/images/shader-prop-general-7.jpg)
+  ![alt text](../../assets/images/shader-prop-general-7.webp)
 
 - **Feature_Tile**:  
   Sets independent tiling values for the **X** and **Y** axes. This is typically kept at a 1:1 ratio.
 
-  ![alt text](../../assets/images/shader-prop-general-8.jpg)
+  ![alt text](../../assets/images/shader-prop-general-8.webp)
 
 ---
 
@@ -75,7 +75,7 @@ This shader applies **features in a layer-like fashion**, with each feature addi
 - **Feature_Fade/Smoothness**:  
   Adjusts the smoothness of transitions or blending for the feature.
 
-  ![alt text](../../assets/images/shader-prop-general-9.jpg)
+  ![alt text](../../assets/images/shader-prop-general-9.webp)
 
 ---
 
@@ -84,11 +84,12 @@ This shader applies **features in a layer-like fashion**, with each feature addi
 - **Feature_Strength**:  
   Increases or decreases the overall intensity of the feature.
 
-  ![alt text](../../assets/images/shader-prop-general-11.jpg)
+  ![alt text](../../assets/images/shader-prop-general-11.webp)
+
 - **Feature_Depth** (For underwater effects):  
   Specifies how far below the water surface the feature appears. Values are in negetive.
 
-  ![alt text](../../assets/images/shader-prop-general-10.jpg)
+  ![alt text](../../assets/images/shader-prop-general-10.webp)
 
 ---
 
@@ -97,7 +98,7 @@ This shader applies **features in a layer-like fashion**, with each feature addi
 - **Feature_Distortion**:  
   Sets the strength of distortion, often influenced by the normal map.
 
-  ![alt text](../../assets/images/shader-prop-general-12.jpg)
+  ![alt text](../../assets/images/shader-prop-general-12.webp)
 
 ---
 

@@ -2,7 +2,7 @@
 
 The **Normal Map** introduces surface details to the water shader, to fake micro waves, adding realism to reflections, refractions, and lighting. However, it doesn't directly affect the shader unless applied in specific sections like [Lighting](usage-guide/shader-properties/shader-prop-lighting.md), [Reflection](usage-guide/shader-properties/shader-prop-reflection.md), or [Refraction](usage-guide/shader-properties/shader-prop-refraction.md).
 
-![alt text](../../assets/images/shader-prop-nromal.jpg)
+![alt text](../../assets/images/shader-prop-nromal.webp)
 
 ---
 

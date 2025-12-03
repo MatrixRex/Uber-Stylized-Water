@@ -2,18 +2,18 @@
 
 This shader supports **Planar Reflection** and **Reflection Probes** to simulate reflections on the water surface.
 
-![alt text](../../assets/images/shader-prop-refraction-show.gif)
+![alt text](../../assets/images/shader-prop-reflection-show.webp)
 
 - **Planar Reflection**:  
    Requires proper setup to function correctly. Refer to the [Planar Reflection Setup Guide](usage-guide/Additional-Components/planner-reflection-setup.md) for instructions.
 
-![alt text](../../assets/images/shader-prop-reflection-compare.gif)
+![alt text](../../assets/images/shader-prop-reflection-compare.webp)
 
 ---
 
 ## Unique Parameters
 
-![alt text](../../assets/images/shader-prop-reflection.jpg)
+![alt text](../../assets/images/shader-prop-reflection.webp)
 
 ### **Reflection Strength**
 
@@ -34,8 +34,7 @@ Reflections are blended using a **Fresnel effect** for realism:
   - Higher values make reflections **less visible** when viewed directly from above.
   - Lower values enhance the reflection's prominence across all angles.
 
-![alt text](../../assets/images/shader-prop-reflection-fresnel.gif)
-
+![alt text](../../assets/images/shader-prop-reflection-fresnel.webp)
 
 ### **Reflection Distortion**
 

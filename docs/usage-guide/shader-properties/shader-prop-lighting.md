@@ -2,13 +2,13 @@
 
 This settings controls shadow settings and specular highlight settings. This shader employs **Phong shading** instead of physically-based rendering (PBR) to optimize performance and provide greater artistic control over the water's appearance.
 
-![alt text](../../assets/images/shader-prop-lighting-show.gif)
+![alt text](../../assets/images/shader-prop-lighting-show.webp)
 
 ---
 
 ## Unique Parameters
 
-![alt text](../../assets/images/shader-prop-lighting.jpg)
+![alt text](../../assets/images/shader-prop-lighting.webp)
 
 ### **Shadow Control**
 
@@ -21,7 +21,7 @@ This settings controls shadow settings and specular highlight settings. This sha
 
 - Main light color changes are **not supported**. However, **additional lights** can be colored.
 
-  ![alt text](../../assets/images/shader-prop-lightingmultilight.jpg ":size=30%")
+  ![alt text](../../assets/images/shader-prop-lightingmultilight.webp ":size=30%")
 
 ---
 

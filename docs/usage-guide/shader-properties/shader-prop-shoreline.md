@@ -2,7 +2,7 @@
 
 The **Shoreline Effect** creates animated foam that moves either towards or away from the shore.
 
-![alt text](../../assets/images/shader-prop-shoreline-show.gif)
+![alt text](../../assets/images/shader-prop-shoreline-show.webp)
 
 ---
 

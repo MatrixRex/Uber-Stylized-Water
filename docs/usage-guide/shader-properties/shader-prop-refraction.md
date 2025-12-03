@@ -2,12 +2,11 @@
 
 Refraction creates the illusion of light bending through water, distorting the geometry beneath the surface.
 
-![alt text](../../assets/images/shader-prop-refraction-show.gif)
----
+## ![alt text](../../assets/images/shader-prop-refraction-show.webp)
 
 ## Unique Parameters
 
-![alt text](../../assets/images/shader-prop-refraction.jpg)
+![alt text](../../assets/images/shader-prop-refraction.webp)
 
 ---
 

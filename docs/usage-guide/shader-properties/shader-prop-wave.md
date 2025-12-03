@@ -2,13 +2,13 @@
 
 The **Wave Settings** in this shader implement the **Gerstner Wave Formula**, allowing the simulation of realistic water surface motion. The shader supports two individually controllable waves for added complexity and detail.
 
-![alt text](../../assets/images/shader-prop-wave-show.gif)
+![alt text](../../assets/images/shader-prop-wave-show.webp)
 
 ---
 
 ## Unique Parameters
 
-![alt text](../../assets/images/shader-prop-wave.jpg)
+![alt text](../../assets/images/shader-prop-wave.webp)
 
 ### **Wave Dimensions**
 

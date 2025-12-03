@@ -2,13 +2,13 @@
 
 This effect creates a foam effect on the intersection between water and other objects.
 
-![alt text](../../assets/images/shader-prop-intersec-show.gif)
+![alt text](../../assets/images/shader-prop-intersec-show.webp)
 
 ---
 
 ## Unique Parameters
 
-![alt text](../../assets/images/shader-prop-intersec.jpg)
+![alt text](../../assets/images/shader-prop-intersec.webp)
 
 ---
 
@@ -19,7 +19,7 @@ Intersection foam can be used with or without a mask texture.
 - Without a mask: The foam appears as a clean line following the intersection.
 - With a mask: Setting `InterSec_Dissolve` to **0** achieves the same clean line effect.
 
-  ![alt text](../../assets/images/shader-prop-intersec-cleanline.jpg ":size=20%")
+  ![alt text](../../assets/images/shader-prop-intersec-cleanline.webp ":size=20%")
 
 ---
 
@@ -48,7 +48,7 @@ Intersection foam can be used with or without a mask texture.
   - **Enabled**: Dissolve is less noticeable closer to the intersection, becoming more apparent further away.
   - **Disabled**: Dissolve is applied evenly across the foam.
 
-    ![alt text](../../assets/images/shader-prop-intersec-gradientdissolve.jpg ":size=50%")
+    ![alt text](../../assets/images/shader-prop-intersec-gradientdissolve.webp ":size=50%")
 
 ### **Edge Fading**
 
@@ -58,6 +58,6 @@ Intersection foam can be used with or without a mask texture.
   - **Closer to the intersection**: Full alpha.
   - **Further from the intersection**: Lower alpha for a fading effect.
 
-    ![alt text](../../assets/images/shader-prop-intersec-edgefade.jpg ":size=50%")
+    ![alt text](../../assets/images/shader-prop-intersec-edgefade.webp ":size=50%")
 
 ---

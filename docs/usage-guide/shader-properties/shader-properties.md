@@ -28,6 +28,6 @@ The shaders is spereated in these sub-sections:
 
 - [Wave ](usage-guide/shader-properties/shader-prop-wave.md)
 
-![alt text](../../assets/images/shader-prop-allsections.jpg)
+![alt text](../../assets/images/shader-prop-allsections.webp)
 
 ---
