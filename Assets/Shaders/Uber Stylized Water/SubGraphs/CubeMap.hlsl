@@ -14,9 +14,12 @@ void GetCubemap_float(float3 ViewDirWS, float3 PositionWS, float3 NormalWS, floa
     Cubemap = 0;
     #else
 
-    half3 reflectionVector = reflect(-ViewDirWS, NormalWS);
+   
+    float3 V = normalize(ViewDirWS);
+    float3 N = normalize(NormalWS);
+
+    half3 reflectionVector = reflect(-V, N);
     Cubemap = GlossyEnvironmentReflection(reflectionVector, PositionWS, Roughness, 1.0, float2(0,0));
-    //Cubemap = GlossyEnvironmentReflection(reflectionVector, Roughness, 1.0);
 
     #endif
 }

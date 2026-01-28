@@ -73,20 +73,26 @@ public class PlanarReflectionVolume : MonoBehaviour
     // FIX: Added LateUpdate to trigger the render safely outside the pipeline loop
     void LateUpdate()
     {
-        // 1. Handle Game View Camera
-        var mainCam = Camera.main;
-        if (mainCam != null)
+        // 1. Handle Game View Camera (Active during Play Mode)
+        if (Application.isPlaying)
         {
-            DoPlanarReflections(default, mainCam);
+            var mainCam = Camera.main;
+            if (mainCam != null)
+            {
+                DoPlanarReflections(default, mainCam);
+            }
         }
 
 #if UNITY_EDITOR
-        // 2. Handle Scene View Camera (Optional support for editing)
-        // We check if we are currently drawing the scene view to update reflections there too
-        var sceneView = UnityEditor.SceneView.lastActiveSceneView;
-        if (sceneView != null && sceneView.camera != null && sceneView.camera != mainCam)
+        // 2. Handle Scene View Camera (Always check this in Editor)
+        // This allows reflections to update even when the game isn't running
+        if (!Application.isPlaying || SceneView.lastActiveSceneView != null)
         {
-            DoPlanarReflections(default, sceneView.camera);
+            var sceneCam = SceneView.lastActiveSceneView?.camera;
+            if (sceneCam != null)
+            {
+                DoPlanarReflections(default, sceneCam);
+            }
         }
 #endif
     }
@@ -405,6 +411,11 @@ public class PlanarReflectionVolume : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (!Application.isPlaying)
+        {
+            UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
+            UnityEditor.SceneView.RepaintAll();
+        }
         // Draw inner volume
         Gizmos.color = new Color(0, 1, 1, 0.0f);
         Gizmos.matrix = transform.localToWorldMatrix;
