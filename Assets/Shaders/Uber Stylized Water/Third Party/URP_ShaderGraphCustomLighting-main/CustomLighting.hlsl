@@ -306,6 +306,91 @@ float ToonAttenuation(int lightIndex, float3 positionWS, float pointBands, float
 		saturate(1.0 - floor(dist * pointBands) / pointBands);
 }
 #endif
+//------------------------------------------------------------------------------------------------------
+// Additional Lights (Stylized Specular)
+//------------------------------------------------------------------------------------------------------
+/*
+- Calculates specular internally and applies the Smoothstep logic BEFORE multiplying by light color.
+- Matches the logic: Smoothstep(1-Size, (1-Size)+Hardness, SpecularIntensity)
+*/
+void AdditionalLightsStylized_float(float3 SpecColor, float Smoothness, float3 WorldPosition, float3 WorldNormal, float3 WorldView, 
+                                    float SpecularSize, float SpecularHardness, half4 Shadowmask,
+                                    out float3 Diffuse, out float3 Specular) {
+    float3 diffuseColor = 0;
+    float3 specularColor = 0;
+
+#ifndef SHADERGRAPH_PREVIEW
+    Smoothness = exp2(10 * Smoothness + 1);
+    WorldNormal = normalize(WorldNormal);
+    WorldView = SafeNormalize(WorldView);
+    
+    // Pre-calculate threshold values to match your graph logic
+    float edge1 = 1.0 - SpecularSize;
+    float edge2 = edge1 + SpecularHardness;
+
+    uint pixelLightCount = GetAdditionalLightsCount();
+    uint meshRenderingLayers = GetMeshRenderingLayer();
+
+    #if USE_FORWARD_PLUS
+    for (uint lightIndex = 0; lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS); lightIndex++) {
+        FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
+        Light light = GetAdditionalLight(lightIndex, WorldPosition, Shadowmask);
+        #ifdef _LIGHT_LAYERS
+        if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
+        #endif
+        {
+            float3 attenuatedLightColor = light.color * (light.distanceAttenuation * light.shadowAttenuation);
+            
+            // Diffuse (Standard Lambert)
+            diffuseColor += LightingLambert(attenuatedLightColor, light.direction, WorldNormal);
+
+            // Specular (Custom Stylized)
+            float3 halfVec = SafeNormalize(light.direction + WorldView);
+            float NdotH = saturate(dot(WorldNormal, halfVec));
+            float modifier = pow(NdotH, Smoothness);
+            
+            // Apply Hardness/Step Logic here (on scalar intensity)
+            modifier = smoothstep(edge1, edge2, modifier);
+            
+            specularColor += attenuatedLightColor * SpecColor * modifier;
+        }
+    }
+    #endif
+
+    // Standard Light Loop (Non-Forward+)
+    InputData inputData = (InputData)0;
+    float4 screenPos = ComputeScreenPos(TransformWorldToHClip(WorldPosition));
+    inputData.normalizedScreenSpaceUV = screenPos.xy / screenPos.w;
+    inputData.positionWS = WorldPosition;
+
+    LIGHT_LOOP_BEGIN(pixelLightCount)
+        Light light = GetAdditionalLight(lightIndex, WorldPosition, Shadowmask);
+        #ifdef _LIGHT_LAYERS
+        if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
+        #endif
+        {
+            float3 attenuatedLightColor = light.color * (light.distanceAttenuation * light.shadowAttenuation);
+            
+            // Diffuse
+            diffuseColor += LightingLambert(attenuatedLightColor, light.direction, WorldNormal);
+
+            // Specular
+            float3 halfVec = SafeNormalize(light.direction + WorldView);
+            float NdotH = saturate(dot(WorldNormal, halfVec));
+            float modifier = pow(NdotH, Smoothness);
+            
+            // Apply Hardness
+            modifier = smoothstep(edge1, edge2, modifier);
+            
+            specularColor += attenuatedLightColor * SpecColor * modifier;
+        }
+    LIGHT_LOOP_END
+#endif
+
+    Diffuse = diffuseColor;
+    Specular = specularColor;
+}
+
 
 /*
 - Handles additional lights (e.g. point, spotlights) with banded toon effect
@@ -366,6 +451,10 @@ void AdditionalLightsToon_float(float3 SpecColor, float Smoothness, float3 World
 		}
 	LIGHT_LOOP_END
 #endif
+
+
+
+
 
 /*
 #ifndef SHADERGRAPH_PREVIEW

@@ -25,10 +25,8 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
-  - _ENABLECAUSTICS
   - _ENABLENORMAL
   - _ENABLEPLANERREFLECTION
-  - _ENABLE_UNDERWATERLAYER
   m_InvalidKeywords: []
   m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
@@ -235,7 +233,7 @@ Material:
     - _DistanceNormalTile: 5.54
     - _DistortionScale: 2
     - _DstBlend: 10
-    - _ENABLECAUSTICS: 1
+    - _ENABLECAUSTICS: 0
     - _ENABLEINTERSECTION: 1
     - _ENABLENORMAL: 1
     - _ENABLEPLANERREFLECTION: 1
@@ -244,10 +242,10 @@ Material:
     - _ENABLESURFACEFOAM: 1
     - _ENABLEUNDERWATERLAYER: 1
     - _ENABLEWAVE: 0
-    - _ENABLE_UNDERWATERLAYER: 1
+    - _ENABLE_UNDERWATERLAYER: 0
     - _ENVIRONMENTREFLECTIONS_OFF: 1
     - _Enable_Intersection: 1
-    - _Enable_SurfaceFoam: 1
+    - _Enable_SurfaceFoam: 0
     - _FarColorDistance: 20
     - _FarColorMaskHardness: 10
     - _FarColorStartOffset: 0.08
@@ -352,10 +350,11 @@ Material:
     - _ShoreLineWidth: 0.96
     - _ShoreLine_Cutoff: 0.27
     - _Smoothness: 1
-    - _Specular_Hardness: 1
-    - _Specular_Size: 0.103
-    - _Specular_Spread: 0
+    - _Specular_Hardness: 0
+    - _Specular_Size: 0.055
+    - _Specular_Spread: 0.466
     - _Specular_Strength: 50
+    - _Specular_SunMultiplier: 8
     - _SrcBlend: 5
     - _SunShadowOcclusion: 1
     - _SurfFoam_AlphaBlend: 1
@@ -423,8 +422,8 @@ Material:
     m_Colors:
     - _1st_Wave_Direction: {r: 1, g: 0, b: 0, a: 0}
     - _2nd_Wave_Direction: {r: -1, g: 0, b: 1, a: 0}
-    - _Color_Deep: {r: 0, g: 0.15005267, b: 0.645, a: 1}
-    - _Color_Shallow: {r: 0.12156862, g: 1, b: 0.9824349, a: 1}
+    - _Color_Deep: {r: 0, g: 0, b: 0, a: 1}
+    - _Color_Shallow: {r: 0, g: 0, b: 0, a: 1}
     - _Deep_Color: {r: 0, g: 0.15303946, b: 1, a: 1}
     - _DistanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _FarColor: {r: 0.15966535, g: 0.6787135, b: 0.8679245, a: 0}
@@ -451,7 +450,7 @@ Material:
     - _ShoreLineMaskPan: {r: 0.01, g: 0.02, b: 0, a: 0}
     - _ShoreLineMaskPanning: {r: 0, g: 0, b: 0, a: 0}
     - _ShoreLineMaskTile: {r: 3, g: 3, b: 0, a: 0}
-    - _Specular_Color: {r: 68.5935, g: 68.5935, b: 68.5935, a: 1}
+    - _Specular_Color: {r: 91.57773, g: 91.57773, b: 91.57773, a: 1}
     - _SurfFoam_Color: {r: 1, g: 1, b: 1, a: 0.9764706}
     - _SurfFoam_Pan: {r: 0.26, g: 0.14, b: 0, a: 0}
     - _SurfFoam_Tile: {r: 1, g: 1, b: 0, a: 0}
