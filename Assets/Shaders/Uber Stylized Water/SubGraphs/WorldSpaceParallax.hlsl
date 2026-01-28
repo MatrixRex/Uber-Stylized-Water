@@ -20,3 +20,15 @@ void WorldSpaceParallax_float(
     // Subtract because we're offsetting in the direction the viewer is looking
     ParallaxUV = WorldUV - parallaxOffset;
 }
+
+// Half precision variant (required by Shader Graph to prevent console errors)
+void WorldSpaceParallax_half(
+    half HeightWorldUnits,
+    half2 WorldUV,
+    half3 WorldViewDir,
+    out half2 ParallaxUV)
+{
+    half3 viewDir = normalize(WorldViewDir);
+    half2 parallaxOffset = (viewDir.xz / max(abs(viewDir.y), 0.001)) * HeightWorldUnits;
+    ParallaxUV = WorldUV - parallaxOffset;
+}
