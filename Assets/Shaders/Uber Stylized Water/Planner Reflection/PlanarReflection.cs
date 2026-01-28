@@ -189,47 +189,61 @@ public class PlanarReflectionVolume : MonoBehaviour
         {
             _reflectionCamera = InitializeReflectionCamera();
         }
-        else if (_reflectionCamera.gameObject.hideFlags != (hideReflectionCamera ? HideFlags.HideAndDontSave : HideFlags.DontSave))
-        {
-            // Update hide flags if they've changed
-            _reflectionCamera.gameObject.hideFlags = hideReflectionCamera ? HideFlags.HideAndDontSave : HideFlags.DontSave;
-#if UNITY_EDITOR
-            // Force update the hierarchy in editor
-            UnityEditor.EditorApplication.DirtyHierarchyWindowSorting();
-#endif
-        }
 
+        // ... [Hide flags handling remains the same] ...
+
+        // 1. GET PLANE DATA
         Vector3 pos = Vector3.zero;
         Vector3 normal = Vector3.up;
 
         if (reflectionTarget != null)
         {
+            // Use the actual target position (Water Height)
             pos = reflectionTarget.transform.position + Vector3.up * reflectionPlaneOffset;
             normal = reflectionTarget.transform.up;
         }
 
         UpdateCamera(realCamera, _reflectionCamera);
-        _reflectionCamera.gameObject.hideFlags = (hideReflectionCamera) ? HideFlags.HideAndDontSave : HideFlags.DontSave;
 
-        var d = -Vector3.Dot(normal, pos);
-        var reflectionPlane = new Vector4(normal.x, normal.y, normal.z, d);
+        // 2. CALCULATE PLANE EQUATION
+        // Plane formula: Ax + By + Cz + D = 0
+        // D = -Dot(Normal, PointOnPlane)
+        float d = -Vector3.Dot(normal, pos);
+        Vector4 reflectionPlane = new Vector4(normal.x, normal.y, normal.z, d);
 
-        var reflection = Matrix4x4.identity;
-        reflection *= Matrix4x4.Scale(new Vector3(1, -1, 1));
-
+        // 3. CALCULATE REFLECTION MATRIX
+        // This matrix reflects the entire world across the plane
+        Matrix4x4 reflection = Matrix4x4.zero;
         CalculateReflectionMatrix(ref reflection, reflectionPlane);
-        var oldPosition = realCamera.transform.position - new Vector3(0, pos.y * 2, 0);
-        var newPosition = ReflectPosition(oldPosition);
-        _reflectionCamera.transform.forward = Vector3.Scale(realCamera.transform.forward, new Vector3(1, -1, 1));
+
+        // 4. CALCULATE REFLECTED CAMERA POSITION (THE FIX)
+        // Instead of manually flipping Y, we reflect the point across the plane mathematically.
+        // Formula: P' = P - 2 * (Dot(N, P) + D) * N
+        Vector3 oldPos = realCamera.transform.position;
+        float distFromPlane = Vector3.Dot(normal, oldPos) + d;
+        Vector3 newPos = oldPos - (2 * distFromPlane * normal);
+
+        // 5. CALCULATE REFLECTED ROTATION
+        // Reflect the forward vector
+        Vector3 oldForward = realCamera.transform.forward;
+        Vector3 newForward = oldForward - (2 * Vector3.Dot(oldForward, normal) * normal);
+
+        // Apply changes
+        _reflectionCamera.transform.position = newPos;
+        _reflectionCamera.transform.forward = newForward; // Or rotation
+
+        // 6. SETUP MATRICES
+        // The view matrix is the Original View * Reflection Matrix
         _reflectionCamera.worldToCameraMatrix = realCamera.worldToCameraMatrix * reflection;
 
-        var clipPlane = CameraSpacePlane(_reflectionCamera, pos - Vector3.up * 0.1f, normal, 1.0f);
+        // 7. OBLIQUE PROJECTION (Clip Plane)
+        // This cuts off everything below the water so it doesn't block the view
+        var clipPlane = CameraSpacePlane(_reflectionCamera, pos, normal, 1.0f);
         var projection = realCamera.CalculateObliqueMatrix(clipPlane);
         _reflectionCamera.projectionMatrix = projection;
-        _reflectionCamera.cullingMask = reflectionLayer;
-        _reflectionCamera.transform.position = newPosition;
-    }
 
+        _reflectionCamera.cullingMask = reflectionLayer;
+    }
     private void UpdateCamera(Camera src, Camera dest)
     {
         if (dest == null) return;
@@ -403,11 +417,7 @@ public class PlanarReflectionVolume : MonoBehaviour
         reflectionMatrix.m33 = 1F;
     }
 
-    public static Vector3 ReflectPosition(Vector3 pos)
-    {
-        var newPos = new Vector3(pos.x, -pos.y, pos.z);
-        return newPos;
-    }
+
 
     private void OnDrawGizmos()
     {

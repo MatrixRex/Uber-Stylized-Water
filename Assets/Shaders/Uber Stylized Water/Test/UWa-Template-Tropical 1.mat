@@ -291,7 +291,7 @@ Material:
     - _NormalStrength: 0.2
     - _NormalTile: 4
     - _Normal_DistanceStrength: 0.2
-    - _Normal_Pan: 1.03
+    - _Normal_Pan: 0
     - _Normal_Scale: 5
     - _Normal_Strength: 0.7
     - _Normal_Tile: 5
@@ -302,8 +302,8 @@ Material:
     - _ReflectionDistortion: 0.07
     - _ReflectionFresnel: 2.24
     - _ReflectionFresnelStrength: 1.17
-    - _Reflection_Distortion: 0
-    - _Reflection_Fresnel: 0.76
+    - _Reflection_Distortion: 0.95
+    - _Reflection_Fresnel: 0.88
     - _Reflection_Strength: 1
     - _RefractionFadeDistance: 5
     - _RefractionStrength: 0.2
@@ -350,7 +350,7 @@ Material:
     - _ShoreLine_Cutoff: 0.27
     - _Smoothness: 1
     - _Specular_Hardness: 1
-    - _Specular_Size: 0
+    - _Specular_Size: 0.885
     - _Specular_Spread: 0.263
     - _Specular_Strength: 50
     - _SrcBlend: 5
