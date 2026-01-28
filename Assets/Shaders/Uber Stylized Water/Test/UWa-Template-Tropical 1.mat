@@ -27,6 +27,7 @@ Material:
   m_ValidKeywords:
   - _ENABLECAUSTICS
   - _ENABLENORMAL
+  - _ENABLEPLANERREFLECTION
   - _ENABLE_UNDERWATERLAYER
   m_InvalidKeywords: []
   m_LightmapFlags: 2
@@ -219,8 +220,10 @@ Material:
     - _Caustics_Fade: 56.46
     - _Caustics_Pan: 1.27
     - _Caustics_Scale: 1.75
+    - _Caustics_ShadowOcclusion: 1
     - _Caustics_Start: 5
     - _Caustics_Strength: 0.6
+    - _Caustics_SunOcclusion: 1
     - _ConformToGeometry: 1
     - _Cull: 2
     - _Depth_Distance: 1.26
@@ -235,7 +238,7 @@ Material:
     - _ENABLECAUSTICS: 1
     - _ENABLEINTERSECTION: 1
     - _ENABLENORMAL: 1
-    - _ENABLEPLANERREFLECTION: 0
+    - _ENABLEPLANERREFLECTION: 1
     - _ENABLEREFRACTION: 0
     - _ENABLESHORELINE: 0
     - _ENABLESURFACEFOAM: 1
@@ -244,7 +247,7 @@ Material:
     - _ENABLE_UNDERWATERLAYER: 1
     - _ENVIRONMENTREFLECTIONS_OFF: 1
     - _Enable_Intersection: 1
-    - _Enable_SurfaceFoam: 0
+    - _Enable_SurfaceFoam: 1
     - _FarColorDistance: 20
     - _FarColorMaskHardness: 10
     - _FarColorStartOffset: 0.08
@@ -291,7 +294,7 @@ Material:
     - _NormalStrength: 0.2
     - _NormalTile: 4
     - _Normal_DistanceStrength: 0.2
-    - _Normal_Pan: 0
+    - _Normal_Pan: 0.67
     - _Normal_Scale: 5
     - _Normal_Strength: 0.7
     - _Normal_Tile: 5
@@ -302,9 +305,9 @@ Material:
     - _ReflectionDistortion: 0.07
     - _ReflectionFresnel: 2.24
     - _ReflectionFresnelStrength: 1.17
-    - _Reflection_Distortion: 0.95
-    - _Reflection_Fresnel: 0.88
-    - _Reflection_Strength: 1
+    - _Reflection_Distortion: 1.08
+    - _Reflection_Fresnel: 1.5
+    - _Reflection_Strength: 0
     - _RefractionFadeDistance: 5
     - _RefractionStrength: 0.2
     - _Refraction_Distace_Mask: 10
@@ -350,8 +353,8 @@ Material:
     - _ShoreLine_Cutoff: 0.27
     - _Smoothness: 1
     - _Specular_Hardness: 1
-    - _Specular_Size: 0.885
-    - _Specular_Spread: 0.263
+    - _Specular_Size: 0.103
+    - _Specular_Spread: 0
     - _Specular_Strength: 50
     - _SrcBlend: 5
     - _SunShadowOcclusion: 1
@@ -376,6 +379,7 @@ Material:
     - _UnderWaterScaleModifier: 1
     - _UnderWater_Depth: 0.1
     - _UnderWater_ScaleModifier: 0
+    - _UnderWater_ShadowOcclusion: 1
     - _UnderWater_Start: 5
     - _UnderwaterLayerFade: 15
     - _Underwater_Fade: 15
@@ -391,7 +395,7 @@ Material:
     - _WaveSpeed: 0.3
     - _WaveSpeed2nd: 0.2
     - _WorkflowMode: 1
-    - _WorldSpaceDepth: 0
+    - _WorldSpaceDepth: 1
     - _ZTest: 4
     - _ZWrite: 0
     - _ZWriteControl: 0
@@ -420,7 +424,7 @@ Material:
     - _1st_Wave_Direction: {r: 1, g: 0, b: 0, a: 0}
     - _2nd_Wave_Direction: {r: -1, g: 0, b: 1, a: 0}
     - _Color_Deep: {r: 0, g: 0.15005267, b: 0.645, a: 1}
-    - _Color_Shallow: {r: 0.12156862, g: 1, b: 0.9824349, a: 0.5686275}
+    - _Color_Shallow: {r: 0.12156862, g: 1, b: 0.9824349, a: 1}
     - _Deep_Color: {r: 0, g: 0.15303946, b: 1, a: 1}
     - _DistanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _FarColor: {r: 0.15966535, g: 0.6787135, b: 0.8679245, a: 0}
