@@ -214,14 +214,14 @@ Material:
     - _CausticsStart: 5
     - _CausticsStartDistance: 5
     - _CausticsStrength: 100
-    - _Caustics_Depth: -4
+    - _Caustics_Depth: 0.1
     - _Caustics_Distortion_Scale: 2
     - _Caustics_Distortion_Strength: 3
     - _Caustics_Fade: 5
-    - _Caustics_Pan: 0.1
-    - _Caustics_Scale: 1
+    - _Caustics_Pan: 1
+    - _Caustics_Scale: 2.59
     - _Caustics_Start: 5
-    - _Caustics_Strength: 4.33
+    - _Caustics_Strength: 0.2
     - _ConformToGeometry: 1
     - _Cull: 2
     - _Depth_Distance: 1.26
@@ -332,7 +332,7 @@ Material:
     - _ShoreFadeHardness: 0.368
     - _ShoreFadeSmoothness: 0.2
     - _ShoreFade_1: 0
-    - _ShoreFade_Smoothness: 0.2
+    - _ShoreFade_Smoothness: 0.785
     - _ShoreLineAmmount: 3.34
     - _ShoreLineCenterMask: 2.01
     - _ShoreLineCutoff: 0.66
@@ -355,6 +355,7 @@ Material:
     - _Specular_Spread: 0.019
     - _Specular_Strength: 50
     - _SrcBlend: 5
+    - _SunShadowOcclusion: 1
     - _SurfFoam_AlphaBlend: 0
     - _SurfFoam_Edge: 0.277
     - _SurfFoam_EdgeSmooth: 0.098
@@ -374,14 +375,14 @@ Material:
     - _UnderWaterLayerStart: 5
     - _UnderWaterScaleIncrease: 0.7
     - _UnderWaterScaleModifier: 1
-    - _UnderWater_Depth: -3
+    - _UnderWater_Depth: 0.1
     - _UnderWater_ScaleModifier: 0
     - _UnderWater_Start: 5
     - _UnderwaterLayerFade: 15
     - _Underwater_Fade: 15
     - _WORLDSPACEDEPTH: 1
     - _WaterDepth: 0.6
-    - _Water_Depth: 0.5
+    - _Water_Depth: 0.1
     - _WaveHeight: 0.01
     - _WaveHeight2nd: 0.01
     - _WaveLength: 10
@@ -391,7 +392,7 @@ Material:
     - _WaveSpeed: 0.3
     - _WaveSpeed2nd: 0.2
     - _WorkflowMode: 1
-    - _WorldSpaceDepth: 1
+    - _WorldSpaceDepth: 0
     - _ZTest: 4
     - _ZWrite: 0
     - _ZWriteControl: 0
@@ -419,8 +420,8 @@ Material:
     m_Colors:
     - _1st_Wave_Direction: {r: 1, g: 0, b: 0, a: 0}
     - _2nd_Wave_Direction: {r: -1, g: 0, b: 1, a: 0}
-    - _Color_Deep: {r: 0, g: 0.15005267, b: 0.645, a: 1}
-    - _Color_Shallow: {r: 0.12156862, g: 1, b: 0.9824349, a: 1}
+    - _Color_Deep: {r: 0.32411155, g: 0, b: 0.6431373, a: 1}
+    - _Color_Shallow: {r: 0.8223214, g: 1, b: 0.12156862, a: 1}
     - _Deep_Color: {r: 0, g: 0.15303946, b: 1, a: 1}
     - _DistanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _FarColor: {r: 0.15966535, g: 0.6787135, b: 0.8679245, a: 0}
