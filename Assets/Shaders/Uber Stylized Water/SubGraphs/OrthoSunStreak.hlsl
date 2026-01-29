@@ -1,4 +1,3 @@
-// 1. Float Version
 void FakeSunSpec_float(
     float3 WorldPos, 
     float3 WorldNormal, 
@@ -25,51 +24,46 @@ void FakeSunSpec_float(
     sunDir.z = cos(altRad) * cos(azRad);
     sunDir = normalize(sunDir);
     
-    // 2. Virtual View 
-    // We do NOT distort this. We keep the "Eye" position stable.
-    float3 virtualView = normalize(CamPos - WorldPos);
+    // 2. Virtual View & Distortion (Applied FIRST)
+    float3 rawView = normalize(CamPos - WorldPos);
     
-    // 3. Half Vector (H)
-    float3 H = normalize(sunDir + virtualView);
-    
-    // 4. APPLY DISTORTION HERE (XZ Only!)
-    // We only nudge the H vector using the wave slopes (Normal.xz).
-    // We explicitly zero out the Y so the sun doesn't move up/down/sideways permanently.
+    // XZ Only Distortion
     float3 wavePerturb = float3(WorldNormal.x, 0, WorldNormal.z) * Distortion * 5.0;
+    float3 H = normalize(sunDir + rawView + wavePerturb);
     
-    // Add waves to H. This breaks up the reflection shape without moving the hotspot.
-    float3 distortedH = H + wavePerturb;
-    
-    // 5. Anisotropic Basis (Sun Frame)
-    // We flatten the sun direction to create a stable grid on the water
+    // 3. Coordinate System
     float3 flatSun = normalize(float3(sunDir.x, 0, sunDir.z));
     float3 tangent = normalize(cross(float3(0,1,0), flatSun)); 
     float3 bitangent = flatSun; 
     
-    // 6. Auto-Stretch Logic
-    float NdotV = abs(dot(normalize(OrthoViewDir), float3(0,1,0)));
-    float viewStretch = lerp(AutoStretch * 10.0, 1.0, NdotV);
+    // 4. Project
+    float dWidth = dot(H, tangent);
+    float dLength = dot(H, bitangent);
     
-    // 7. Project Distorted H onto Sun Frame
-    float dWidth = dot(distortedH, tangent);
-    float dLength = dot(distortedH, bitangent);
+    // 5. Artistic Stretch
+    float grazing = saturate(abs(dot(normalize(OrthoViewDir), float3(0,1,0))));
+    float horizonFactor = 1.0 - grazing;
     
-    float widthFactor = 1.0 + Anisotropy; 
-    float lengthFactor = 1.0 / (viewStretch + 0.001);
+    float stretchMult = 1.0 + (AutoStretch * 100.0 * (horizonFactor * horizonFactor));
     
-    float specDist = (dWidth * dWidth * widthFactor) + (dLength * dLength * lengthFactor);
+    // 6. Shape & Sizing (SENSITIVITY FIX)
+    float widthFactor = 1.0 + Anisotropy;
+    float finalLength = dLength / stretchMult;
     
-    // 8. Facing Check (Use undistorted H for cleaner masking)
-    float facing = dot(float3(0,1,0), H); 
+    float specDist = (dWidth * dWidth * widthFactor) + (finalLength * finalLength);
     
-    // 9. Final Shaping
-    float sunSpot = exp(-specDist / (SunSize * 0.01 + 0.0001));
+    // NEW SIZING LOGIC:
+    // We square the SunSize to treat it as a proper Radius.
+    // This gives you smooth control from 0.0 to 1.0+.
+    float sizeSquared = SunSize * SunSize;
+    float rawGradient = exp(-specDist / (sizeSquared + 0.0001));
     
-    sunSpot = smoothstep(1.0 - Hardness, 1.0, sunSpot);
-    Out = sunSpot * saturate(facing * 10.0);
+    // 7. Hardness (Step Logic)
+    // Hardness 1.0 -> Sharp edge. Hardness 0.0 -> Soft glow.
+    float smoothness = max(0.001, 1.0 - Hardness);
+    Out = smoothstep(0.01, 0.01 + smoothness, rawGradient);
 }
 
-// 2. Half Version (Mobile Optimized)
 void FakeSunSpec_half(
     half3 WorldPos, 
     half3 WorldNormal, 
@@ -95,33 +89,34 @@ void FakeSunSpec_half(
     sunDir.z = cos(altRad) * cos(azRad);
     sunDir = normalize(sunDir);
     
-    half3 virtualView = normalize(CamPos - WorldPos);
+    half3 rawView = normalize(CamPos - WorldPos);
     
-    half3 H = normalize(sunDir + virtualView);
-    
-    // XZ Only Distortion
+    // Distortion
     half3 wavePerturb = half3(WorldNormal.x, 0, WorldNormal.z) * Distortion * 5.0h;
-    half3 distortedH = H + wavePerturb;
+    half3 H = normalize(sunDir + rawView + wavePerturb);
     
     half3 flatSun = normalize(half3(sunDir.x, 0, sunDir.z));
     half3 tangent = normalize(cross(half3(0,1,0), flatSun));
-    half3 bitangent = flatSun;
+    half3 bitangent = flatSun; 
     
-    half NdotV = abs(dot(normalize(OrthoViewDir), half3(0,1,0)));
-    half viewStretch = lerp(AutoStretch * 10.0h, 1.0h, NdotV);
+    half dWidth = dot(H, tangent);
+    half dLength = dot(H, bitangent);
     
-    half dWidth = dot(distortedH, tangent);
-    half dLength = dot(distortedH, bitangent);
+    half grazing = saturate(abs(dot(normalize(OrthoViewDir), half3(0,1,0))));
+    half horizonFactor = 1.0h - grazing;
     
-    half widthFactor = 1.0h + Anisotropy; 
-    half lengthFactor = 1.0h / (viewStretch + 0.001h);
+    half stretchMult = 1.0h + (AutoStretch * 100.0h * (horizonFactor * horizonFactor));
     
-    half specDist = (dWidth * dWidth * widthFactor) + (dLength * dLength * lengthFactor);
+    half widthFactor = 1.0h + Anisotropy;
+    half finalLength = dLength / stretchMult;
     
-    half facing = dot(half3(0,1,0), H);
+    half specDist = (dWidth * dWidth * widthFactor) + (finalLength * finalLength);
     
-    half sunSpot = exp(-specDist / (SunSize * 0.01h + 0.0001h));
+    // Sensitivity Fix (Half Precision)
+    half sizeSquared = SunSize * SunSize;
+    half rawGradient = exp(-specDist / (sizeSquared + 0.0001h));
     
-    sunSpot = smoothstep(1.0h - Hardness, 1.0h, sunSpot);
-    Out = sunSpot * saturate(facing * 10.0h);
+    // Hardness Logic
+    half smoothness = max(0.001h, 1.0h - Hardness);
+    Out = smoothstep(0.01h, 0.01h + smoothness, rawGradient);
 }
