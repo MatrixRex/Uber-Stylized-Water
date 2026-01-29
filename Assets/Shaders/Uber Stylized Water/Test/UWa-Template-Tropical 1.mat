@@ -288,6 +288,7 @@ Material:
     - _Intersection_Foam_depth: 0.13
     - _Intersection_foam_cutoff: 17.95
     - _Invert_SurfFoam: 0
+    - _Len: 792.6
     - _NormalPan: 0.1
     - _NormalStrength: 0.2
     - _NormalTile: 4
@@ -297,6 +298,7 @@ Material:
     - _Normal_Strength: 0.7
     - _Normal_Tile: 5
     - _ParalaxDepth: 30
+    - _Parallax: 500
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
@@ -350,11 +352,12 @@ Material:
     - _ShoreLineWidth: 0.96
     - _ShoreLine_Cutoff: 0.27
     - _Smoothness: 1
-    - _Specular_Hardness: 0
-    - _Specular_Size: 0.055
-    - _Specular_Spread: 0.466
+    - _Specular_AdditionalMultiplier: 1
+    - _Specular_Hardness: 0.021
+    - _Specular_Size: 0.153
+    - _Specular_Spread: 0.409
     - _Specular_Strength: 50
-    - _Specular_SunMultiplier: 8
+    - _Specular_SunMultiplier: 0
     - _SrcBlend: 5
     - _SunShadowOcclusion: 1
     - _SurfFoam_AlphaBlend: 1
@@ -398,8 +401,15 @@ Material:
     - _ZTest: 4
     - _ZWrite: 0
     - _ZWriteControl: 0
+    - _alt: 33.4
+    - _angle: 50
+    - _aniso: 0.462
+    - _autostretch: 0
+    - _azimuth: 50
     - _contact_foam_cutoff: 0.17
+    - _distort: 0.57
     - _fade: 0.04
+    - _hard: 0.09
     - _mask: 0.731
     - _max: 1
     - _min: 0
@@ -416,9 +426,10 @@ Material:
     - _shoreLinewidth: 0.115
     - _shoreSpeed: 1
     - _shoreTile: 9.47
+    - _size: 1
     - _speed: 0.25
     - _tile: 10
-    - _width: 0.238
+    - _width: 116.5
     m_Colors:
     - _1st_Wave_Direction: {r: 1, g: 0, b: 0, a: 0}
     - _2nd_Wave_Direction: {r: -1, g: 0, b: 1, a: 0}
