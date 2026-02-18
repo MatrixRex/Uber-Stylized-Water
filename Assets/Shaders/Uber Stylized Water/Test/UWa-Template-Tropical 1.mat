@@ -193,6 +193,9 @@ Material:
     - _AffectedByMainColor: 1
     - _AlphaClip: 0
     - _AlphaToMask: 0
+    - _Ambient: 0.1
+    - _Ambient_1: 1.22
+    - _Atten: 0.5
     - _B: 1
     - _Blend: 0
     - _BlendModePreserveSpecular: 0
@@ -235,6 +238,7 @@ Material:
     - _DistanceMask_Start: 5
     - _DistanceNormalStrength: 0.01
     - _DistanceNormalTile: 5.54
+    - _Distor: 0.25
     - _DistortionScale: 2
     - _DstBlend: 10
     - _ENABLECAUSTICS: 0
@@ -268,7 +272,7 @@ Material:
     - _FarNormalStartOffset: 0
     - _FarNormalStrength: 0.01
     - _FarRefractionStrength: 0
-    - _FixedWaterDepth: 0
+    - _FixedWaterDepth: 1
     - _Float: 51.69
     - _Float2: 5.57
     - _Float_1: 1
@@ -284,6 +288,9 @@ Material:
     - _FresnelStrength: 1
     - _Fresnel_Opacity: 1
     - _Fresnel_Power: 10
+    - _HeighMaskOffset: 1
+    - _HeighMaskStrength: 1
+    - _HeightMaskOffset: 0.17
     - _InterSec_Dissolve: 1.23
     - _InterSec_Edge_Dissolve: 1
     - _InterSec_Edge_Fade: 0
@@ -309,6 +316,7 @@ Material:
     - _Iteration: 3
     - _Itr: 1
     - _Len: 792.6
+    - _NormalDistortion: 0.5
     - _NormalPan: 0.1
     - _NormalStrength: 0.2
     - _NormalTile: 4
@@ -319,6 +327,8 @@ Material:
     - _Normal_Tile: 5
     - _ParalaxDepth: 30
     - _Parallax: 500
+    - _Pow: 5.62
+    - _Power: 3
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
@@ -350,6 +360,8 @@ Material:
     - _SL_TrailFade: 0
     - _SL_Trail_Fade: 2
     - _SL_WaterDepth: 2.24
+    - _Scale: 0.09
+    - _ShadowAttenuation: 0.1
     - _ShoreFade: 1
     - _ShoreFadeHardness: 0.368
     - _ShoreFadeSmoothness: 0.2
@@ -401,6 +413,7 @@ Material:
     - _SurfaceFomShaodwDistance: 200
     - _SurfaceFomShaodwFade: 16
     - _SurfaceFomShaodwRange: 7
+    - _Thick: 0.1
     - _UnderWaterDepth: -4
     - _UnderWaterLayerStart: 5
     - _UnderWaterScaleIncrease: 0.7
@@ -413,7 +426,7 @@ Material:
     - _Underwater_Fade: 15
     - _WORLDSPACEDEPTH: 1
     - _WaterDepth: 0.6
-    - _Water_Depth: 7.13
+    - _Water_Depth: 3.99
     - _WaveHeight: 0.01
     - _WaveHeight2nd: 0.01
     - _WaveLength: 10
@@ -422,6 +435,11 @@ Material:
     - _WaveSharpness2nd: 0.3
     - _WaveSpeed: 0.3
     - _WaveSpeed2nd: 0.2
+    - _Wave_Detail: 3
+    - _Wave_Direction: 0
+    - _Wave_Length: 10.32
+    - _Wave_Speed: 1
+    - _Wave_Steep: 0.32
     - _Wavelen: 6
     - _Wavelength: 15
     - _WorkflowMode: 1
@@ -465,7 +483,8 @@ Material:
     - _2nd_Wave_Direction: {r: -1, g: 0, b: 1, a: 0}
     - _Color_Deep: {r: 0.017493742, g: 0.105331555, b: 0.23773581, a: 1}
     - _Color_Fresnel: {r: 1, g: 0.09866079, b: 0, a: 0.34509805}
-    - _Color_Shallow: {r: 0.61698115, g: 1, b: 0.77052677, a: 1}
+    - _Color_SSS: {r: 1.1727748, g: 8, b: 5.5287952, a: 0.6039216}
+    - _Color_Shallow: {r: 0.61698115, g: 1, b: 0.77052677, a: 0.54509807}
     - _Deep_Color: {r: 0, g: 0.15303946, b: 1, a: 1}
     - _Direction: {r: 1, g: 0, b: 0, a: 0}
     - _DistanceColor: {r: 1, g: 1, b: 1, a: 1}
