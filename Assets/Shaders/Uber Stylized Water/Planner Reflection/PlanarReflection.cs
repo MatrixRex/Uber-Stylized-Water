@@ -169,11 +169,13 @@ public class PlanarReflectionVolume : MonoBehaviour
         {
             _reflectionCamera.targetTexture = null;
             SafeDestroyObject(_reflectionCamera.gameObject);
+            _reflectionCamera = null;
         }
 
         if (_reflectionTexture)
         {
             RenderTexture.ReleaseTemporary(_reflectionTexture);
+            _reflectionTexture = null;
         }
     }
 
@@ -187,10 +189,25 @@ public class PlanarReflectionVolume : MonoBehaviour
     {
         if (_reflectionCamera == null)
         {
-            _reflectionCamera = InitializeReflectionCamera();
+            // Try to find an existing reflection camera in the scene (handles domain reloads)
+            _reflectionCamera = FindReflectionCamera(realCamera);
+            
+            if (_reflectionCamera == null)
+            {
+                _reflectionCamera = InitializeReflectionCamera();
+            }
         }
 
-        // ... [Hide flags handling remains the same] ...
+        // Handle visibility and cleanup flags
+        _reflectionCamera.gameObject.hideFlags = HideFlags.DontSave;
+        if (hideReflectionCamera)
+        {
+            _reflectionCamera.gameObject.hideFlags |= HideFlags.HideInHierarchy;
+        }
+        else
+        {
+            _reflectionCamera.gameObject.hideFlags &= ~HideFlags.HideInHierarchy;
+        }
 
         // 1. GET PLANE DATA
         Vector3 pos = Vector3.zero;
@@ -267,6 +284,8 @@ public class PlanarReflectionVolume : MonoBehaviour
     {
         var go = new GameObject("", typeof(Camera));
         go.name = "Reflection Camera [" + go.GetInstanceID() + "]";
+        go.hideFlags = HideFlags.DontSave;
+        
         var camData = go.AddComponent(typeof(UnityEngine.Rendering.Universal.UniversalAdditionalCameraData)) as UnityEngine.Rendering.Universal.UniversalAdditionalCameraData;
 
         camData.requiresColorOption = CameraOverrideOption.Off;
@@ -280,6 +299,20 @@ public class PlanarReflectionVolume : MonoBehaviour
         reflectionCamera.enabled = false;
 
         return reflectionCamera;
+    }
+
+    private Camera FindReflectionCamera(Camera realCamera)
+    {
+        // Search for cameras with our naming convention in the scene
+        Camera[] cameras = GameObject.FindObjectsByType<Camera>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var cam in cameras)
+        {
+            if (cam.name.Contains("Reflection Camera ["))
+            {
+                return cam;
+            }
+        }
+        return null;
     }
 
     private Vector4 CameraSpacePlane(Camera cam, Vector3 pos, Vector3 normal, float sideSign)
