@@ -36,7 +36,7 @@ public class FloatingObjectEditor : Editor
 
         // ── Validation Hints ──────────────────────────────────────────────
         bool hasWater     = WaterFloatingSystem.Instance != null
-                             || FindObjectOfType<WaterFloatingSystem>() != null;
+                             || Object.FindAnyObjectByType<WaterFloatingSystem>() != null;
         bool hasSamplePts   = fo.SamplePoints != null && fo.SamplePoints.Count > 0;
 
         if (!hasWater)
