@@ -63,19 +63,24 @@ public class FloatingObject : MonoBehaviour
 
     private const float WaterDensity = 1000f; // kg/m³
 
-    // ─────────────────────────────────────────────────────────────────────
-    private void Awake()
-    {
-        rb = GetComponent<Rigidbody>();
-        defaultDrag        = rb.linearDamping;
-        defaultAngularDrag = rb.angularDamping;
-        CacheObjectHeight();
-        RefreshSamplePoints();
-    }
+    // Helper properties for buoyancy calculations
+    private float DensityRatio => Mathf.Clamp01(density / WaterDensity);
+    private float BuoyancyRatio => Mathf.Clamp01(1f - DensityRatio);
+    private float CaptureRange => objectHalfHeight * 2f;
 
-    private void OnEnable()
+    // ─────────────────────────────────────────────────────────────────────
+    private void Awake() => Initialize();
+
+    private void OnEnable() => Initialize();
+
+    private void Initialize()
     {
         if (rb == null) rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            defaultDrag = rb.linearDamping;
+            defaultAngularDrag = rb.angularDamping;
+        }
         CacheObjectHeight();
         RefreshSamplePoints();
     }
@@ -86,8 +91,7 @@ public class FloatingObject : MonoBehaviour
         // Re-scan children every frame so adding/removing points works live
         RefreshSamplePoints();
 
-        bool inEditMode = !Application.isPlaying;
-        if (inEditMode && previewInEditMode)
+        if (!Application.isPlaying && previewInEditMode)
         {
             EditModeUpdate();
         }
@@ -107,82 +111,109 @@ public class FloatingObject : MonoBehaviour
     private void CacheObjectHeight()
     {
         // Try colliders first (more accurate for physics)
-        Collider[] cols = GetComponentsInChildren<Collider>();
-        if (cols.Length > 0)
+        var colliders = GetComponentsInChildren<Collider>();
+        if (colliders.Length > 0)
         {
-            Bounds b = cols[0].bounds;
-            foreach (var c in cols) b.Encapsulate(c.bounds);
-            objectHalfHeight = Mathf.Max(b.extents.y, 0.05f);
+            objectHalfHeight = Mathf.Max(GetBounds(colliders).extents.y, 0.05f);
             return;
         }
 
         // Fall back to renderer bounds
-        Renderer[] rends = GetComponentsInChildren<Renderer>();
-        if (rends.Length > 0)
+        var renderers = GetComponentsInChildren<Renderer>();
+        if (renderers.Length > 0)
         {
-            Bounds b = rends[0].bounds;
-            foreach (var r in rends) b.Encapsulate(r.bounds);
-            objectHalfHeight = Mathf.Max(b.extents.y, 0.05f);
+            objectHalfHeight = Mathf.Max(GetBounds(renderers).extents.y, 0.05f);
             return;
         }
 
         objectHalfHeight = 0.5f; // safe default
     }
 
+    private Bounds GetBounds<T>(T[] components) where T : Component
+    {
+        Bounds bounds = default;
+        bool initialized = false;
+
+        foreach (var comp in components)
+        {
+            Bounds b = comp switch
+            {
+                Collider c => c.bounds,
+                Renderer r => r.bounds,
+                _ => default
+            };
+
+            if (!initialized)
+            {
+                bounds = b;
+                initialized = true;
+            }
+            else
+            {
+                bounds.Encapsulate(b);
+            }
+        }
+        return bounds;
+    }
+
     // ─────────────────────────────────────────────────────────────────────
     /// <summary>Edit-mode preview: move + rotate transform directly.</summary>
     private void EditModeUpdate()
     {
-        WaterFloatingSystem water = WaterFloatingSystem.Instance;
-        // Fallback: static Instance is cleared on domain reload; find it manually
-        if (water == null) water = FindFirstObjectByType<WaterFloatingSystem>();
+        WaterFloatingSystem water = GetWaterSystem();
         if (water == null || samplePoints.Count == 0) return;
 
-        double editorTime = UnityEditor.EditorApplication.timeSinceStartup;
-        float  t          = (float)editorTime;
+        float time = (float)UnityEditor.EditorApplication.timeSinceStartup;
+        
+        CalculateAverageWaterSurface(water, time, out float avgWaterY, out Vector3 avgNormal);
+        UpdateTransformForEditMode(avgWaterY, avgNormal);
 
-        // In edit mode: place the object at its natural float depth based on density.
-        // sinkFraction = density / waterDensity → how far down the object rests (0=surface, 1=fully under)
-        float sinkFraction = Mathf.Clamp01(density / WaterDensity);
+        UnityEditor.EditorUtility.SetDirty(this);
+    }
 
-        float   totalHeight = 0f;
-        Vector3 avgNormal   = Vector3.zero;
-        int     sampleCount = 0;
+    private WaterFloatingSystem GetWaterSystem()
+    {
+        WaterFloatingSystem water = WaterFloatingSystem.Instance;
+        return water != null ? water : FindFirstObjectByType<WaterFloatingSystem>();
+    }
+
+    private void CalculateAverageWaterSurface(WaterFloatingSystem water, float time, out float avgWaterY, out Vector3 avgNormal)
+    {
+        float totalHeight = 0f;
+        Vector3 combinedNormal = Vector3.zero;
+        int count = 0;
 
         foreach (var pt in samplePoints)
         {
             if (pt == null) continue;
 
-            WaterFloatingSystem.WaveSample sample = water.SampleWave(pt.transform.position, t);
+            var sample = water.SampleWave(pt.transform.position, time);
             float waterY = sample.height + depthOffset;
 
             pt.lastWaterHeight = waterY;
-            pt.hasValidSample  = true;
-            pt.isSubmerged     = pt.transform.position.y < waterY;
+            pt.hasValidSample = true;
+            pt.isSubmerged = pt.transform.position.y < waterY;
 
             totalHeight += waterY;
-            avgNormal   += sample.normal;
-            sampleCount++;
+            combinedNormal += sample.normal;
+            count++;
         }
 
-        if (sampleCount == 0) return;
+        avgWaterY = count > 0 ? totalHeight / count : transform.position.y;
+        avgNormal = count > 0 ? (combinedNormal / count).normalized : Vector3.up;
+    }
 
-        float avgWaterY = totalHeight / sampleCount;
-        avgNormal       = (avgNormal / sampleCount).normalized;
+    private void UpdateTransformForEditMode(float avgWaterY, Vector3 avgNormal)
+    {
+        // sinkFraction = density / waterDensity → how far down the object rests (0=surface, 1=fully under)
+        // centerY = waterY + halfHeight * (1 - 2 * sinkFraction)
+        float centerY = avgWaterY + objectHalfHeight * (1f - 2f * DensityRatio);
 
-        // Center Y so the bottom of the object is sinkFraction deep:
-        // centerY = waterY + halfHeight - fullHeight * sinkFraction
-        //         = waterY + halfHeight * (1 - 2 * sinkFraction)
-        float centerY = avgWaterY + objectHalfHeight * (1f - 2f * sinkFraction);
-
-        Vector3    pos       = transform.position;
-        pos.y                = centerY;
-        Quaternion targetRot = Quaternion.FromToRotation(transform.up, avgNormal) * transform.rotation;
-
+        Vector3 pos = transform.position;
+        pos.y = centerY;
         transform.position = pos;
-        transform.rotation = targetRot;
 
-        UnityEditor.EditorUtility.SetDirty(this);
+        transform.rotation = Quaternion.FromToRotation(transform.up, avgNormal) * transform.rotation;
     }
 
     /// <summary>Play-mode: apply Rigidbody buoyancy forces (Archimedes' principle).</summary>
@@ -191,99 +222,122 @@ public class FloatingObject : MonoBehaviour
         WaterFloatingSystem water = WaterFloatingSystem.Instance;
         if (water == null || samplePoints.Count == 0) return;
 
-        // ── Archimedes' principle ─────────────────────────────────────────
-        // F_buoy = ρ_water × g × V_submerged
-        // Object volume derived from mass and user-set density: V = mass / density
-        // Submersion is normalised by the object's actual Y extent so a thin plank
-        // and a fat barrel of the same mass float at the same *fraction* of their height.
-        float g           = Mathf.Abs(Physics.gravity.y);
-        float volume      = rb.mass / Mathf.Max(density, 1f);
-        float volumePerPt = volume / samplePoints.Count;
+        float volumePerPt = (rb.mass / Mathf.Max(density, 1f)) / samplePoints.Count;
+        float gravity = Mathf.Abs(Physics.gravity.y);
 
-        bool  anySubmerged    = false;
-        float maxSubFraction  = 0f;
+        Vector3 combinedNormal = Vector3.zero;
+        float maxSubFraction = 0f;
+        int normalCount = 0;
 
         foreach (var pt in samplePoints)
         {
             if (pt == null) continue;
 
-            WaterFloatingSystem.WaveSample sample = water.SampleWave(pt.transform.position, Time.time);
+            var sample = water.SampleWave(pt.transform.position, Time.time);
             float waterY = sample.height + depthOffset;
 
-            pt.lastWaterHeight = waterY;
-            pt.hasValidSample  = true;
+            // Cache for alignment and general state
+            combinedNormal += sample.normal;
+            normalCount++;
 
-            float submersion = waterY - pt.transform.position.y;  // positive = under water
-            pt.isSubmerged   = submersion > 0f;
+            pt.lastWaterHeight = waterY;
+            pt.hasValidSample = true;
+
+            float submersion = waterY - pt.transform.position.y; // positive = under water
+            pt.isSubmerged = submersion > 0f;
 
             if (pt.isSubmerged)
             {
-                anySubmerged = true;
+                float subFraction = Mathf.Clamp01(submersion / CaptureRange);
+                maxSubFraction = Mathf.Max(maxSubFraction, subFraction);
 
-                float subFraction = Mathf.Clamp01(submersion / (2f * objectHalfHeight));
-                maxSubFraction    = Mathf.Max(maxSubFraction, subFraction);
-
-                // ── Buoyancy force (non-linear curve) ─────────────────────
-                float buoyancyFactor = subFraction * (1f + subFraction);
-                float forceMag      = WaterDensity * g * volumePerPt * buoyancyFactor;
-                rb.AddForceAtPosition(Vector3.up * forceMag, pt.transform.position, ForceMode.Force);
-
-                // ── Velocity damping (energy absorption) ──────────────────
-                if (waterImpactDamping > 0f)
-                {
-                    Vector3 pointVel     = rb.GetPointVelocity(pt.transform.position);
-                    float   dampingScale = waterImpactDamping * subFraction * rb.mass / samplePoints.Count;
-                    Vector3 dampingForce = -pointVel * dampingScale;
-                    rb.AddForceAtPosition(dampingForce, pt.transform.position, ForceMode.Force);
-                }
+                ApplyBuoyancyForce(pt, subFraction, volumePerPt, gravity);
+                ApplyImpactDamping(pt, subFraction);
             }
             else
             {
-                // ── Surface capture zone ──────────────────────────────────
-                // Extends ABOVE the water surface by one object height.
-                // In real water, objects don't just launch out — the surface
-                // resists them leaving.  Two effects:
-                //
-                // 1. Damp upward velocity so the object can't fly out.
-                // 2. Pull the object back toward the surface (surface tension).
-                //
-                // Both fade out the further above the surface the point is.
-                float aboveWater     = -submersion;  // positive distance above surface
-                float captureRange   = objectHalfHeight * 2f;
-
-                if (aboveWater < captureRange && waterImpactDamping > 0f)
-                {
-                    // Blend: 1 at water surface → 0 at captureRange above
-                    float zoneFactor = 1f - Mathf.Clamp01(aboveWater / captureRange);
-                    zoneFactor *= zoneFactor;  // quadratic falloff — strong near surface
-
-                    // Track that we're still in the water's influence
-                    maxSubFraction = Mathf.Max(maxSubFraction, zoneFactor * 0.5f);
-
-                    Vector3 pointVel = rb.GetPointVelocity(pt.transform.position);
-
-                    // 1) Damp upward velocity — only resist leaving the water,
-                    //    never resist falling back in
-                    if (pointVel.y > 0f)
-                    {
-                        float dampScale    = waterImpactDamping * zoneFactor * rb.mass / samplePoints.Count;
-                        Vector3 dampForce  = Vector3.down * (pointVel.y * dampScale);
-                        rb.AddForceAtPosition(dampForce, pt.transform.position, ForceMode.Force);
-                    }
-
-                    // 2) Surface tension pull — gentle force toward the water
-                    //    Stronger for lighter objects (higher buoyancy ratio)
-                    float buoyancyRatio = Mathf.Clamp01(1f - density / WaterDensity); // 0.9 for cork, 0 for steel
-                    float pullForce     = buoyancyRatio * zoneFactor * rb.mass * g * 0.5f;
-                    rb.AddForceAtPosition(Vector3.down * pullForce, pt.transform.position, ForceMode.Force);
-                }
+                float zoneFactor = ApplySurfaceCaptureZone(pt, submersion, gravity);
+                maxSubFraction = Mathf.Max(maxSubFraction, zoneFactor * 0.5f);
             }
         }
 
-        // ── Drag scales with submersion depth ─────────────────────────────
-        float massScale   = Mathf.Pow(rb.mass, 1f / 3f);
-        rb.linearDamping  = Mathf.Lerp(defaultDrag,        waterDragCoeff        * massScale, maxSubFraction);
-        rb.angularDamping = Mathf.Lerp(defaultAngularDrag, waterAngularDragCoeff * massScale, maxSubFraction);
+        if (normalCount > 0 && maxSubFraction > 0f)
+        {
+            Vector3 avgNormal = (combinedNormal / normalCount).normalized;
+            ApplyAlignmentTorque(avgNormal, maxSubFraction, gravity);
+        }
+
+        UpdateDragProperties(maxSubFraction);
+    }
+
+    private void ApplyBuoyancyForce(FloatingSamplePoint pt, float subFraction, float volumePerPt, float gravity)
+    {
+        // F_buoy = ρ_water × g × V_submerged
+        // Buoyancy force (non-linear curve)
+        float buoyancyFactor = subFraction * (1f + subFraction);
+        float forceMag = WaterDensity * gravity * volumePerPt * buoyancyFactor;
+        rb.AddForceAtPosition(Vector3.up * forceMag, pt.transform.position, ForceMode.Force);
+    }
+
+    private void ApplyImpactDamping(FloatingSamplePoint pt, float subFraction)
+    {
+        if (waterImpactDamping <= 0f) return;
+
+        Vector3 pointVel = rb.GetPointVelocity(pt.transform.position);
+        float dampingScale = waterImpactDamping * subFraction * rb.mass / samplePoints.Count;
+        rb.AddForceAtPosition(-pointVel * dampingScale, pt.transform.position, ForceMode.Force);
+    }
+
+    private float ApplySurfaceCaptureZone(FloatingSamplePoint pt, float submersion, float gravity)
+    {
+        float aboveWater = -submersion; // positive distance above surface
+        if (aboveWater >= CaptureRange || waterImpactDamping <= 0f) return 0f;
+
+        // Blend: 1 at water surface → 0 at captureRange above
+        float zoneFactor = 1f - Mathf.Clamp01(aboveWater / CaptureRange);
+        zoneFactor *= zoneFactor; // quadratic falloff — strong near surface
+
+        Vector3 pointVel = rb.GetPointVelocity(pt.transform.position);
+
+        // 1) Damp upward velocity — only resist leaving the water
+        if (pointVel.y > 0f)
+        {
+            float dampScale = waterImpactDamping * zoneFactor * rb.mass / samplePoints.Count;
+            rb.AddForceAtPosition(Vector3.down * (pointVel.y * dampScale), pt.transform.position, ForceMode.Force);
+        }
+
+        // 2) Surface tension pull — gentle force toward the water
+        float pullForce = BuoyancyRatio * zoneFactor * rb.mass * gravity * 0.5f;
+        rb.AddForceAtPosition(Vector3.down * pullForce, pt.transform.position, ForceMode.Force);
+
+        return zoneFactor;
+    }
+
+    private void ApplyAlignmentTorque(Vector3 avgNormal, float maxSubFraction, float gravity)
+    {
+        // Cross product gives the rotation axis + magnitude of misalignment
+        Vector3 alignAxis = Vector3.Cross(transform.up, avgNormal);
+
+        // Transition from Acceleration to Force to allow mass to influence stability
+        // Heavier objects (higher density * mass) will resist alignment more naturally
+        float buoyancyRatio = BuoyancyRatio;
+        
+        // Scale torque by mass to maintain consistent rotational acceleration across different weights
+        // but adjusted by density to favor light floaters
+        float torqueMag = buoyancyRatio * maxSubFraction * gravity * rb.mass * 2f;
+        rb.AddTorque(alignAxis * torqueMag, ForceMode.Force);
+    }
+
+    private void UpdateDragProperties(float maxSubFraction)
+    {
+        // Drag should scale with the object's displacement/volume (Effective Radius)
+        // volume = mass / density
+        // volume^(1/3) gives a linear scale of the object's size in water
+        float volume = rb.mass / Mathf.Max(density, 1f);
+        float volumeScale = Mathf.Pow(volume, 1f / 3f);
+
+        rb.linearDamping = Mathf.Lerp(defaultDrag, waterDragCoeff * volumeScale, maxSubFraction);
+        rb.angularDamping = Mathf.Lerp(defaultAngularDrag, waterAngularDragCoeff * volumeScale, maxSubFraction);
     }
 
     // ─────────────────────────────────────────────────────────────────────
