@@ -44,6 +44,12 @@ public class FloatingObject : MonoBehaviour
     [Tooltip("Angular drag coefficient. Final angular drag = this × mass^(1/3).")]
     public float waterAngularDragCoeff = 0.4f;
 
+    [Tooltip("How strongly the water absorbs kinetic energy on impact.\n" +
+             "Higher = object decelerates faster when hitting the water.\n" +
+             "0 = no damping (springy), 5+ = very heavy water feel.")]
+    [Range(0f, 10f)]
+    public float waterImpactDamping = 2f;
+
     // ── Internal ──────────────────────────────────────────────────────────
     private Rigidbody rb;
     private float defaultDrag;
@@ -194,7 +200,8 @@ public class FloatingObject : MonoBehaviour
         float volume      = rb.mass / Mathf.Max(density, 1f);
         float volumePerPt = volume / samplePoints.Count;
 
-        bool anySubmerged = false;
+        bool  anySubmerged    = false;
+        float maxSubFraction  = 0f;
 
         foreach (var pt in samplePoints)
         {
@@ -206,26 +213,77 @@ public class FloatingObject : MonoBehaviour
             pt.lastWaterHeight = waterY;
             pt.hasValidSample  = true;
 
-            float submersion = waterY - pt.transform.position.y;
+            float submersion = waterY - pt.transform.position.y;  // positive = under water
             pt.isSubmerged   = submersion > 0f;
 
             if (pt.isSubmerged)
             {
                 anySubmerged = true;
 
-                // Normalise: what fraction of the object's full height is submerged?
-                // Clamped to [0,1] — going fully under doesn't over-scale force.
                 float subFraction = Mathf.Clamp01(submersion / (2f * objectHalfHeight));
+                maxSubFraction    = Mathf.Max(maxSubFraction, subFraction);
 
-                float forceMag = WaterDensity * g * volumePerPt * subFraction;
+                // ── Buoyancy force (non-linear curve) ─────────────────────
+                float buoyancyFactor = subFraction * (1f + subFraction);
+                float forceMag      = WaterDensity * g * volumePerPt * buoyancyFactor;
                 rb.AddForceAtPosition(Vector3.up * forceMag, pt.transform.position, ForceMode.Force);
+
+                // ── Velocity damping (energy absorption) ──────────────────
+                if (waterImpactDamping > 0f)
+                {
+                    Vector3 pointVel     = rb.GetPointVelocity(pt.transform.position);
+                    float   dampingScale = waterImpactDamping * subFraction * rb.mass / samplePoints.Count;
+                    Vector3 dampingForce = -pointVel * dampingScale;
+                    rb.AddForceAtPosition(dampingForce, pt.transform.position, ForceMode.Force);
+                }
+            }
+            else
+            {
+                // ── Surface capture zone ──────────────────────────────────
+                // Extends ABOVE the water surface by one object height.
+                // In real water, objects don't just launch out — the surface
+                // resists them leaving.  Two effects:
+                //
+                // 1. Damp upward velocity so the object can't fly out.
+                // 2. Pull the object back toward the surface (surface tension).
+                //
+                // Both fade out the further above the surface the point is.
+                float aboveWater     = -submersion;  // positive distance above surface
+                float captureRange   = objectHalfHeight * 2f;
+
+                if (aboveWater < captureRange && waterImpactDamping > 0f)
+                {
+                    // Blend: 1 at water surface → 0 at captureRange above
+                    float zoneFactor = 1f - Mathf.Clamp01(aboveWater / captureRange);
+                    zoneFactor *= zoneFactor;  // quadratic falloff — strong near surface
+
+                    // Track that we're still in the water's influence
+                    maxSubFraction = Mathf.Max(maxSubFraction, zoneFactor * 0.5f);
+
+                    Vector3 pointVel = rb.GetPointVelocity(pt.transform.position);
+
+                    // 1) Damp upward velocity — only resist leaving the water,
+                    //    never resist falling back in
+                    if (pointVel.y > 0f)
+                    {
+                        float dampScale    = waterImpactDamping * zoneFactor * rb.mass / samplePoints.Count;
+                        Vector3 dampForce  = Vector3.down * (pointVel.y * dampScale);
+                        rb.AddForceAtPosition(dampForce, pt.transform.position, ForceMode.Force);
+                    }
+
+                    // 2) Surface tension pull — gentle force toward the water
+                    //    Stronger for lighter objects (higher buoyancy ratio)
+                    float buoyancyRatio = Mathf.Clamp01(1f - density / WaterDensity); // 0.9 for cork, 0 for steel
+                    float pullForce     = buoyancyRatio * zoneFactor * rb.mass * g * 0.5f;
+                    rb.AddForceAtPosition(Vector3.down * pullForce, pt.transform.position, ForceMode.Force);
+                }
             }
         }
 
-        // Auto-scaled drag: mass^(1/3) ≈ linear size → drag scales with surface area
-        float massScale       = Mathf.Pow(rb.mass, 1f / 3f);
-        rb.linearDamping      = anySubmerged ? waterDragCoeff        * massScale : defaultDrag;
-        rb.angularDamping     = anySubmerged ? waterAngularDragCoeff * massScale : defaultAngularDrag;
+        // ── Drag scales with submersion depth ─────────────────────────────
+        float massScale   = Mathf.Pow(rb.mass, 1f / 3f);
+        rb.linearDamping  = Mathf.Lerp(defaultDrag,        waterDragCoeff        * massScale, maxSubFraction);
+        rb.angularDamping = Mathf.Lerp(defaultAngularDrag, waterAngularDragCoeff * massScale, maxSubFraction);
     }
 
     // ─────────────────────────────────────────────────────────────────────
