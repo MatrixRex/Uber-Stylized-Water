@@ -32,28 +32,24 @@ public class PlanarReflectionVolume : MonoBehaviour
 
     private Bounds _volumeBounds;
 
-
     void OnEnable()
     {
-        RenderPipelineManager.beginCameraRendering += DoPlanarReflections;
+        // FIX: Removed the RenderPipelineManager subscription to avoid recursion
+        // RenderPipelineManager.beginCameraRendering += DoPlanarReflections;
+
         reflectionLayer = ~(1 << 4);
         UpdateBounds();
 
         // Get the material from the reflection target
-        if (reflectionTarget != null)
-        {
-            var renderer = reflectionTarget.GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                _targetMaterial = renderer.sharedMaterial;
-            }
-        }
+        UpdateTargetMaterial();
     }
 
     void OnDisable()
     {
         CleanUp();
-        RenderPipelineManager.beginCameraRendering -= DoPlanarReflections;
+        // FIX: Removed unsubscription since we don't subscribe anymore
+        // RenderPipelineManager.beginCameraRendering -= DoPlanarReflections;
+
         // Reset blend parameter on the specific material when disabled
         if (_targetMaterial != null)
         {
@@ -64,12 +60,35 @@ public class PlanarReflectionVolume : MonoBehaviour
     void OnDestroy()
     {
         CleanUp();
-        RenderPipelineManager.beginCameraRendering -= DoPlanarReflections;
+        // FIX: Removed unsubscription
+        // RenderPipelineManager.beginCameraRendering -= DoPlanarReflections;
+
         // Reset blend parameter on the specific material when destroyed
         if (_targetMaterial != null)
         {
             _targetMaterial.SetFloat(_planarReflectionBlendId, 1f);
         }
+    }
+
+    // FIX: Added LateUpdate to trigger the render safely outside the pipeline loop
+    void LateUpdate()
+    {
+        // 1. Handle Game View Camera
+        var mainCam = Camera.main;
+        if (mainCam != null)
+        {
+            DoPlanarReflections(default, mainCam);
+        }
+
+#if UNITY_EDITOR
+        // 2. Handle Scene View Camera (Optional support for editing)
+        // We check if we are currently drawing the scene view to update reflections there too
+        var sceneView = UnityEditor.SceneView.lastActiveSceneView;
+        if (sceneView != null && sceneView.camera != null && sceneView.camera != mainCam)
+        {
+            DoPlanarReflections(default, sceneView.camera);
+        }
+#endif
     }
 
     private void UpdateTargetMaterial()
@@ -83,7 +102,6 @@ public class PlanarReflectionVolume : MonoBehaviour
             }
         }
     }
-
 
     private void UpdateBounds()
     {
@@ -313,11 +331,14 @@ public class PlanarReflectionVolume : MonoBehaviour
 
         var data = new PlanarReflectionSettingData();
         data.Set();
+
+        // Invoke event (Context is passed as default since we are in LateUpdate)
         BeginPlanarReflections?.Invoke(context, _reflectionCamera);
 
         if (_reflectionCamera.WorldToViewportPoint(reflectionTarget.transform.position).z < 100000)
         {
-            UniversalRenderPipeline.RenderSingleCamera(context, _reflectionCamera);
+            // FIX: Updated API call to avoid Obsolete warning and Recursion error
+            RenderPipeline.SubmitRenderRequest(_reflectionCamera, new UniversalRenderPipeline.SingleCameraRequest());
         }
 
         data.Restore();
