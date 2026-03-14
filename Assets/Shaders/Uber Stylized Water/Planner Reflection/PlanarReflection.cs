@@ -32,24 +32,28 @@ public class PlanarReflectionVolume : MonoBehaviour
 
     private Bounds _volumeBounds;
 
+
     void OnEnable()
     {
-        // FIX: Removed the RenderPipelineManager subscription to avoid recursion
-        // RenderPipelineManager.beginCameraRendering += DoPlanarReflections;
-
+        RenderPipelineManager.beginCameraRendering += DoPlanarReflections;
         reflectionLayer = ~(1 << 4);
         UpdateBounds();
 
         // Get the material from the reflection target
-        UpdateTargetMaterial();
+        if (reflectionTarget != null)
+        {
+            var renderer = reflectionTarget.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                _targetMaterial = renderer.sharedMaterial;
+            }
+        }
     }
 
     void OnDisable()
     {
         CleanUp();
-        // FIX: Removed unsubscription since we don't subscribe anymore
-        // RenderPipelineManager.beginCameraRendering -= DoPlanarReflections;
-
+        RenderPipelineManager.beginCameraRendering -= DoPlanarReflections;
         // Reset blend parameter on the specific material when disabled
         if (_targetMaterial != null)
         {
@@ -60,35 +64,12 @@ public class PlanarReflectionVolume : MonoBehaviour
     void OnDestroy()
     {
         CleanUp();
-        // FIX: Removed unsubscription
-        // RenderPipelineManager.beginCameraRendering -= DoPlanarReflections;
-
+        RenderPipelineManager.beginCameraRendering -= DoPlanarReflections;
         // Reset blend parameter on the specific material when destroyed
         if (_targetMaterial != null)
         {
             _targetMaterial.SetFloat(_planarReflectionBlendId, 1f);
         }
-    }
-
-    // FIX: Added LateUpdate to trigger the render safely outside the pipeline loop
-    void LateUpdate()
-    {
-        // 1. Handle Game View Camera
-        var mainCam = Camera.main;
-        if (mainCam != null)
-        {
-            DoPlanarReflections(default, mainCam);
-        }
-
-#if UNITY_EDITOR
-        // 2. Handle Scene View Camera (Optional support for editing)
-        // We check if we are currently drawing the scene view to update reflections there too
-        var sceneView = UnityEditor.SceneView.lastActiveSceneView;
-        if (sceneView != null && sceneView.camera != null && sceneView.camera != mainCam)
-        {
-            DoPlanarReflections(default, sceneView.camera);
-        }
-#endif
     }
 
     private void UpdateTargetMaterial()
@@ -102,6 +83,7 @@ public class PlanarReflectionVolume : MonoBehaviour
             }
         }
     }
+
 
     private void UpdateBounds()
     {
@@ -277,12 +259,17 @@ public class PlanarReflectionVolume : MonoBehaviour
         var hdr = camera.allowHDR;
         var renderTextureFormat = hdr ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.Default;
 
-        return new RenderTextureDescriptor(width, height, renderTextureFormat, 16)
+
+        var descriptor = new RenderTextureDescriptor(width, height, renderTextureFormat, 16)
         {
             autoGenerateMips = true,
-            useMipMap = true
+            useMipMap = true,
+            depthBufferBits = 24
         };
+
+        return descriptor;
     }
+
 
     private void CreateReflectionTexture(Camera camera)
     {
@@ -331,14 +318,13 @@ public class PlanarReflectionVolume : MonoBehaviour
 
         var data = new PlanarReflectionSettingData();
         data.Set();
-
-        // Invoke event (Context is passed as default since we are in LateUpdate)
         BeginPlanarReflections?.Invoke(context, _reflectionCamera);
 
         if (_reflectionCamera.WorldToViewportPoint(reflectionTarget.transform.position).z < 100000)
         {
-            // FIX: Updated API call to avoid Obsolete warning and Recursion error
-            RenderPipeline.SubmitRenderRequest(_reflectionCamera, new UniversalRenderPipeline.SingleCameraRequest());
+#pragma warning disable CS0618
+            UniversalRenderPipeline.RenderSingleCamera(context, _reflectionCamera);
+#pragma warning restore CS0618
         }
 
         data.Restore();
