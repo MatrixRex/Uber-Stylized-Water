@@ -284,7 +284,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be12e1b4bc1801540b8442822f6c8e2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lastWaterHeight: 19.669907
+  lastWaterHeight: 19.639917
   isSubmerged: 1
   hasValidSample: 1
 --- !u!4 &164171985 stripped
@@ -1558,8 +1558,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 472468054}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 47.9, y: 19.622713, z: 47.52}
+  m_LocalRotation: {x: -0.00040966526, y: -0.00000087038944, z: 0.00017245744, w: 1}
+  m_LocalPosition: {x: 47.9, y: 19.525042, z: 47.52}
   m_LocalScale: {x: 2.7112, y: 0.9747848, z: 2.7112}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1614,7 +1614,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be12e1b4bc1801540b8442822f6c8e2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lastWaterHeight: 19.562767
+  lastWaterHeight: 19.625374
   isSubmerged: 1
   hasValidSample: 1
 --- !u!1001 &555440788
@@ -1739,7 +1739,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be12e1b4bc1801540b8442822f6c8e2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lastWaterHeight: 19.669907
+  lastWaterHeight: 19.610065
   isSubmerged: 1
   hasValidSample: 1
 --- !u!1 &579814901
@@ -3023,7 +3023,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be12e1b4bc1801540b8442822f6c8e2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lastWaterHeight: 19.529888
+  lastWaterHeight: 19.620941
   isSubmerged: 1
   hasValidSample: 1
 --- !u!1 &1230263623
@@ -3553,7 +3553,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80ed422438a81f747bd03074ceba4298, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  steepness: 0.23
+  steepness: 0.02
   wavelength: 5
   speed: 1.24
   iterations: 3
@@ -4286,7 +4286,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be12e1b4bc1801540b8442822f6c8e2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lastWaterHeight: 19.72829
+  lastWaterHeight: 19.616312
   isSubmerged: 1
   hasValidSample: 1
 --- !u!1 &1870439321
