@@ -11,6 +11,9 @@
         },
         {
             "m_Id": "27b81fb637e7434aadb5c0a0bd3a48ab"
+        },
+        {
+            "m_Id": "5ae16f23882247d8bf954667691a1bf5"
         }
     ],
     "m_Keywords": [],
@@ -80,6 +83,9 @@
         },
         {
             "m_Id": "4bce5c6fb1804c2b9d0f2f38c9d8e8dd"
+        },
+        {
+            "m_Id": "3cc47cf22b4c4037be1ca2120e9daee6"
         }
     ],
     "m_GroupDatas": [
@@ -129,6 +135,20 @@
                     "m_Id": "a514c54d52574f27a52b61462ebb80dd"
                 },
                 "m_SlotId": 2
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "3cc47cf22b4c4037be1ca2120e9daee6"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "b2e7a9499b684a2eb5620b09cf93c8e3"
+                },
+                "m_SlotId": 133537113
             }
         },
         {
@@ -283,20 +303,6 @@
                     "m_Id": "906250f4561f439c908ae64093468043"
                 },
                 "m_SlotId": 0
-            }
-        },
-        {
-            "m_OutputSlot": {
-                "m_Node": {
-                    "m_Id": "a514c54d52574f27a52b61462ebb80dd"
-                },
-                "m_SlotId": 0
-            },
-            "m_InputSlot": {
-                "m_Node": {
-                    "m_Id": "b2e7a9499b684a2eb5620b09cf93c8e3"
-                },
-                "m_SlotId": 133537113
             }
         },
         {
@@ -526,6 +532,9 @@
         },
         {
             "m_Id": "27b81fb637e7434aadb5c0a0bd3a48ab"
+        },
+        {
+            "m_Id": "5ae16f23882247d8bf954667691a1bf5"
         }
     ]
 }
@@ -630,6 +639,29 @@
     "m_StageCapability": 3,
     "m_Value": 0.0,
     "m_DefaultValue": 0.0,
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
+    "m_ObjectId": "22d7c9c57b994575950750ec7663a9f7",
+    "m_Id": 0,
+    "m_DisplayName": "GroundPostionWS",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
     "m_Labels": []
 }
 
@@ -752,11 +784,47 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
+    "m_ObjectId": "3cc47cf22b4c4037be1ca2120e9daee6",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "Property",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -20.79999351501465,
+            "y": -566.3999633789063,
+            "width": 172.00003051757813,
+            "height": 33.5999755859375
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "22d7c9c57b994575950750ec7663a9f7"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_Property": {
+        "m_Id": "5ae16f23882247d8bf954667691a1bf5"
+    }
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.GroupData",
     "m_ObjectId": "3d6f303b5f6e4a3faae649370b372e0a",
     "m_Title": "Parallax Offset",
     "m_Position": {
-        "x": -416.800048828125,
+        "x": -416.8000183105469,
         "y": -417.6000061035156
     }
 }
@@ -1288,6 +1356,34 @@
     },
     "m_Space": 2,
     "m_PositionSource": 0
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector3ShaderProperty",
+    "m_ObjectId": "5ae16f23882247d8bf954667691a1bf5",
+    "m_Guid": {
+        "m_GuidSerialized": "a4c40a5c-4e5e-46ff-9c8e-3f27b0642bfa"
+    },
+    "m_Name": "GroundPostionWS",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "GroundPostionWS",
+    "m_DefaultReferenceName": "_GroundPostionWS",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    }
 }
 
 {

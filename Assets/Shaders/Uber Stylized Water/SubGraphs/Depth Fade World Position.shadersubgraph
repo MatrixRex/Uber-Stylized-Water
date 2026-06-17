@@ -701,6 +701,20 @@
                 },
                 "m_SlotId": 0
             }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "2c25b57f8324426d93b93d4c698a317a"
+                },
+                "m_SlotId": 1
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "0d8b75dabe0742559dd459daba31323e"
+                },
+                "m_SlotId": 9
+            }
         }
     ],
     "m_VertexContext": {
@@ -926,6 +940,9 @@
         },
         {
             "m_Id": "66e3a5dffc184e0b8157cdd3bbef49b6"
+        },
+        {
+            "m_Id": "9f81736b412b4d99a9a3b8cd62e74da0"
         }
     ],
     "synonyms": [],
@@ -2387,6 +2404,29 @@
     "m_StageCapability": 2,
     "m_Value": 0.0,
     "m_DefaultValue": 0.0,
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
+    "m_ObjectId": "9f81736b412b4d99a9a3b8cd62e74da0",
+    "m_Id": 9,
+    "m_DisplayName": "GroundPositionWS",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "GroundPositionWS",
+    "m_StageCapability": 2,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
     "m_Labels": []
 }
 
