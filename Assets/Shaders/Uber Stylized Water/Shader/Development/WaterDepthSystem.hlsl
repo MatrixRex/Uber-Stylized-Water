@@ -29,17 +29,11 @@ void ReconstructGroundWS_float(float2 ScreenUV, float RawDepth,
     IsValid = 1.0;
 }
 
-// ---------------------------------------------------------------------
-// 2. Vertical (straight top-down) water depth. View-angle independent.
-//    Feed the plain-UV ground so the foam line stays put. (It is just
-//    max(surfaceY - groundY, 0) — exposed as a node for a clean graph.)
-// ---------------------------------------------------------------------
-void WaterColumnDepth_float(float3 SurfaceWorldPos, float3 GroundWorldPos,
-                            out float Depth)
+void ReconstructGroundWS_half(float2 ScreenUV, float RawDepth,
+                              out float3 GroundWorldPos, out float IsValid)
 {
-    Depth = max(SurfaceWorldPos.y - GroundWorldPos.y, 0.0);
+    ReconstructGroundWS_float(ScreenUV, RawDepth, GroundWorldPos, IsValid);
 }
-
 // ---------------------------------------------------------------------
 // 3. Map a ground XZ back to the MESH UV of the surface point above it,
 //    so mesh-UV foam (basin water) and its projected shadow stay in sync.
@@ -68,6 +62,16 @@ void GroundToMeshUV_float(float2 GroundXZ, float2 SurfaceWorldXZ, float2 Surface
 
     float2 screenDelta = mul(invW, targetXZ - SurfaceWorldXZ);
     ProjectedUV = SurfaceUV + dUVx * screenDelta.x + dUVy * screenDelta.y;
+}
+
+// Both depths from the same two world points (call after reconstruction).
+//   VerticalDepth : camera-independent  -> edge / intersection foam
+//   ViewDepth     : ray path length     -> color absorption blend
+void WaterDepths_float(float3 SurfaceWorldPos, float3 GroundWorldPos,
+                       out float VerticalDepth, out float ViewDepth)
+{
+    VerticalDepth = max(SurfaceWorldPos.y - GroundWorldPos.y, 0.0);
+    ViewDepth     = distance(SurfaceWorldPos, GroundWorldPos);
 }
 
 #endif

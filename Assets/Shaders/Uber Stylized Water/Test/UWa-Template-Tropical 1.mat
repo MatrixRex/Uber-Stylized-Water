@@ -24,7 +24,9 @@ Material:
   m_Shader: {fileID: -6465566751694194690, guid: 0d7de34eca869774aa7869858bcdaf6a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - _ENABLEREFRACTION
+  - _ENABLE_UNDERWATERLAYER
   m_InvalidKeywords:
   - _ENABLENORMAL
   m_LightmapFlags: 2
@@ -244,17 +246,17 @@ Material:
     - _ENABLEINTERSECTION: 1
     - _ENABLENORMAL: 1
     - _ENABLEPLANERREFLECTION: 0
-    - _ENABLEREFRACTION: 0
+    - _ENABLEREFRACTION: 1
     - _ENABLESHORELINE: 0
     - _ENABLESURFACEFOAM: 1
     - _ENABLEUNDERWATERLAYER: 1
     - _ENABLEWAVE: 0
-    - _ENABLE_UNDERWATERLAYER: 0
+    - _ENABLE_UNDERWATERLAYER: 1
     - _ENVIRONMENTREFLECTIONS_OFF: 1
-    - _Enable_Intersection: 0
+    - _Enable_Intersection: 1
     - _Enable_Normal: 0
-    - _Enable_ShoreLine: 1
-    - _Enable_SurfaceFoam: 0
+    - _Enable_ShoreLine: 0
+    - _Enable_SurfaceFoam: 1
     - _Enable_SurfaceFoamTexture: 0
     - _FakeSun_Altitude: 27.6
     - _FakeSun_Aniso: 0
@@ -271,7 +273,7 @@ Material:
     - _FarNormalStartOffset: 0
     - _FarNormalStrength: 0.01
     - _FarRefractionStrength: 0
-    - _FixedWaterDepth: 1
+    - _FixedWaterDepth: 0
     - _Float: 1
     - _Float2: 5.57
     - _Float_1: 1
@@ -294,10 +296,13 @@ Material:
     - _InterSec_Edge_Dissolve: 1
     - _InterSec_Edge_Fade: 0
     - _InterSec_Foam_Distortion: 2.27
+    - _InterSec_Foam_EdgeSmooth: 0.01
     - _InterSec_Foam_Invert: 1
     - _InterSec_Foam_Scale: 3.76
     - _InterSec_Foam_Smooth: 0
     - _InterSec_GradientDissolve: 0
+    - _InterSec_ReflectionPower: 0
+    - _InterSec_SpecularPower: 0
     - _InterSec_Width: 0.36
     - _IntersectionDistanceCutoff: 2.5
     - _IntersectionDistanceDepth: 0.5
@@ -407,7 +412,9 @@ Material:
     - _SurfFoam_AlphaBlend: 0
     - _SurfFoam_Edge: 0.547
     - _SurfFoam_EdgeSmooth: 0
+    - _SurfFoam_ReflectionPower: 0.2
     - _SurfFoam_Scale: 3.4
+    - _SurfFoam_SpecularPower: 0.2
     - _Surface: 1
     - _SurfaceDistortionScale: 1.48
     - _SurfaceDistortionStrength: 0.1
@@ -426,10 +433,11 @@ Material:
     - _UnderWaterScaleModifier: 1
     - _UnderWater_Depth: 0.1
     - _UnderWater_ScaleModifier: 0
-    - _UnderWater_ShadowOcclusion: 1
+    - _UnderWater_ShadowOcclusion: 0
     - _UnderWater_Start: 5
     - _UnderwaterLayerFade: 15
     - _Underwater_Fade: 15
+    - _UseMeshUV: 0
     - _WORLDSPACEDEPTH: 1
     - _WaterDepth: 0.6
     - _Water_Depth: 3.99
@@ -487,10 +495,10 @@ Material:
     m_Colors:
     - _1st_Wave_Direction: {r: 1, g: 0, b: 0, a: 0}
     - _2nd_Wave_Direction: {r: -1, g: 0, b: 1, a: 0}
-    - _Color_Deep: {r: 0, g: 0, b: 0, a: 1}
+    - _Color_Deep: {r: 0.015272317, g: 0.072050996, b: 0.20754719, a: 1}
     - _Color_Fresnel: {r: 1, g: 0.09866079, b: 0, a: 0.34509805}
     - _Color_SSS: {r: 1.1727748, g: 8, b: 5.5287952, a: 0.6039216}
-    - _Color_Shallow: {r: 0, g: 0, b: 0, a: 1}
+    - _Color_Shallow: {r: 0.6060435, g: 0.7584905, b: 0.5252189, a: 1}
     - _Deep_Color: {r: 0, g: 0.15303946, b: 1, a: 1}
     - _Direction: {r: 1, g: 0, b: 0, a: 0}
     - _DistanceColor: {r: 1, g: 1, b: 1, a: 1}

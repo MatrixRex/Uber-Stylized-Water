@@ -50,6 +50,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _Boolean: 0
     - _CenterMask: 0.77
     - _CenterMaskFade: 0
     - _Depth: 4.5
@@ -61,11 +62,13 @@ Material:
     - _Speed: 0.8
     - _Thickness: 1
     - _TrailFade: 1
+    - _depth: 5.18
     - _linedirection: 1
     - _maskscale: 3.05
     - _maskspeed: 0
-    - _offset: 1.59
-    - _tile: 5.14
+    - _offset: 2.48
+    - _smooth: 1
+    - _tile: 3.25
     m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1
