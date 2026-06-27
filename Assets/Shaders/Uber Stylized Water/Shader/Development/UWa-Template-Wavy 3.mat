@@ -25,6 +25,7 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - _ENABLECAUSTICS
   - _ENABLEREFRACTION
   - _ENABLE_UNDERWATERLAYER
   m_InvalidKeywords:
@@ -53,7 +54,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Caustics_Map:
-        m_Texture: {fileID: 2800000, guid: 556ddd13b8c2fcb48981e3241653892e, type: 3}
+        m_Texture: {fileID: 2800000, guid: 38c65d70a47d8a64f9f114186d33c4fd, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _CausticticsMap:
@@ -213,15 +214,15 @@ Material:
     - _CausticsStart: 5
     - _CausticsStartDistance: 5
     - _CausticsStrength: 100
-    - _Caustics_Depth: 0.1
+    - _Caustics_Depth: 1.63
     - _Caustics_Distortion_Scale: 2
-    - _Caustics_Distortion_Strength: 3
+    - _Caustics_Distortion_Strength: 0
     - _Caustics_Fade: 5
-    - _Caustics_Pan: 0.6
-    - _Caustics_Scale: 3.33
+    - _Caustics_Pan: 0
+    - _Caustics_Scale: 1
     - _Caustics_ShadowOcclusion: 1
-    - _Caustics_Start: 5
-    - _Caustics_Strength: 5.48
+    - _Caustics_Start: 50
+    - _Caustics_Strength: 5
     - _ConformToGeometry: 1
     - _Cull: 2
     - _Depth_Distance: 1.26
@@ -234,7 +235,7 @@ Material:
     - _DistanceNormalTile: 5.54
     - _DistortionScale: 2
     - _DstBlend: 10
-    - _ENABLECAUSTICS: 0
+    - _ENABLECAUSTICS: 1
     - _ENABLEINTERSECTION: 1
     - _ENABLENORMAL: 1
     - _ENABLEPLANERREFLECTION: 0
@@ -455,7 +456,7 @@ Material:
     - _1st_Wave_Direction: {r: 1, g: 0, b: 0, a: 0}
     - _2nd_Wave_Direction: {r: -1, g: 0, b: 1, a: 0}
     - _Color_Deep: {r: 0.01249553, g: 0.079006314, b: 0.24528301, a: 1}
-    - _Color_Shallow: {r: 0.6024611, g: 0.82641506, b: 0.478697, a: 1}
+    - _Color_Shallow: {r: 0.6024611, g: 0.82641506, b: 0.478697, a: 0}
     - _Deep_Color: {r: 0, g: 0.15303946, b: 1, a: 1}
     - _DistanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _FakeSun_Color: {r: 0, g: 0, b: 0, a: 1}
