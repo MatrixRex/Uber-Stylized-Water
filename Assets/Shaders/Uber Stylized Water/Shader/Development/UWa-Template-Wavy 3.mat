@@ -26,9 +26,9 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _ENABLECAUSTICS
-  - _ENABLE_UNDERWATERLAYER
   m_InvalidKeywords:
   - _ENABLENORMAL
+  - _ENABLE_UNDERWATERLAYER
   m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -81,7 +81,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal_Map:
-        m_Texture: {fileID: 2800000, guid: c69caf43660380d4dae6230c82b2b51f, type: 3}
+        m_Texture: {fileID: 2800000, guid: 21ca1cd73d124f84f865f7d4358ffc3e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ParallaxMapping_3e1fcc83888a4187b62a584859a1136c_Heightmap_1_Texture2D:
@@ -245,12 +245,13 @@ Material:
     - _ENABLESURFACEFOAM: 1
     - _ENABLEUNDERWATERLAYER: 1
     - _ENABLEWAVE: 0
+    - _ENABLE_FOAMSHADOW: 0
     - _ENABLE_UNDERWATERLAYER: 1
     - _ENVIRONMENTREFLECTIONS_OFF: 1
     - _Enable_Intersection: 1
     - _Enable_Normal: 1
     - _Enable_ShoreLine: 1
-    - _Enable_SurfaceFoam: 1
+    - _Enable_SurfaceFoam: 0
     - _Enable_SurfaceFoamTexture: 0
     - _Environment_Reflections: 1
     - _FakeSun_Altitude: 27.6
@@ -274,6 +275,10 @@ Material:
     - _Float_2: 0.88
     - _Float_3: 1.09
     - _FoamDistortionScale: 1
+    - _FoamShadow_End: 5
+    - _FoamShadow_Fade: 15
+    - _FoamShadow_ScaleModifier: 0
+    - _FoamShadow_ShadowOcclusion: 1
     - _FoamShaodwFade: 16
     - _FoamShaodwRange: 7
     - _FresnelAmmount: 4.77
@@ -310,9 +315,9 @@ Material:
     - _NormalStrength: 0.2
     - _NormalTile: 4
     - _Normal_DistanceStrength: 1
-    - _Normal_Pan: 1
-    - _Normal_Scale: 10
-    - _Normal_Strength: 0.2
+    - _Normal_Pan: 9.87
+    - _Normal_Scale: 11.03
+    - _Normal_Strength: 0.89
     - _Normal_Tile: 5
     - _ParalaxDepth: 30
     - _QueueControl: 0
@@ -388,7 +393,7 @@ Material:
     - _SurfFoam_Edge: 0.547
     - _SurfFoam_EdgeSmooth: 0
     - _SurfFoam_ReflectionPower: 0.234
-    - _SurfFoam_Scale: 3.4
+    - _SurfFoam_Scale: 10
     - _SurfFoam_SpecularPower: 0.303
     - _Surface: 1
     - _SurfaceDistortionScale: 1.48
@@ -411,10 +416,10 @@ Material:
     - _UnderWater_Start: 5
     - _UnderwaterLayerFade: 15
     - _Underwater_Fade: 15
-    - _UseMeshUV: 0
+    - _UseMeshUV: 1
     - _WORLDSPACEDEPTH: 1
     - _WaterDepth: 0.6
-    - _Water_Depth: 0.75
+    - _Water_Depth: 0.46
     - _WaveHeight: 0.01
     - _WaveHeight2nd: 0.01
     - _WaveLength: 10
@@ -464,6 +469,7 @@ Material:
     - _FakeSun_Color: {r: 0, g: 0, b: 0, a: 1}
     - _FarColor: {r: 0.15966535, g: 0.6787135, b: 0.8679245, a: 0}
     - _FoamDistortionSpeed: {r: 0.1, g: 0.1, b: 0, a: 0}
+    - _FoamShadow_Color: {r: 0, g: 0, b: 0, a: 0.5019608}
     - _FresnelColor: {r: 0.2647297, g: 0.116945416, b: 0.82641506, a: 1}
     - _InterSec_Color: {r: 1, g: 1, b: 1, a: 1}
     - _InterSec_Foam_Pan: {r: 1, g: 0, b: 0, a: 0}
@@ -489,7 +495,7 @@ Material:
     - _ShoreLineMaskTile: {r: 3, g: 3, b: 0, a: 0}
     - _Specular_Color: {r: 131.72768, g: 131.72768, b: 131.72768, a: 1}
     - _SurfFoam_Color: {r: 1, g: 1, b: 1, a: 1}
-    - _SurfFoam_Pan: {r: 0, g: 0.34, b: 0, a: 0}
+    - _SurfFoam_Pan: {r: 0, g: 1, b: 0, a: 0}
     - _SurfFoam_Tile: {r: 1, g: 1, b: 0, a: 0}
     - _Surface: {r: 1, g: 1, b: 1, a: 1}
     - _SurfaceDistortionSpeed: {r: 0.1, g: 0.02, b: 0, a: 0}

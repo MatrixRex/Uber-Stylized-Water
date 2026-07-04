@@ -23,16 +23,37 @@ void TwoWayNormalBlend_float(
     // 1. Determine base UV coordinates based on UseMeshUV toggle
     float2 baseUV = UseMeshUV ? MeshUV : (WorldPosition.xz * 0.1);
 
-    // 2. Calculate Panned UVs for the two samples
-    // Sample 1: Tiling = NormalTile * 0.5, Panning Speed = NormalPan * -0.5 (scaled by 0.1 * Time)
-    float2 speed1 = float2(NormalPan * -0.5, NormalPan * -0.5);
-    float2 tile1 = float2(NormalTile * 0.5, NormalTile * 0.5);
-    float2 uv1 = baseUV * tile1 + speed1 * 0.1 * Time;
+    // 2. Build the two panning UV sets. World and mesh-UV want opposite things
+    //    (ambient churn vs. directional flow), so they branch here.
+    float2 tile1 = NormalTile * 0.5;
+    float2 tile2 = NormalTile * 0.87;
+    float2 uv1, uv2;
 
-    // Sample 2: Tiling = NormalTile * 0.73, Panning Speed = NormalPan * 1.0 (scaled by 0.1 * Time)
-    float2 speed2 = float2(NormalPan, NormalPan);
-    float2 tile2 = float2(NormalTile * 0.73, NormalTile * 0.73);
-    float2 uv2 = baseUV * tile2 + speed2 * 0.1 * Time;
+    if (UseMeshUV)
+    {
+        // River: both layers travel downstream (dominant V = uv.y) but at
+        // different angles, so they cross like two overlapping wave trains
+        // instead of merging into one uniform smear. Opposite U components make
+        // them diverge; different tiling + a U mirror on layer 2 break the
+        // shared-texture look further. Net flow still clearly reads downstream.
+        // (Flip the sign of the V speeds to reverse upstream/downstream.)
+        float2 speed1 = float2( 0.35, 0.9) * NormalPan;
+        float2 speed2 = float2(-0.40, 0.7) * NormalPan;
+        uv1 = baseUV *  tile1                       + speed1 * 0.1 * Time;
+        uv2 = baseUV * (tile2 * float2(-1.0, 1.0))  + speed2 * 0.1 * Time;
+    }
+    else
+    {
+        // Open water: no net flow. Rotate layer 2's domain ~60 deg to decorrelate
+        // the shared texture, then pan it at the exact opposite apparent world
+        // velocity to layer 1 (compensating for that rotation and the tiling
+        // ratio) so the two drifts cancel and nothing reads as a flow direction.
+        const float2x2 rot2 = float2x2(0.5, -0.866, 0.866, 0.5);
+        float2 speed1 = float2(-0.5, -0.35) * NormalPan;
+        float2 speed2 = -mul(rot2, speed1) * (tile2 / tile1);
+        uv1 =           baseUV  * tile1 + speed1 * 0.1 * Time;
+        uv2 = mul(rot2, baseUV) * tile2 + speed2 * 0.1 * Time;
+    }
 
     // 3. Sample and Unpack Normals using URP/HDRP Texture2D sampling macros
     float3 n1 = UnpackNormal(SAMPLE_TEXTURE2D(NormalMap.tex, sampler_NormalMap.samplerstate, uv1));
@@ -68,8 +89,11 @@ void TwoWayNormalBlend_float(
         );
     }
 
-    // 5. Blend the two tangent-space normal vectors (linear average)
-    UnscaledNormal = lerp(finalNormal1, finalNormal2, 0.5);
+    // 5. Blend the two tangent-space normals with a whiteout/UDN blend.
+    // Summing xy and multiplying z keeps ripple amplitude (a linear average
+    // would cancel opposing layers toward flat), then normalize to a unit normal.
+    UnscaledNormal = normalize(float3(finalNormal1.xy + finalNormal2.xy,
+                                      finalNormal1.z  * finalNormal2.z));
 
     // 6. Calculate and apply interpolated normal strength
     float strength = lerp(NormalStrength, DistancelStrength, DistanceMask);
