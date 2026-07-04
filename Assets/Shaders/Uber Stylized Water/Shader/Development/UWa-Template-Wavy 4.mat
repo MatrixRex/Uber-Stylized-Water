@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: UWa-Template-Wavy 3
+  m_Name: UWa-Template-Wavy 4
   m_Shader: {fileID: -6465566751694194690, guid: 0d7de34eca869774aa7869858bcdaf6a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -411,7 +411,7 @@ Material:
     - _UnderWater_Start: 5
     - _UnderwaterLayerFade: 15
     - _Underwater_Fade: 15
-    - _UseMeshUV: 0
+    - _UseMeshUV: 1
     - _WORLDSPACEDEPTH: 1
     - _WaterDepth: 0.6
     - _Water_Depth: 0.75

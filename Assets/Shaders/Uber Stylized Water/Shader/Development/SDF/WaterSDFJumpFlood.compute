@@ -1,0 +1,149 @@
+// WaterSDFJumpFlood.compute
+// Builds a signed distance field (to the shoreline) + water depth map
+// from two top-down height renders (terrain and water surface).
+//
+// Output (RGBAFloat):
+//   R = signed distance to shoreline in world meters (+ in water, - on land)
+//   G = water depth in meters (waterHeight - terrainHeight, 0 on land)
+//   B = shore direction X (normalized SDF gradient, points away from shore / toward deeper water)
+//   A = shore direction Z
+//
+// Texture axes map to world axes: u -> world X, v -> world Z.
+// Flow *along* the shoreline = perpendicular: float2(-dir.y, dir.x).
+
+#pragma kernel BuildMask
+#pragma kernel InitSeeds
+#pragma kernel JumpFlood
+#pragma kernel Resolve
+#pragma kernel ComputeGradient
+
+Texture2D<float>    _TerrainHeight;
+Texture2D<float>    _WaterHeight;
+RWTexture2D<float>  _Mask;      // 1 = land, 0 = water
+Texture2D<float2>   _SrcSeeds;  // pixel coords of nearest boundary seed
+RWTexture2D<float2> _DstSeeds;
+RWTexture2D<float4> _Result;
+Texture2D<float4>   _ResolveSrc; // _Result from Resolve, read-only in gradient pass
+RWTexture2D<float4> _Final;
+
+int   _Resolution;
+int   _JumpSize;
+float _TexelWorldSize;   // meters per texel
+float _MaxDistance;      // clamp for texels that never found a seed
+float _NoDataHeight;     // sentinel used to clear the height RTs (e.g. -100000)
+
+// ---------------------------------------------------------------------------
+
+[numthreads(8,8,1)]
+void BuildMask (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_Resolution || id.y >= (uint)_Resolution) return;
+
+    float th = _TerrainHeight[id.xy];
+    float wh = _WaterHeight[id.xy];
+
+    bool hasWater = wh > _NoDataHeight + 1.0;
+    bool land = !hasWater || (th >= wh);
+
+    _Mask[id.xy] = land ? 1.0 : 0.0;
+}
+
+// ---------------------------------------------------------------------------
+
+[numthreads(8,8,1)]
+void InitSeeds (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_Resolution || id.y >= (uint)_Resolution) return;
+
+    float m = _Mask[id.xy];
+    bool boundary = false;
+
+    const int2 offs[4] = { int2(1,0), int2(-1,0), int2(0,1), int2(0,-1) };
+
+    [unroll]
+    for (int i = 0; i < 4; i++)
+    {
+        int2 n = clamp((int2)id.xy + offs[i], int2(0,0), int2(_Resolution-1, _Resolution-1));
+        if (_Mask[n] != m) { boundary = true; }
+    }
+
+    _DstSeeds[id.xy] = boundary ? float2(id.xy) : float2(-1, -1);
+}
+
+// ---------------------------------------------------------------------------
+
+[numthreads(8,8,1)]
+void JumpFlood (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_Resolution || id.y >= (uint)_Resolution) return;
+
+    float2 px       = float2(id.xy);
+    float2 best     = _SrcSeeds[id.xy];
+    float  bestDist = best.x < 0 ? 1e20 : distance(best, px);
+
+    for (int dy = -1; dy <= 1; dy++)
+    for (int dx = -1; dx <= 1; dx++)
+    {
+        int2 n = (int2)id.xy + int2(dx, dy) * _JumpSize;
+        if (any(n < 0) || any(n >= _Resolution)) continue;
+
+        float2 s = _SrcSeeds[n];
+        if (s.x < 0) continue;
+
+        float d = distance(s, px);
+        if (d < bestDist) { bestDist = d; best = s; }
+    }
+
+    _DstSeeds[id.xy] = best;
+}
+
+// ---------------------------------------------------------------------------
+
+[numthreads(8,8,1)]
+void Resolve (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_Resolution || id.y >= (uint)_Resolution) return;
+
+    float2 seed = _SrcSeeds[id.xy];
+    float  m    = _Mask[id.xy];
+
+    float dist = seed.x < 0
+        ? _MaxDistance
+        : distance(seed, float2(id.xy)) * _TexelWorldSize;
+
+    dist = min(dist, _MaxDistance);
+    float signedDist = m > 0.5 ? -dist : dist;
+
+    float th = _TerrainHeight[id.xy];
+    float wh = _WaterHeight[id.xy];
+    bool hasWater = wh > _NoDataHeight + 1.0;
+    float depth = hasWater ? max(0.0, wh - th) : 0.0;
+
+    _Result[id.xy] = float4(signedDist, depth, 0, 1);
+}
+
+// ---------------------------------------------------------------------------
+// Central-difference gradient of the signed distance. Because the SDF is
+// smooth, this gives a clean normalized shore direction usable as a base
+// for flow maps. Points from land toward deeper water.
+
+[numthreads(8,8,1)]
+void ComputeGradient (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_Resolution || id.y >= (uint)_Resolution) return;
+
+    int2 p = (int2)id.xy;
+    int  R = _Resolution - 1;
+
+    float dl = _ResolveSrc[int2(max(p.x - 1, 0), p.y)].r;
+    float dr = _ResolveSrc[int2(min(p.x + 1, R), p.y)].r;
+    float db = _ResolveSrc[int2(p.x, max(p.y - 1, 0))].r;
+    float dt = _ResolveSrc[int2(p.x, min(p.y + 1, R))].r;
+
+    float2 g   = float2(dr - dl, dt - db);
+    float  len = length(g);
+    float2 dir = len > 1e-5 ? g / len : float2(0, 0);
+
+    float4 s = _ResolveSrc[p];
+    _Final[p] = float4(s.r, s.g, dir.x, dir.y);
+}
