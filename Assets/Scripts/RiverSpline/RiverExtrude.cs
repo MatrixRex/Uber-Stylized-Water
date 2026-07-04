@@ -227,6 +227,15 @@ namespace RiverTools
             float3 prevWorldPos = default;
             float distanceSoFar = 0f;
 
+            float vTexelSize = m_VTexelSize;
+            if (spline.Closed)
+            {
+                float totalV = length / m_VTexelSize;
+                float roundedV = Mathf.Round(totalV);
+                if (roundedV < 1f) roundedV = 1f;
+                vTexelSize = length / roundedV;
+            }
+
             for (int i = 0; i <= steps; i++)
             {
                 float t = i / (float)steps;
@@ -244,7 +253,7 @@ namespace RiverTools
                 // Interpolate the width multiplier between the two nearest knots.
                 float widthMultiplier = EvaluateKnotWidthMultiplier(spline, t, knotCount);
                 float width = Mathf.Max(0f, m_BaseWidth * widthMultiplier);
-                float v = distanceSoFar / m_VTexelSize;
+                float v = distanceSoFar / vTexelSize;
 
                 for (int c = 0; c < cols; c++)
                 {
