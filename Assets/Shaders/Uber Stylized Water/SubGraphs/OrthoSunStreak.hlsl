@@ -44,31 +44,39 @@ void FakeSunSpec_float(
     }
     
     // 2. Virtual View (Applied FIRST)
-    // Orthographic camera view direction calculation (with virtual camera projection)
-    float viewDirY = OrthoViewDir.y;
-    if (abs(viewDirY) < 0.001) viewDirY = 0.001 * (viewDirY >= 0 ? 1 : -1);
+    float3 rawView;
+    if (unity_OrthoParams.w > 0.5)
+    {
+        // Orthographic camera view direction calculation (with virtual camera projection)
+        float viewDirY = OrthoViewDir.y;
+        if (abs(viewDirY) < 0.001) viewDirY = 0.001 * (viewDirY >= 0 ? 1 : -1);
+        
+        float t = (CamPos.y - WorldPos.y) / viewDirY;
+        float3 viewCenter = CamPos - OrthoViewDir * t;
+        
+        // Scale the virtual distance with orthographic camera size for consistency when zooming
+        float orthoSize = unity_OrthoParams.y;
+        float virtualDistance = max(50.0, orthoSize * 2.0);
+        
+        float3 virtualCamPos = viewCenter + OrthoViewDir * virtualDistance;
+        rawView = normalize(virtualCamPos - WorldPos);
+    }
+    else
+    {
+        // Perspective camera: use actual view vector
+        rawView = normalize(CamPos - WorldPos);
+    }
     
-    float t = (CamPos.y - WorldPos.y) / viewDirY;
-    float3 viewCenter = CamPos - OrthoViewDir * t;
+    // 3. Coordinate System (based on reflection vector R to match Phong and be perfectly circular)
+    float3 R = float3(-sunDir.x, sunDir.y, -sunDir.z);
+    float3 crossVec = cross(float3(0, 1, 0), R);
+    if (length(crossVec) < 0.001) crossVec = float3(1, 0, 0);
+    float3 tangent = normalize(crossVec);
+    float3 bitangent = cross(R, tangent);
     
-    // Scale the virtual distance with orthographic camera size for consistency when zooming
-    float orthoSize = unity_OrthoParams.y;
-    float virtualDistance = max(50.0, orthoSize * 2.0);
-    
-    float3 virtualCamPos = viewCenter + OrthoViewDir * virtualDistance;
-    float3 rawView = normalize(virtualCamPos - WorldPos);
-    
-    // Undistorted Half-Vector
-    float3 H = normalize(sunDir + rawView);
-    
-    // 3. Coordinate System
-    float3 flatSun = normalize(float3(sunDir.x, 0, sunDir.z));
-    float3 tangent = normalize(cross(float3(0,1,0), flatSun)); 
-    float3 bitangent = flatSun; 
-    
-    // 4. Project
-    float dWidth = dot(H, tangent);
-    float dLength = dot(H, bitangent);
+    // 4. Project view vector relative to R
+    float dWidth = dot(rawView, tangent);
+    float dLength = dot(rawView, bitangent);
     
     // 5. Artistic Stretch
     float grazing = saturate(abs(dot(normalize(OrthoViewDir), float3(0,1,0))));
@@ -94,6 +102,11 @@ void FakeSunSpec_float(
     float rawGradient = exp(-specDist / max(1e-8, sizeSquared));
     
     // 6.5 Facing-Sun Mask
+    float3 flatSun = float3(sunDir.x, 0, sunDir.z);
+    float lenSunXZ = length(flatSun);
+    if (lenSunXZ > 0.001) flatSun = flatSun / lenSunXZ;
+    else flatSun = float3(0, 0, 1);
+    
     float3 flatView = float3(OrthoViewDir.x, 0.0, OrthoViewDir.z);
     float lenXZ = length(flatView.xz);
     if (lenXZ > 0.001) flatView = flatView / lenXZ;
@@ -155,30 +168,39 @@ void FakeSunSpec_half(
     }
     
     // 2. Virtual View (Applied FIRST)
-    // Orthographic camera view direction calculation (with virtual camera projection)
-    half viewDirY = OrthoViewDir.y;
-    if (abs(viewDirY) < 0.001h) viewDirY = 0.001h * (viewDirY >= 0.0h ? 1.0h : -1.0h);
+    half3 rawView;
+    if (unity_OrthoParams.w > 0.5h)
+    {
+        // Orthographic camera view direction calculation (with virtual camera projection)
+        half viewDirY = OrthoViewDir.y;
+        if (abs(viewDirY) < 0.001h) viewDirY = 0.001h * (viewDirY >= 0.0h ? 1.0h : -1.0h);
+        
+        half t = (CamPos.y - WorldPos.y) / viewDirY;
+        half3 viewCenter = CamPos - OrthoViewDir * t;
+        
+        // Scale the virtual distance with orthographic camera size for consistency when zooming
+        half orthoSize = (half)unity_OrthoParams.y;
+        half virtualDistance = max(50.0h, orthoSize * 2.0h);
+        
+        half3 virtualCamPos = viewCenter + OrthoViewDir * virtualDistance;
+        rawView = normalize(virtualCamPos - WorldPos);
+    }
+    else
+    {
+        // Perspective camera: use actual view vector
+        rawView = normalize(CamPos - WorldPos);
+    }
     
-    half t = (CamPos.y - WorldPos.y) / viewDirY;
-    half3 viewCenter = CamPos - OrthoViewDir * t;
+    // Coordinate System (based on reflection vector R to match Phong and be perfectly circular)
+    half3 R = half3(-sunDir.x, sunDir.y, -sunDir.z);
+    half3 crossVec = cross(half3(0.0h, 1.0h, 0.0h), R);
+    if (length(crossVec) < 0.001h) crossVec = half3(1.0h, 0.0h, 0.0h);
+    half3 tangent = normalize(crossVec);
+    half3 bitangent = cross(R, tangent);
     
-    // Scale the virtual distance with orthographic camera size for consistency when zooming
-    half orthoSize = (half)unity_OrthoParams.y;
-    half virtualDistance = max(50.0h, orthoSize * 2.0h);
-    
-    half3 virtualCamPos = viewCenter + OrthoViewDir * virtualDistance;
-    half3 rawView = normalize(virtualCamPos - WorldPos);
-    
-    // Undistorted Half-Vector
-    half3 H = normalize(sunDir + rawView);
-    
-    // Coordinate System
-    half3 flatSun = normalize(half3(sunDir.x, 0.0h, sunDir.z));
-    half3 tangent = normalize(cross(half3(0,1,0), flatSun));
-    half3 bitangent = flatSun; 
-    
-    half dWidth = dot(H, tangent);
-    half dLength = dot(H, bitangent);
+    // Project view vector relative to R
+    half dWidth = dot(rawView, tangent);
+    half dLength = dot(rawView, bitangent);
     
     half grazing = saturate(abs(dot(normalize(OrthoViewDir), half3(0,1,0))));
     half horizonFactor = 1.0h - grazing;
@@ -201,6 +223,11 @@ void FakeSunSpec_half(
     half rawGradient = exp(-specDist / max(1e-8h, sizeSquared));
     
     // Facing-Sun Mask
+    half3 flatSun = half3(sunDir.x, 0.0h, sunDir.z);
+    half lenSunXZ = length(flatSun);
+    if (lenSunXZ > 0.001h) flatSun = flatSun / lenSunXZ;
+    else flatSun = half3(0.0h, 0.0h, 1.0h);
+    
     half3 flatView = half3(OrthoViewDir.x, 0.0h, OrthoViewDir.z);
     half lenXZ = length(flatView.xz);
     if (lenXZ > 0.001h) flatView = flatView / lenXZ;
