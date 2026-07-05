@@ -10,7 +10,6 @@ void FakeSunSpec_float(
     float AutoStretch, 
     float Hardness, 
     float Distortion, 
-    float OrthoCamMode, 
     out float Out)
 {
     // Early exit if size is close to zero
@@ -45,28 +44,19 @@ void FakeSunSpec_float(
     }
     
     // 2. Virtual View (Applied FIRST)
-    float3 rawView;
-    if (OrthoCamMode > 0.5)
-    {
-        // Orthographic camera view direction calculation (with virtual camera projection)
-        float viewDirY = OrthoViewDir.y;
-        if (abs(viewDirY) < 0.001) viewDirY = 0.001 * (viewDirY >= 0 ? 1 : -1);
-        
-        float t = (CamPos.y - WorldPos.y) / viewDirY;
-        float3 viewCenter = CamPos - OrthoViewDir * t;
-        
-        // Scale the virtual distance with orthographic camera size for consistency when zooming
-        float orthoSize = unity_OrthoParams.y;
-        float virtualDistance = max(50.0, orthoSize * 2.0);
-        
-        float3 virtualCamPos = viewCenter + OrthoViewDir * virtualDistance;
-        rawView = normalize(virtualCamPos - WorldPos);
-    }
-    else
-    {
-        // Perspective camera
-        rawView = normalize(CamPos - WorldPos);
-    }
+    // Orthographic camera view direction calculation (with virtual camera projection)
+    float viewDirY = OrthoViewDir.y;
+    if (abs(viewDirY) < 0.001) viewDirY = 0.001 * (viewDirY >= 0 ? 1 : -1);
+    
+    float t = (CamPos.y - WorldPos.y) / viewDirY;
+    float3 viewCenter = CamPos - OrthoViewDir * t;
+    
+    // Scale the virtual distance with orthographic camera size for consistency when zooming
+    float orthoSize = unity_OrthoParams.y;
+    float virtualDistance = max(50.0, orthoSize * 2.0);
+    
+    float3 virtualCamPos = viewCenter + OrthoViewDir * virtualDistance;
+    float3 rawView = normalize(virtualCamPos - WorldPos);
     
     // Undistorted Half-Vector
     float3 H = normalize(sunDir + rawView);
@@ -131,7 +121,6 @@ void FakeSunSpec_half(
     half AutoStretch, 
     half Hardness, 
     half Distortion, 
-    half OrthoCamMode, 
     out half Out)
 {
     // Early exit if size is close to zero
@@ -166,28 +155,19 @@ void FakeSunSpec_half(
     }
     
     // 2. Virtual View (Applied FIRST)
-    half3 rawView;
-    if (OrthoCamMode > 0.5h)
-    {
-        // Orthographic camera view direction calculation (with virtual camera projection)
-        half viewDirY = OrthoViewDir.y;
-        if (abs(viewDirY) < 0.001h) viewDirY = 0.001h * (viewDirY >= 0.0h ? 1.0h : -1.0h);
-        
-        half t = (CamPos.y - WorldPos.y) / viewDirY;
-        half3 viewCenter = CamPos - OrthoViewDir * t;
-        
-        // Scale the virtual distance with orthographic camera size for consistency when zooming
-        half orthoSize = (half)unity_OrthoParams.y;
-        half virtualDistance = max(50.0h, orthoSize * 2.0h);
-        
-        half3 virtualCamPos = viewCenter + OrthoViewDir * virtualDistance;
-        rawView = normalize(virtualCamPos - WorldPos);
-    }
-    else
-    {
-        // Perspective camera
-        rawView = normalize(CamPos - WorldPos);
-    }
+    // Orthographic camera view direction calculation (with virtual camera projection)
+    half viewDirY = OrthoViewDir.y;
+    if (abs(viewDirY) < 0.001h) viewDirY = 0.001h * (viewDirY >= 0.0h ? 1.0h : -1.0h);
+    
+    half t = (CamPos.y - WorldPos.y) / viewDirY;
+    half3 viewCenter = CamPos - OrthoViewDir * t;
+    
+    // Scale the virtual distance with orthographic camera size for consistency when zooming
+    half orthoSize = (half)unity_OrthoParams.y;
+    half virtualDistance = max(50.0h, orthoSize * 2.0h);
+    
+    half3 virtualCamPos = viewCenter + OrthoViewDir * virtualDistance;
+    half3 rawView = normalize(virtualCamPos - WorldPos);
     
     // Undistorted Half-Vector
     half3 H = normalize(sunDir + rawView);
