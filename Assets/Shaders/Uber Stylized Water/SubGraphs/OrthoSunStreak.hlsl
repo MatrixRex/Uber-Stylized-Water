@@ -13,6 +13,13 @@ void FakeSunSpec_float(
     float OrthoCamMode, 
     out float Out)
 {
+    // Early exit if size is close to zero
+    if (SunSize <= 0.00001)
+    {
+        Out = 0.0;
+        return;
+    }
+
     float pi = 3.14159265359;
     
     // 1. Sun Direction
@@ -37,7 +44,7 @@ void FakeSunSpec_float(
         sunDir = normalize(sunDir);
     }
     
-    // 2. Virtual View & Distortion (Applied FIRST)
+    // 2. Virtual View (Applied FIRST)
     float3 rawView;
     if (OrthoCamMode > 0.5)
     {
@@ -61,9 +68,8 @@ void FakeSunSpec_float(
         rawView = normalize(CamPos - WorldPos);
     }
     
-    // XZ Only Distortion
-    float3 wavePerturb = float3(WorldNormal.x, 0, WorldNormal.z) * Distortion * 5.0;
-    float3 H = normalize(sunDir + rawView + wavePerturb);
+    // Undistorted Half-Vector
+    float3 H = normalize(sunDir + rawView);
     
     // 3. Coordinate System
     float3 flatSun = normalize(float3(sunDir.x, 0, sunDir.z));
@@ -80,17 +86,22 @@ void FakeSunSpec_float(
     
     float stretchMult = 1.0 + (AutoStretch * 100.0 * (horizonFactor * horizonFactor));
     
-    // 6. Shape & Sizing (SENSITIVITY FIX)
-    float widthFactor = 1.0 + Anisotropy;
-    float finalLength = dLength / stretchMult;
+    // 6. Shape, Sizing & Distortion (UNIFORM DISTORTION FIX)
+    float3 wavePerturb = float3(WorldNormal.x, 0, WorldNormal.z) * Distortion * 5.0;
+    float distortWidth = dot(wavePerturb, tangent);
+    float distortLength = dot(wavePerturb, bitangent);
     
-    float specDist = (dWidth * dWidth * widthFactor) + (finalLength * finalLength);
+    float finalWidth = dWidth + distortWidth;
+    float finalLength = (dLength / stretchMult) + distortLength;
+    
+    float widthFactor = 1.0 + Anisotropy;
+    float specDist = (finalWidth * finalWidth * widthFactor) + (finalLength * finalLength);
     
     // NEW SIZING LOGIC:
     // We square the SunSize to treat it as a proper Radius.
     // This gives you smooth control from 0.0 to 1.0+.
     float sizeSquared = SunSize * SunSize;
-    float rawGradient = exp(-specDist / (sizeSquared + 0.0001));
+    float rawGradient = exp(-specDist / max(1e-8, sizeSquared));
     
     // 6.5 Facing-Sun Mask
     float3 flatView = float3(OrthoViewDir.x, 0.0, OrthoViewDir.z);
@@ -123,6 +134,13 @@ void FakeSunSpec_half(
     half OrthoCamMode, 
     out half Out)
 {
+    // Early exit if size is close to zero
+    if (SunSize <= 0.00001h)
+    {
+        Out = 0.0h;
+        return;
+    }
+
     half pi = 3.14159265359h;
     
     // 1. Sun Direction
@@ -147,7 +165,7 @@ void FakeSunSpec_half(
         sunDir = normalize(sunDir);
     }
     
-    // 2. Virtual View & Distortion (Applied FIRST)
+    // 2. Virtual View (Applied FIRST)
     half3 rawView;
     if (OrthoCamMode > 0.5h)
     {
@@ -171,11 +189,11 @@ void FakeSunSpec_half(
         rawView = normalize(CamPos - WorldPos);
     }
     
-    // Distortion
-    half3 wavePerturb = half3(WorldNormal.x, 0, WorldNormal.z) * Distortion * 5.0h;
-    half3 H = normalize(sunDir + rawView + wavePerturb);
+    // Undistorted Half-Vector
+    half3 H = normalize(sunDir + rawView);
     
-    half3 flatSun = normalize(half3(sunDir.x, 0, sunDir.z));
+    // Coordinate System
+    half3 flatSun = normalize(half3(sunDir.x, 0.0h, sunDir.z));
     half3 tangent = normalize(cross(half3(0,1,0), flatSun));
     half3 bitangent = flatSun; 
     
@@ -187,14 +205,20 @@ void FakeSunSpec_half(
     
     half stretchMult = 1.0h + (AutoStretch * 100.0h * (horizonFactor * horizonFactor));
     
-    half widthFactor = 1.0h + Anisotropy;
-    half finalLength = dLength / stretchMult;
+    // Uniform Distortion Fix
+    half3 wavePerturb = half3(WorldNormal.x, 0, WorldNormal.z) * Distortion * 5.0h;
+    half distortWidth = dot(wavePerturb, tangent);
+    half distortLength = dot(wavePerturb, bitangent);
     
-    half specDist = (dWidth * dWidth * widthFactor) + (finalLength * finalLength);
+    half finalWidth = dWidth + distortWidth;
+    half finalLength = (dLength / stretchMult) + distortLength;
+    
+    half widthFactor = 1.0h + Anisotropy;
+    half specDist = (finalWidth * finalWidth * widthFactor) + (finalLength * finalLength);
     
     // Sensitivity Fix (Half Precision)
     half sizeSquared = SunSize * SunSize;
-    half rawGradient = exp(-specDist / (sizeSquared + 0.0001h));
+    half rawGradient = exp(-specDist / max(1e-8h, sizeSquared));
     
     // Facing-Sun Mask
     half3 flatView = half3(OrthoViewDir.x, 0.0h, OrthoViewDir.z);
