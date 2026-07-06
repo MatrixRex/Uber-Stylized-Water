@@ -83,6 +83,9 @@
         },
         {
             "m_Id": "4f246425cb234af6946dec7f837e4aaa"
+        },
+        {
+            "m_Id": "f46e418ce87e405d9bb528b18a1fdab0"
         }
     ],
     "m_GroupDatas": [],
@@ -282,6 +285,20 @@
                     "m_Id": "713aad3c0b904ec49e84e13119f9e531"
                 },
                 "m_SlotId": 18
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "f46e418ce87e405d9bb528b18a1fdab0"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "713aad3c0b904ec49e84e13119f9e531"
+                },
+                "m_SlotId": 24
             }
         },
         {
@@ -1242,7 +1259,7 @@
     "m_Group": {
         "m_Id": ""
     },
-    "m_Name": "FakeSunSpec (Custom Function)",
+    "m_Name": "FakeSunSpecCurved (Custom Function)",
     "m_DrawState": {
         "m_Expanded": true,
         "m_Position": {
@@ -1255,10 +1272,16 @@
     },
     "m_Slots": [
         {
+            "m_Id": "ea77cec82af64b139dd368fc14356d97"
+        },
+        {
             "m_Id": "3a176907f90c46cea288045a8bc27529"
         },
         {
             "m_Id": "0177b94be3fa46f988a68fb3df0d9774"
+        },
+        {
+            "m_Id": "c7996afa47804b94ad2a9e63eb61195b"
         },
         {
             "m_Id": "48ac1eddf3cc4028989e6813e161a96e"
@@ -1286,9 +1309,6 @@
         },
         {
             "m_Id": "38045d9279de452c887b01b2f0fec612"
-        },
-        {
-            "m_Id": "ea77cec82af64b139dd368fc14356d97"
         }
     ],
     "synonyms": [
@@ -1303,7 +1323,7 @@
         "m_SerializableColors": []
     },
     "m_SourceType": 0,
-    "m_FunctionName": "FakeSunSpec",
+    "m_FunctionName": "FakeSunSpecCurved",
     "m_FunctionSource": "fde9cb22e99b1d44681e96591ef7dd17",
     "m_FunctionSourceUsePragmas": true,
     "m_FunctionBody": "float pi = 3.14159265359;\nfloat rad = AngleDeg * (pi / 180.0);\n    \n    // 1. Setup direction vectors based on Angle\nfloat2 dir = float2(cos(rad), sin(rad));\nfloat2 perpDir = float2(-dir.y, dir.x);\n    \n    // 2. Calculate Parallax Offset\n    // We use the ViewDir to shift the \"origin\" of our calculation.\n    // This makes the specular move as the camera rotates or changes angle.\nfloat2 viewOffset = ViewDir.xz * Parallax;\n    \n    // 3. Combine World Position, Normal Distortion, and View Parallax\nfloat2 finalPos = WorldPos.xz + (WorldNormal.xz * Distortion) + viewOffset;\n    \n    // 4. Project onto our Angle axes\nfloat dParallel = dot(finalPos, dir);\nfloat dPerp = dot(finalPos, perpDir);\n    \n    // 5. Create the Oval Shape\n    // Dividing by Width/Length here keeps the size stable\nfloat horizontal = dPerp / (Width + 0.0001);\nfloat vertical = dParallel / (Length + 0.0001);\n    \n    // Calculate elliptical distance\nfloat ovalDist = sqrt(horizontal * horizontal + vertical * vertical);\n    \n    // 6. Hardness and Masking\nfloat smoothEdge = (1.0 - Hardness);\n    // Use 1.0 as the boundary for the normalized oval\nOut = 1.0 - smoothstep(1.0 - smoothEdge, 1.0, ovalDist);\nOut = saturate(Out);"
@@ -1610,6 +1630,29 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
+    "m_ObjectId": "8ea93665544e41f489ec9d1004670fa2",
+    "m_Id": 0,
+    "m_DisplayName": "Out",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
     "m_ObjectId": "90e51674e21b4d77ade311d4a7fdc655",
     "m_Group": {
@@ -1742,9 +1785,9 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": 500.7999572753906,
-            "y": -93.5999984741211,
-            "width": 86.40005493164063,
+            "x": 535.199951171875,
+            "y": -73.59999084472656,
+            "width": 86.39996337890625,
             "height": 76.79999542236328
         }
     },
@@ -1884,6 +1927,29 @@
     "m_Property": {
         "m_Id": "d8aacb6d20254061989ddb5d5a3a0d49"
     }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
+    "m_ObjectId": "c7996afa47804b94ad2a9e63eb61195b",
+    "m_Id": 24,
+    "m_DisplayName": "GeoNormal",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "GeoNormal",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_Labels": []
 }
 
 {
@@ -2103,6 +2169,42 @@
     "m_Value": 0.0,
     "m_DefaultValue": 0.0,
     "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.NormalVectorNode",
+    "m_ObjectId": "f46e418ce87e405d9bb528b18a1fdab0",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "Normal Vector",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -172.0000457763672,
+            "y": 528.0000610351563,
+            "width": 206.40000915527345,
+            "height": 128.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "8ea93665544e41f489ec9d1004670fa2"
+        }
+    ],
+    "synonyms": [
+        "surface direction"
+    ],
+    "m_Precision": 0,
+    "m_PreviewExpanded": false,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 2,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_Space": 2
 }
 
 {
