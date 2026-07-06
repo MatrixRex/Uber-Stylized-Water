@@ -1,4 +1,4 @@
-void FakeSunSpec_float(
+void StylizedSunSpec_float(
     float3 WorldPos, 
     float3 WorldNormal, 
     float3 CamPos, 
@@ -122,7 +122,7 @@ void FakeSunSpec_float(
     Out = smoothstep(0.01, 0.01 + smoothness, rawGradient) * facingMask;
 }
 
-void FakeSunSpec_half(
+void StylizedSunSpec_half(
     half3 WorldPos, 
     half3 WorldNormal, 
     half3 CamPos, 
@@ -242,7 +242,7 @@ void FakeSunSpec_half(
     Out = smoothstep(0.01h, 0.01h + smoothness, rawGradient) * facingMask;
 }
 
-void FakeSunSpecCurved_float(
+void StylizedSunSpecCurved_float(
     float3 WorldPos, 
     float3 WorldNormal, 
     float3 GeoNormal, 
@@ -370,7 +370,7 @@ void FakeSunSpecCurved_float(
     Out = smoothstep(0.01, 0.01 + smoothness, rawGradient) * facingMask;
 }
 
-void FakeSunSpecCurved_half(
+void StylizedSunSpecCurved_half(
     half3 WorldPos, 
     half3 WorldNormal, 
     half3 GeoNormal, 
