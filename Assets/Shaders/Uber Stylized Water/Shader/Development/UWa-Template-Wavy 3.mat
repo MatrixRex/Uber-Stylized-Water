@@ -391,11 +391,14 @@ Material:
     - _ShoreLine_Cutoff: 0.27
     - _Smoothness: 1
     - _Specular_AdditionalMultiplier: 1
-    - _Specular_Hardness: 0
+    - _Specular_Distortion: 1
+    - _Specular_Hardness: 1
     - _Specular_Size: 0.7
+    - _Specular_Size_Additional: 1
+    - _Specular_Size_Sun: 5
     - _Specular_Spread: 0.4
     - _Specular_Strength: 50
-    - _Specular_SunMultiplier: 0.1
+    - _Specular_SunMultiplier: 1
     - _SrcBlend: 5
     - _SufFoam_Subtractor: 0
     - _SunShadowOcclusion: 0
