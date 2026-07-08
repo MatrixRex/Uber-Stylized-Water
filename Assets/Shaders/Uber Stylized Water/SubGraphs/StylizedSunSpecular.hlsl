@@ -264,3 +264,62 @@ void StylizedSunSpecCurved_half(
     half smoothness = max(0.001h, 1.0h - Hardness);
     Out = smoothstep(0.01h, 0.01h + smoothness, rawGradient) * facingMask;
 }
+
+// Overloaded versions that also output the Sun's Color
+void StylizedSunSpecCurved_float(
+    float3 WorldPos, 
+    float3 WorldNormal, 
+    float3 GeoNormal, 
+    float3 CamPos, 
+    float3 OrthoViewDir, 
+    float SunAzimuth, 
+    float SunAltitude, 
+    float SunSize, 
+    float Anisotropy, 
+    float AutoStretch, 
+    float Hardness, 
+    float Distortion, 
+    out float Out,
+    out float3 SunColor)
+{
+    StylizedSunSpecCurved_float(
+        WorldPos, WorldNormal, GeoNormal, CamPos, OrthoViewDir, 
+        SunAzimuth, SunAltitude, SunSize, Anisotropy, AutoStretch, 
+        Hardness, Distortion, Out);
+
+    #if defined(SHADERGRAPH_PREVIEW)
+        SunColor = float3(1.0, 1.0, 1.0);
+    #else
+        Light mainLight = GetMainLight();
+        SunColor = mainLight.color;
+    #endif
+}
+
+void StylizedSunSpecCurved_half(
+    half3 WorldPos, 
+    half3 WorldNormal, 
+    half3 GeoNormal, 
+    half3 CamPos, 
+    half3 OrthoViewDir, 
+    half SunAzimuth, 
+    half SunAltitude, 
+    half SunSize, 
+    half Anisotropy, 
+    half AutoStretch, 
+    half Hardness, 
+    half Distortion, 
+    out half Out,
+    out half3 SunColor)
+{
+    StylizedSunSpecCurved_half(
+        WorldPos, WorldNormal, GeoNormal, CamPos, OrthoViewDir, 
+        SunAzimuth, SunAltitude, SunSize, Anisotropy, AutoStretch, 
+        Hardness, Distortion, Out);
+
+    #if defined(SHADERGRAPH_PREVIEW)
+        SunColor = half3(1.0h, 1.0h, 1.0h);
+    #else
+        Light mainLight = GetMainLight();
+        SunColor = (half3)mainLight.color;
+    #endif
+}

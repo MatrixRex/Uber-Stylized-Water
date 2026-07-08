@@ -86,6 +86,9 @@
         },
         {
             "m_Id": "fa29df9cbf384e3a8a59431295846e74"
+        },
+        {
+            "m_Id": "1c027adbb3a04f3e9929ea6c0191fc13"
         }
     ],
     "m_GroupDatas": [],
@@ -117,6 +120,20 @@
                     "m_Id": "ec1a4709efa14173836e4f2787279030"
                 },
                 "m_SlotId": 0
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "1c027adbb3a04f3e9929ea6c0191fc13"
+                },
+                "m_SlotId": 2
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "754f8fffe7fc48f8a1478f3f820c23a7"
+                },
+                "m_SlotId": 1
             }
         },
         {
@@ -282,7 +299,21 @@
             },
             "m_InputSlot": {
                 "m_Node": {
-                    "m_Id": "754f8fffe7fc48f8a1478f3f820c23a7"
+                    "m_Id": "1c027adbb3a04f3e9929ea6c0191fc13"
+                },
+                "m_SlotId": 0
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "e3c32b4e8ac24a0689c8f8cf762ba1ff"
+                },
+                "m_SlotId": 25
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "1c027adbb3a04f3e9929ea6c0191fc13"
                 },
                 "m_SlotId": 1
             }
@@ -474,6 +505,49 @@
     },
     "m_Property": {
         "m_Id": "49b15e96c20847368488b56d67057939"
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.MultiplyNode",
+    "m_ObjectId": "1c027adbb3a04f3e9929ea6c0191fc13",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "Multiply",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": 550.4000244140625,
+            "y": -199.1999969482422,
+            "width": 130.39996337890626,
+            "height": 117.59999084472656
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "f00aefc269134c91b1849aa03706e243"
+        },
+        {
+            "m_Id": "d9108f9fe18e409ca03d1bff693cd4df"
+        },
+        {
+            "m_Id": "c2d3ec6d835f47f9825e794bc06d0669"
+        }
+    ],
+    "synonyms": [
+        "multiplication",
+        "times",
+        "x"
+    ],
+    "m_Precision": 0,
+    "m_PreviewExpanded": false,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
     }
 }
 
@@ -1352,15 +1426,15 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": 588.0,
-            "y": -192.80001831054688,
-            "width": 115.199951171875,
-            "height": 76.79999542236328
+            "x": 741.5999755859375,
+            "y": -191.1999969482422,
+            "width": 100.800048828125,
+            "height": 76.80000305175781
         }
     },
     "m_Slots": [
         {
-            "m_Id": "e53f0bd6275c4011a793597fdbd43276"
+            "m_Id": "ddb793fa475a4b94973b46ff9bd480e9"
         }
     ],
     "synonyms": [],
@@ -1684,6 +1758,54 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.DynamicValueMaterialSlot",
+    "m_ObjectId": "c2d3ec6d835f47f9825e794bc06d0669",
+    "m_Id": 2,
+    "m_DisplayName": "Out",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "e00": 0.0,
+        "e01": 0.0,
+        "e02": 0.0,
+        "e03": 0.0,
+        "e10": 0.0,
+        "e11": 0.0,
+        "e12": 0.0,
+        "e13": 0.0,
+        "e20": 0.0,
+        "e21": 0.0,
+        "e22": 0.0,
+        "e23": 0.0,
+        "e30": 0.0,
+        "e31": 0.0,
+        "e32": 0.0,
+        "e33": 0.0
+    },
+    "m_DefaultValue": {
+        "e00": 1.0,
+        "e01": 0.0,
+        "e02": 0.0,
+        "e03": 0.0,
+        "e10": 0.0,
+        "e11": 1.0,
+        "e12": 0.0,
+        "e13": 0.0,
+        "e20": 0.0,
+        "e21": 0.0,
+        "e22": 1.0,
+        "e23": 0.0,
+        "e30": 0.0,
+        "e31": 0.0,
+        "e32": 0.0,
+        "e33": 1.0
+    }
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
     "m_ObjectId": "c609601f83144236b8142801f9198793",
     "m_Group": {
@@ -1796,6 +1918,29 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
+    "m_ObjectId": "d2f7ae4c59b44050a99670e43dbd3ed7",
+    "m_Id": 25,
+    "m_DisplayName": "SunColor",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "SunColor",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.CameraNode",
     "m_ObjectId": "d528e272479848c9ad0cde79f2492a0d",
     "m_Group": {
@@ -1858,6 +2003,54 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.DynamicValueMaterialSlot",
+    "m_ObjectId": "d9108f9fe18e409ca03d1bff693cd4df",
+    "m_Id": 1,
+    "m_DisplayName": "B",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "B",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "e00": 2.0,
+        "e01": 2.0,
+        "e02": 2.0,
+        "e03": 2.0,
+        "e10": 2.0,
+        "e11": 2.0,
+        "e12": 2.0,
+        "e13": 2.0,
+        "e20": 2.0,
+        "e21": 2.0,
+        "e22": 2.0,
+        "e23": 2.0,
+        "e30": 2.0,
+        "e31": 2.0,
+        "e32": 2.0,
+        "e33": 2.0
+    },
+    "m_DefaultValue": {
+        "e00": 1.0,
+        "e01": 0.0,
+        "e02": 0.0,
+        "e03": 0.0,
+        "e10": 0.0,
+        "e11": 1.0,
+        "e12": 0.0,
+        "e13": 0.0,
+        "e20": 0.0,
+        "e21": 0.0,
+        "e22": 1.0,
+        "e23": 0.0,
+        "e30": 0.0,
+        "e31": 0.0,
+        "e32": 0.0,
+        "e33": 1.0
+    }
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "dbd4cefca2e94499a19e8c0fe0491529",
     "m_Id": 16,
@@ -1882,6 +2075,29 @@
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Position",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
+    "m_ObjectId": "ddb793fa475a4b94973b46ff9bd480e9",
+    "m_Id": 1,
+    "m_DisplayName": "Specular",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Specular",
     "m_StageCapability": 3,
     "m_Value": {
         "x": 0.0,
@@ -1981,9 +2197,6 @@
     },
     "m_Slots": [
         {
-            "m_Id": "5c2bfb700d5a44ec886c4741c1db7f8f"
-        },
-        {
             "m_Id": "5a51a8530b884360a910fbf4a1fa8e19"
         },
         {
@@ -2018,6 +2231,12 @@
         },
         {
             "m_Id": "256f616314694d34b2b25e4e4e2807fd"
+        },
+        {
+            "m_Id": "5c2bfb700d5a44ec886c4741c1db7f8f"
+        },
+        {
+            "m_Id": "d2f7ae4c59b44050a99670e43dbd3ed7"
         }
     ],
     "synonyms": [
@@ -2036,21 +2255,6 @@
     "m_FunctionSource": "fde9cb22e99b1d44681e96591ef7dd17",
     "m_FunctionSourceUsePragmas": true,
     "m_FunctionBody": "float pi = 3.14159265359;\nfloat rad = AngleDeg * (pi / 180.0);\n    \n    // 1. Setup direction vectors based on Angle\nfloat2 dir = float2(cos(rad), sin(rad));\nfloat2 perpDir = float2(-dir.y, dir.x);\n    \n    // 2. Calculate Parallax Offset\n    // We use the ViewDir to shift the \"origin\" of our calculation.\n    // This makes the specular move as the camera rotates or changes angle.\nfloat2 viewOffset = ViewDir.xz * Parallax;\n    \n    // 3. Combine World Position, Normal Distortion, and View Parallax\nfloat2 finalPos = WorldPos.xz + (WorldNormal.xz * Distortion) + viewOffset;\n    \n    // 4. Project onto our Angle axes\nfloat dParallel = dot(finalPos, dir);\nfloat dPerp = dot(finalPos, perpDir);\n    \n    // 5. Create the Oval Shape\n    // Dividing by Width/Length here keeps the size stable\nfloat horizontal = dPerp / (Width + 0.0001);\nfloat vertical = dParallel / (Length + 0.0001);\n    \n    // Calculate elliptical distance\nfloat ovalDist = sqrt(horizontal * horizontal + vertical * vertical);\n    \n    // 6. Hardness and Masking\nfloat smoothEdge = (1.0 - Hardness);\n    // Use 1.0 as the boundary for the normalized oval\nOut = 1.0 - smoothstep(1.0 - smoothEdge, 1.0, ovalDist);\nOut = saturate(Out);"
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
-    "m_ObjectId": "e53f0bd6275c4011a793597fdbd43276",
-    "m_Id": 1,
-    "m_DisplayName": "Specular",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "Specular",
-    "m_StageCapability": 3,
-    "m_Value": 0.0,
-    "m_DefaultValue": 0.0,
-    "m_Labels": []
 }
 
 {
@@ -2142,6 +2346,54 @@
     "m_RangeValues": {
         "x": 0.0,
         "y": 1.0
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.DynamicValueMaterialSlot",
+    "m_ObjectId": "f00aefc269134c91b1849aa03706e243",
+    "m_Id": 0,
+    "m_DisplayName": "A",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "A",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "e00": 0.0,
+        "e01": 0.0,
+        "e02": 0.0,
+        "e03": 0.0,
+        "e10": 0.0,
+        "e11": 0.0,
+        "e12": 0.0,
+        "e13": 0.0,
+        "e20": 0.0,
+        "e21": 0.0,
+        "e22": 0.0,
+        "e23": 0.0,
+        "e30": 0.0,
+        "e31": 0.0,
+        "e32": 0.0,
+        "e33": 0.0
+    },
+    "m_DefaultValue": {
+        "e00": 1.0,
+        "e01": 0.0,
+        "e02": 0.0,
+        "e03": 0.0,
+        "e10": 0.0,
+        "e11": 1.0,
+        "e12": 0.0,
+        "e13": 0.0,
+        "e20": 0.0,
+        "e21": 0.0,
+        "e22": 1.0,
+        "e23": 0.0,
+        "e30": 0.0,
+        "e31": 0.0,
+        "e32": 0.0,
+        "e33": 1.0
     }
 }
 
