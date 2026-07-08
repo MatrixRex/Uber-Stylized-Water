@@ -77,9 +77,7 @@ void WaterDepths_float(float3 SurfaceWorldPos, float3 GroundWorldPos,
 {
     float3 camForward = -UNITY_MATRIX_V[2].xyz;
     ViewDepth = distance(SurfaceWorldPos, GroundWorldPos);
-    float3 viewDir = GetWorldSpaceNormalizeViewDir(SurfaceWorldPos);
-    float depth_diff = dot(GroundWorldPos - SurfaceWorldPos, camForward);
-    VerticalDepth = max(depth_diff * max(abs(viewDir.y), 0.5), 0.0);
+    VerticalDepth = max(dot(GroundWorldPos - SurfaceWorldPos, camForward), 0.0);
 }
 
 #endif
