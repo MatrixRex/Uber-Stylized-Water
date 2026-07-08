@@ -287,18 +287,18 @@ Material:
     - _FresnelStrength: 1
     - _Fresnel_Opacity: 1
     - _Fresnel_Power: 10
-    - _InterSec_Dissolve: 0.22
+    - _InterSec_Dissolve: 0
     - _InterSec_Edge_Dissolve: 1
-    - _InterSec_Edge_Fade: 0.103
+    - _InterSec_Edge_Fade: 0
     - _InterSec_Foam_Distortion: 0
     - _InterSec_Foam_EdgeSmooth: 0
     - _InterSec_Foam_Invert: 1
     - _InterSec_Foam_Scale: 2.49
     - _InterSec_Foam_Smooth: 0
     - _InterSec_GradientDissolve: 1
-    - _InterSec_ReflectionPower: 0
-    - _InterSec_SpecularPower: 0
-    - _InterSec_Width: 0.21
+    - _InterSec_ReflectionPower: 1
+    - _InterSec_SpecularPower: 1
+    - _InterSec_Width: 0.85
     - _IntersectionDistanceCutoff: 2.5
     - _IntersectionDistanceDepth: 0.5
     - _IntersectionFoamCutoff: 8.6
@@ -315,7 +315,7 @@ Material:
     - _NormalPan: 0.1
     - _NormalStrength: 0.2
     - _NormalTile: 4
-    - _Normal_DistanceStrength: 0.2
+    - _Normal_DistanceStrength: 1
     - _Normal_Pan: -2
     - _Normal_Scale: 10.95
     - _Normal_Strength: 1
@@ -338,7 +338,7 @@ Material:
     - _Reflection_Distortion: 0.23
     - _Reflection_Fresnel: 1.5
     - _Reflection_Fresnel_Strength: 1
-    - _Reflection_Strength: 0
+    - _Reflection_Strength: 1
     - _RefractionFadeDistance: 5
     - _RefractionStrength: 0.2
     - _Refraction_Distace_Mask: 10
@@ -352,7 +352,7 @@ Material:
     - _SL_CenterMask: 0.901
     - _SL_CenterMaskFade: 0
     - _SL_Density: 15.8
-    - _SL_Depth: 0.817
+    - _SL_Depth: 0.645
     - _SL_Dissolve: 6.11
     - _SL_EnableTrail: 1
     - _SL_ExplandNearShore: 0
@@ -371,7 +371,7 @@ Material:
     - _ShoreFadeHardness: 0.368
     - _ShoreFadeSmoothness: 0.2
     - _ShoreFade_1: 0
-    - _ShoreFade_Smoothness: 0.025
+    - _ShoreFade_Smoothness: 0.094
     - _ShoreLineAmmount: 3.34
     - _ShoreLineCenterMask: 2.01
     - _ShoreLineCutoff: 0.66
@@ -431,7 +431,7 @@ Material:
     - _UseMeshUV: 1
     - _WORLDSPACEDEPTH: 1
     - _WaterDepth: 0.6
-    - _Water_Depth: 0.75
+    - _Water_Depth: 3.55
     - _WaveHeight: 0.01
     - _WaveHeight2nd: 0.01
     - _WaveLength: 10
@@ -475,8 +475,8 @@ Material:
     m_Colors:
     - _1st_Wave_Direction: {r: 1, g: 0, b: 0, a: 0}
     - _2nd_Wave_Direction: {r: -1, g: 0, b: 1, a: 0}
-    - _Color_Deep: {r: 0.01249553, g: 0.079006314, b: 0.24528301, a: 0.9254902}
-    - _Color_Shallow: {r: 0.6024611, g: 0.82641506, b: 0.478697, a: 0}
+    - _Color_Deep: {r: 0.01249553, g: 0.079006314, b: 0.24528301, a: 1}
+    - _Color_Shallow: {r: 0.09115692, g: 0.81886786, b: 0.57766026, a: 1}
     - _Deep_Color: {r: 0, g: 0.15303946, b: 1, a: 1}
     - _DistanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _FakeSun_Color: {r: 1, g: 1, b: 1, a: 1}

@@ -256,11 +256,37 @@ public class PlanarReflectionVolume : MonoBehaviour
         // 7. OBLIQUE PROJECTION (Clip Plane)
         // This cuts off everything below the water so it doesn't block the view
         var clipPlane = CameraSpacePlane(_reflectionCamera, pos, normal, 1.0f);
-        var projection = realCamera.CalculateObliqueMatrix(clipPlane);
-        _reflectionCamera.projectionMatrix = projection;
+        if (realCamera.orthographic)
+        {
+            var projection = realCamera.projectionMatrix;
+            CalculateObliqueMatrixOrtho(ref projection, clipPlane);
+            _reflectionCamera.projectionMatrix = projection;
+        }
+        else
+        {
+            var projection = realCamera.CalculateObliqueMatrix(clipPlane);
+            _reflectionCamera.projectionMatrix = projection;
+        }
 
         _reflectionCamera.cullingMask = reflectionLayer;
     }
+
+    private static void CalculateObliqueMatrixOrtho(ref Matrix4x4 projection, Vector4 clipPlane)
+    {
+        Vector4 q = projection.inverse * new Vector4(
+            Mathf.Sign(clipPlane.x),
+            Mathf.Sign(clipPlane.y),
+            1.0f,
+            1.0f
+        );
+        Vector4 c = clipPlane * (2.0f / Vector4.Dot(clipPlane, q));
+        // Modify the third row of the projection matrix directly
+        projection[2, 0] = c.x;
+        projection[2, 1] = c.y;
+        projection[2, 2] = c.z;
+        projection[2, 3] = c.w - 1.0f;
+    }
+
     private void UpdateCamera(Camera src, Camera dest)
     {
         if (dest == null) return;

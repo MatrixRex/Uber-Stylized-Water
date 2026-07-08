@@ -26,8 +26,8 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _ENABLECAUSTICS
+  - _ENABLEPLANERREFLECTION
   - _ENABLEREFRACTION
-  - _ENABLEWAVE
   m_InvalidKeywords:
   - _ENABLENORMAL
   - _ENABLE_UNDERWATERLAYER
@@ -241,12 +241,12 @@ Material:
     - _ENABLECAUSTICS: 1
     - _ENABLEINTERSECTION: 1
     - _ENABLENORMAL: 1
-    - _ENABLEPLANERREFLECTION: 0
+    - _ENABLEPLANERREFLECTION: 1
     - _ENABLEREFRACTION: 1
     - _ENABLESHORELINE: 0
     - _ENABLESURFACEFOAM: 1
     - _ENABLEUNDERWATERLAYER: 1
-    - _ENABLEWAVE: 1
+    - _ENABLEWAVE: 0
     - _ENABLE_FOAMSHADOW: 0
     - _ENABLE_UNDERWATERLAYER: 1
     - _ENVIRONMENTREFLECTIONS_OFF: 1
@@ -316,7 +316,7 @@ Material:
     - _NormalPan: 0.1
     - _NormalStrength: 0.2
     - _NormalTile: 4
-    - _Normal_DistanceStrength: 0
+    - _Normal_DistanceStrength: 1
     - _Normal_Pan: -2
     - _Normal_Scale: 10.95
     - _Normal_Strength: 0.46
@@ -339,7 +339,7 @@ Material:
     - _Reflection_Distortion: 0.23
     - _Reflection_Fresnel: 1.5
     - _Reflection_Fresnel_Strength: 1
-    - _Reflection_Strength: 0
+    - _Reflection_Strength: 1
     - _RefractionFadeDistance: 5
     - _RefractionStrength: 0.2
     - _Refraction_Distace_Mask: 10
