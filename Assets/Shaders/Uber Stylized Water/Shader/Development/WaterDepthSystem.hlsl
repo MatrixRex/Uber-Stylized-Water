@@ -75,9 +75,19 @@ void GroundToMeshUV_float(float2 GroundXZ, float2 SurfaceWorldXZ, float2 Surface
 void WaterDepths_float(float3 SurfaceWorldPos, float3 GroundWorldPos,
                        out float VerticalDepth, out float ViewDepth)
 {
-    float3 camForward = -UNITY_MATRIX_V[2].xyz;
     ViewDepth = distance(SurfaceWorldPos, GroundWorldPos);
-    VerticalDepth = max(dot(GroundWorldPos - SurfaceWorldPos, camForward), 0.0);
+    
+    // Reconstruct world-space normal of the water surface using screen-space derivatives
+    float3 dX = ddx(SurfaceWorldPos);
+    float3 dY = ddy(SurfaceWorldPos);
+    float3 normalWS = normalize(cross(dX, dY));
+    normalWS *= sign(normalWS.y);
+    
+    // Project ground position vertically to the sloped water surface plane
+    float denom = max(abs(normalWS.y), 0.0001);
+    float Y_water = SurfaceWorldPos.y - (normalWS.x * (GroundWorldPos.x - SurfaceWorldPos.x) + normalWS.z * (GroundWorldPos.z - SurfaceWorldPos.z)) / denom;
+    
+    VerticalDepth = max(Y_water - GroundWorldPos.y, 0.0);
 }
 
 #endif
