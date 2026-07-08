@@ -75,8 +75,11 @@ void GroundToMeshUV_float(float2 GroundXZ, float2 SurfaceWorldXZ, float2 Surface
 void WaterDepths_float(float3 SurfaceWorldPos, float3 GroundWorldPos,
                        out float VerticalDepth, out float ViewDepth)
 {
-    VerticalDepth = max(SurfaceWorldPos.y - GroundWorldPos.y, 0.0);
-    ViewDepth     = distance(SurfaceWorldPos, GroundWorldPos);
+    float3 camForward = -UNITY_MATRIX_V[2].xyz;
+    ViewDepth = distance(SurfaceWorldPos, GroundWorldPos);
+    float3 viewDir = GetWorldSpaceNormalizeViewDir(SurfaceWorldPos);
+    float depth_diff = dot(GroundWorldPos - SurfaceWorldPos, camForward);
+    VerticalDepth = max(depth_diff * max(abs(viewDir.y), 0.5), 0.0);
 }
 
 #endif
