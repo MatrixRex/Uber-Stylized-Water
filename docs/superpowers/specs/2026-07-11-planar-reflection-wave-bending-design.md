@@ -1,30 +1,37 @@
-# Design Document: Planar Reflection Wave Bending
+# Design Document: Planar Reflection Wave Bending with Shore Masking
 
-This design document outlines the plan to modify the planar reflection rendering logic in the Shader Graph so that reflections are distorted (bent) by both the high-frequency surface ripples (normal maps) and the low-frequency wave geometry displacement.
+This document outlines the design for distorting planar reflections based on both normal map ripples and wave geometry deformation, while preventing shoreline projection disconnection by masking the distortion at intersections.
 
 ## Goal
-Currently, the planar reflection in `UberStylizedWaterGraph.shadergraph` is only distorted by the high-frequency normal maps, while the wave geometry deformation (which displaces vertices and alters vertex normals in the vertex shader) is ignored. We want the planar reflection to bend and warp according to the wave shape as well.
+Modify `SamplePlannerReflection.shadersubgraph` to:
+1. Incorporate low-frequency wave geometry slopes in addition to high-frequency ripples.
+2. Fade the distortion offset smoothly to zero at water-land intersections/shorelines.
 
-## Context
-1. **Planar Reflection Texture**: Rendered by a camera mirrored across the flat water plane.
-2. **Sub Graph `SamplePlannerReflection.shadersubgraph`**: Samples the reflection texture using screen space coordinates (NDC Position) offset by the tangent space normal map.
-3. **The Issue**: Tangent space normal map represents only the high-frequency ripples. The vertex wave slopes (geometry deformation) are only present in the world-space vertex normal, which is not factored into the planar reflection offset calculation.
+## Proposed Solution
 
-## Proposed Changes
-We will modify the sub-graph `SamplePlannerReflection.shadersubgraph` to perform the following:
-1. **Transform to World Space**: Transform the tangent-space normal map to world space using the vertex TBN matrix. This automatically incorporates the wave geometry slopes (via the vertex normals).
-2. **Transform to View Space**: Transform the combined world-space normal to view space (camera space).
-3. **Offset Screen UVs**: Use the `xy` components of the view-space normal, scaled by the distortion strength, to offset the screen coordinates used to sample the reflection texture.
+### 1. View Space Space Transformation
+To combine wave slopes and ripples, the tangent space normal map is transformed to world space (using the vertex TBN matrix) and then to view space:
+$$\text{normalVS} = \text{TransformWorldToView}(\text{TransformTangentToWorld}(\text{NormalMap}))$$
 
-### Sub-Graph Connections
-We will insert two `Transform` nodes in the path of the normal map inside the `SamplePlannerReflection.shadersubgraph` graph:
-* **Original Connection**:
-  `Property: NormalMap` (tangent space) $\rightarrow$ `Normal Strength` (In)
-* **New Connection**:
-  `Property: NormalMap` (tangent space) $\rightarrow$ `Transform` (Tangent $\rightarrow$ World) $\rightarrow$ `Transform` (World $\rightarrow$ View) $\rightarrow$ `Normal Strength` (In)
+### 2. Shoreline Masking
+To prevent the planar reflection from disconnecting at contact points (such as shorelines, rocks, and intersections), we retrieve the globally registered `shorefade` depth variable (which is `0.0` at intersections and climbs to `1.0` in deep water) using a `Get Variable` node.
 
-This is simple, elegant, and leverages Unity's built-in space transformation pipelines. Because the `Transform` node from Tangent space to World space relies on the vertex TBN matrix, Unity's compiler will automatically fetch and interpolate the wave-deformed vertex normal, tangent, and bitangent, and pass them into the fragment shader.
+We then multiply the distortion offset by `shorefade`:
+$$\text{Offset} = \text{normalVS}.xy \times \text{ReflectionDistortion} \times \text{Multiplier} \times \text{shorefade}$$
+
+This ensures:
+- **At shorelines/intersections (`shorefade` = 0)**: The offset becomes exactly zero. The reflection aligns perfectly with the solid objects (zero projection gap).
+- **In deep water (`shorefade` = 1)**: The offset is fully driven by the waves and ripples, producing beautiful dynamic warping.
+
+### 3. Sub-Graph Connections
+Inside `SamplePlannerReflection.shadersubgraph`:
+- Add `Get Variable` node for `shorefade`.
+- Add `Multiply` node to multiply the distortion offset by `shorefade`.
+- Wire the connections:
+  `Property: NormalMap` $\rightarrow$ `Transform (Tangent $\rightarrow$ World)` $\rightarrow$ `Transform (World $\rightarrow$ View)` $\rightarrow$ `Normal Strength` $\rightarrow$ `Multiply` (A)
+  `Get Variable (shorefade)` $\rightarrow$ `Multiply` (B)
+  `Multiply` (Out) $\rightarrow$ `Add` $\rightarrow$ `Sample Texture 2D` (UV)
 
 ## Verification Plan
-1. Check that `UberStylizedWaterGraph` recompiles in the Unity Editor without errors.
-2. Verify that the planar reflections dynamically warp in response to both small ripples and large wave shapes.
+1. Check that the sub-graph and main graph compile in Unity.
+2. Verify that reflections remain perfectly attached to shorelines and rocks, while bending naturally in deep water with waves.
