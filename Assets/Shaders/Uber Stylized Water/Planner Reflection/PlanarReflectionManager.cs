@@ -483,7 +483,7 @@ public class PlanarReflectionManagerEditor : Editor
         DrawDefaultInspector();
 
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Global Mode Status", EditorStyles.boldLabel);
+        
 
         // Scan the scene for an active global volume
         PlanarReflectionVolume globalVolume = null;
@@ -503,12 +503,9 @@ public class PlanarReflectionManagerEditor : Editor
             EditorGUILayout.ObjectField("Active Global Volume", globalVolume, typeof(PlanarReflectionVolume), true);
             EditorGUI.EndDisabledGroup();
 
-            EditorGUILayout.HelpBox($"Planar reflections are enabled globally. Custom rendering properties are overridden by '{globalVolume.name}'. Click the reference above to find it in the Hierarchy.", MessageType.Info);
+            EditorGUILayout.HelpBox($"Planar reflections are enabled globally by '{globalVolume.name}'. Click the reference above to find it in the Hierarchy.", MessageType.Info);
         }
-        else
-        {
-            EditorGUILayout.HelpBox("No active global Planar Reflection Volume found. System is currently rendering via local volume boundaries.", MessageType.Info);
-        }
+       
     }
 }
 #endif
