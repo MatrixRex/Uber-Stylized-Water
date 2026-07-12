@@ -10,6 +10,8 @@ using UnityEngine.Rendering.Universal;
 [ExecuteAlways, DisallowMultipleComponent, AddComponentMenu("Effects/Planar Reflection Volume")]
 public class PlanarReflectionVolume : MonoBehaviour
 {
+    public bool isGlobal = false;
+
     [Range(0.01f, 1f)] public float renderScale = 1f;
     public LayerMask reflectionLayer = -1;
     public bool reflectSkybox;
@@ -73,6 +75,7 @@ public class PlanarReflectionVolume : MonoBehaviour
 
     public float GetBlendFactor(Camera camera)
     {
+        if (isGlobal) return 0f;
         if (blendDistance <= 0) return IsCameraInVolume(camera) ? 0f : 1f;
 
         // Transform camera position to local space
@@ -96,6 +99,8 @@ public class PlanarReflectionVolume : MonoBehaviour
 
     public bool IsCameraInRange(Camera camera)
     {
+        if (isGlobal) return true;
+
         Vector3 cameraLocalPos = transform.InverseTransformPoint(camera.transform.position);
         Vector3 halfSize = volumeSize * 0.5f + new Vector3(blendDistance, blendDistance, blendDistance);
 
@@ -116,6 +121,8 @@ public class PlanarReflectionVolume : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (isGlobal) return;
+
         if (!Application.isPlaying)
         {
             #if UNITY_EDITOR
@@ -142,3 +149,90 @@ public class PlanarReflectionVolume : MonoBehaviour
         }
     }
 }
+
+#if UNITY_EDITOR
+[CustomEditor(typeof(PlanarReflectionVolume))]
+public class PlanarReflectionVolumeEditor : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        PlanarReflectionVolume volume = (PlanarReflectionVolume)target;
+
+        // Draw isGlobal field first
+        serializedObject.Update();
+        SerializedProperty isGlobalProp = serializedObject.FindProperty("isGlobal");
+        EditorGUILayout.PropertyField(isGlobalProp);
+        serializedObject.ApplyModifiedProperties();
+
+        // If not global, draw volume settings, otherwise skip volume boundaries settings
+        DrawInspectorFields(volume);
+
+        // Check 1: Check if PlanarReflectionManager exists in the scene
+        var manager = GameObject.FindAnyObjectByType<PlanarReflectionManager>();
+        if (manager == null)
+        {
+            EditorGUILayout.HelpBox("Planar Reflection Manager is missing from the scene. It will be created automatically at runtime, but you can create it now to customize global settings.", MessageType.Warning);
+            if (GUILayout.Button("Create Planar Reflection Manager"))
+            {
+                var go = new GameObject("Planar Reflection Manager");
+                go.AddComponent<PlanarReflectionManager>();
+                Undo.RegisterCreatedObjectUndo(go, "Create Planar Reflection Manager");
+            }
+        }
+
+        // Check 2: Check for global conflicts
+        var volumes = GameObject.FindObjectsByType<PlanarReflectionVolume>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        bool hasOtherGlobal = false;
+        bool hasActiveGlobal = false;
+
+        foreach (var vol in volumes)
+        {
+            if (vol != volume && vol.isActiveAndEnabled)
+            {
+                if (vol.isGlobal)
+                {
+                    hasActiveGlobal = true;
+                    if (volume.isGlobal)
+                    {
+                        hasOtherGlobal = true;
+                    }
+                }
+            }
+        }
+
+        if (volume.isGlobal && hasOtherGlobal)
+        {
+            EditorGUILayout.HelpBox("Multiple global Planar Reflection Volumes are active. This will cause priority/rendering conflicts.", MessageType.Error);
+        }
+        else if (!volume.isGlobal && hasActiveGlobal)
+        {
+            EditorGUILayout.HelpBox("A global Planar Reflection Volume is active in the scene. Local volumes will be overridden and will not work.", MessageType.Error);
+        }
+    }
+
+    private void DrawInspectorFields(PlanarReflectionVolume volume)
+    {
+        serializedObject.Update();
+
+        // Draw settings
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("renderScale"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("reflectionLayer"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("reflectSkybox"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("reflectionTarget"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("reflectionPlaneOffset"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("hideReflectionCamera"));
+
+        if (!volume.isGlobal)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Volume Bounds Settings", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("volumeSize"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("blendDistance"));
+        }
+
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("priority"));
+
+        serializedObject.ApplyModifiedProperties();
+    }
+}
+#endif
