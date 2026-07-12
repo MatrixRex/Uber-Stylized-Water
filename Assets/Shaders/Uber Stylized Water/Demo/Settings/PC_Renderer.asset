@@ -37,11 +37,11 @@ MonoBehaviour:
     m_Bits: 4294967295
   m_TransparentLayerMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 39
   m_DefaultStencilState:
     overrideStencilState: 0
     stencilReference: 1
-    stencilCompareFunction: 3
+    stencilCompareFunction: 6
     passOperation: 2
     failOperation: 0
     zFailOperation: 0
@@ -94,7 +94,7 @@ MonoBehaviour:
   m_Active: 1
   settings:
     passTag: WaterStencilCullFeature
-    Event: 300
+    Event: 500
     filterSettings:
       RenderQueueType: 1
       LayerMask:
@@ -105,7 +105,7 @@ MonoBehaviour:
     overrideMaterialPassIndex: 0
     overrideShader: {fileID: 0}
     overrideShaderPassIndex: 0
-    overrideMode: 1
+    overrideMode: 0
     overrideDepthState: 0
     depthCompareFunction: 4
     enableWrite: 1

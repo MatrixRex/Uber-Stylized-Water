@@ -26,7 +26,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _ENABLECAUSTICS
-  - _REFLECTIONTYPE_SSR
+  - _REFLECTIONTYPE_PLANNER
   m_InvalidKeywords:
   - _ENABLENORMAL
   - _ENABLE_UNDERWATERLAYER
@@ -331,7 +331,7 @@ Material:
     - _ParalaxDepth: 30
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _REFLECTIONTYPE: 1
+    - _REFLECTIONTYPE: 2
     - _ReceiveShadows: 1
     - _ReflectionDistortion: 0.07
     - _ReflectionFresnel: 2.24
