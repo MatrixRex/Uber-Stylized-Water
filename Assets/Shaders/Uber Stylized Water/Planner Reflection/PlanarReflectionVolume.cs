@@ -51,6 +51,35 @@ public class PlanarReflectionVolume : MonoBehaviour
     void OnValidate()
     {
         UpdateTargetMaterial();
+        if (isGlobal)
+        {
+            #if UNITY_EDITOR
+            UnityEditor.EditorApplication.delayCall += DisableOtherGlobals;
+            #else
+            DisableOtherGlobals();
+            #endif
+        }
+    }
+
+    private void DisableOtherGlobals()
+    {
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.delayCall -= DisableOtherGlobals;
+        #endif
+
+        if (this == null || !isGlobal) return;
+
+        var volumes = GameObject.FindObjectsByType<PlanarReflectionVolume>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var vol in volumes)
+        {
+            if (vol != this && vol.isGlobal)
+            {
+                vol.isGlobal = false;
+                #if UNITY_EDITOR
+                UnityEditor.EditorUtility.SetDirty(vol);
+                #endif
+            }
+        }
     }
 
     public void UpdateTargetMaterial()
@@ -183,7 +212,7 @@ public class PlanarReflectionVolumeEditor : Editor
         // Check 2: Check for global conflicts
         var volumes = GameObject.FindObjectsByType<PlanarReflectionVolume>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         bool hasOtherGlobal = false;
-        bool hasActiveGlobal = false;
+        PlanarReflectionVolume activeGlobal = null;
 
         foreach (var vol in volumes)
         {
@@ -191,7 +220,7 @@ public class PlanarReflectionVolumeEditor : Editor
             {
                 if (vol.isGlobal)
                 {
-                    hasActiveGlobal = true;
+                    activeGlobal = vol;
                     if (volume.isGlobal)
                     {
                         hasOtherGlobal = true;
@@ -204,9 +233,12 @@ public class PlanarReflectionVolumeEditor : Editor
         {
             EditorGUILayout.HelpBox("Multiple global Planar Reflection Volumes are active. This will cause priority/rendering conflicts.", MessageType.Error);
         }
-        else if (!volume.isGlobal && hasActiveGlobal)
+        else if (!volume.isGlobal && activeGlobal != null)
         {
-            EditorGUILayout.HelpBox("A global Planar Reflection Volume is active in the scene. Local volumes will be overridden and will not work.", MessageType.Error);
+            if (volume.priority <= activeGlobal.priority)
+            {
+                EditorGUILayout.HelpBox($"A global Planar Reflection Volume ('{activeGlobal.name}', Priority: {activeGlobal.priority}) is active with the same or higher priority. This local volume will be overridden and will not work.", MessageType.Warning);
+            }
         }
     }
 

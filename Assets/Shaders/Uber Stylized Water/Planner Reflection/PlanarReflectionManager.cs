@@ -154,10 +154,18 @@ public class PlanarReflectionManager : MonoBehaviour
                     minBlend = blend;
                     activeVolume = volume;
                 }
-                else if (volume.priority == maxPriority && blend < minBlend)
+                else if (volume.priority == maxPriority)
                 {
-                    minBlend = blend;
-                    activeVolume = volume;
+                    if (volume.isGlobal && (activeVolume == null || !activeVolume.isGlobal))
+                    {
+                        minBlend = blend;
+                        activeVolume = volume;
+                    }
+                    else if (volume.isGlobal == (activeVolume != null && activeVolume.isGlobal) && blend < minBlend)
+                    {
+                        minBlend = blend;
+                        activeVolume = volume;
+                    }
                 }
             }
         }
