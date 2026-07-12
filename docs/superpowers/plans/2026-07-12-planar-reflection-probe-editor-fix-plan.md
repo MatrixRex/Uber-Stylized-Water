@@ -1,3 +1,25 @@
+# Planar Reflection Probe Editor Fix Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Modify the Planar Reflection system to split the logic into `PlanarReflectionVolume` (data configuration) and `PlanarReflectionManager` (shared rendering & lifecycle coordination) to support multiple probes in the editor without conflicts.
+
+**Architecture:** We will implement the `PlanarReflectionManager` as an editor-safe singleton MonoBehaviour which is auto-created dynamically when any volume registers. The manager will evaluate the active volume for each camera using sorting priorities and blend factors, and render a single shared reflection texture, updating all volume materials' blend parameters accordingly.
+
+**Tech Stack:** Unity 2021+, Universal Render Pipeline (URP), C# Scripting.
+
+---
+
+### Task 1: Rewrite PlanarReflection.cs with Coordinated Manager and Volumes
+
+**Files:**
+- Modify: `Assets/Shaders/Uber Stylized Water/Planner Reflection/PlanarReflection.cs`
+
+- [ ] **Step 1: Replace PlanarReflection.cs content with the coordinated Manager/Volume implementation**
+
+Replace the code in [PlanarReflection.cs](file:///g:/Personal/00 Unity/Uber-Stylized-Water/Assets/Shaders/Uber Stylized Water/Planner Reflection/PlanarReflection.cs) with the following implementation:
+
+```csharp
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -598,3 +620,8 @@ public class PlanarReflectionManager : MonoBehaviour
         }
     }
 }
+```
+
+- [ ] **Step 2: Save and verify compilation in Unity Editor**
+
+Ensure the code compiles without errors or warnings.
