@@ -470,3 +470,45 @@ public class PlanarReflectionManager : MonoBehaviour
         }
     }
 }
+
+#if UNITY_EDITOR
+[CustomEditor(typeof(PlanarReflectionManager))]
+public class PlanarReflectionManagerEditor : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        PlanarReflectionManager manager = (PlanarReflectionManager)target;
+
+        // Draw default fields (e.g. runOnEditMode)
+        DrawDefaultInspector();
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Global Mode Status", EditorStyles.boldLabel);
+
+        // Scan the scene for an active global volume
+        PlanarReflectionVolume globalVolume = null;
+        var volumes = GameObject.FindObjectsByType<PlanarReflectionVolume>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var vol in volumes)
+        {
+            if (vol.isActiveAndEnabled && vol.isGlobal)
+            {
+                globalVolume = vol;
+                break;
+            }
+        }
+
+        if (globalVolume != null)
+        {
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.ObjectField("Active Global Volume", globalVolume, typeof(PlanarReflectionVolume), true);
+            EditorGUI.EndDisabledGroup();
+
+            EditorGUILayout.HelpBox($"Planar reflections are enabled globally. Custom rendering properties are overridden by '{globalVolume.name}'. Click the reference above to find it in the Hierarchy.", MessageType.Info);
+        }
+        else
+        {
+            EditorGUILayout.HelpBox("No active global Planar Reflection Volume found. System is currently rendering via local volume boundaries.", MessageType.Info);
+        }
+    }
+}
+#endif
