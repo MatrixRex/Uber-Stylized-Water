@@ -187,29 +187,7 @@ public class PlanarReflectionVolumeEditor : Editor
     {
         PlanarReflectionVolume volume = (PlanarReflectionVolume)target;
 
-        // Draw isGlobal field first
-        serializedObject.Update();
-        SerializedProperty isGlobalProp = serializedObject.FindProperty("isGlobal");
-        EditorGUILayout.PropertyField(isGlobalProp);
-        serializedObject.ApplyModifiedProperties();
-
-        // If not global, draw volume settings, otherwise skip volume boundaries settings
-        DrawInspectorFields(volume);
-
-        // Check 1: Check if PlanarReflectionManager exists in the scene
-        var manager = GameObject.FindAnyObjectByType<PlanarReflectionManager>();
-        if (manager == null)
-        {
-            EditorGUILayout.HelpBox("Planar Reflection Manager is missing from the scene. It will be created automatically at runtime, but you can create it now to customize global settings.", MessageType.Warning);
-            if (GUILayout.Button("Create Planar Reflection Manager"))
-            {
-                var go = new GameObject("Planar Reflection Manager");
-                go.AddComponent<PlanarReflectionManager>();
-                Undo.RegisterCreatedObjectUndo(go, "Create Planar Reflection Manager");
-            }
-        }
-
-        // Check 2: Check for global conflicts
+        // Check for global conflicts
         var volumes = GameObject.FindObjectsByType<PlanarReflectionVolume>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         bool hasOtherGlobal = false;
         PlanarReflectionVolume activeGlobal = null;
@@ -226,6 +204,33 @@ public class PlanarReflectionVolumeEditor : Editor
                         hasOtherGlobal = true;
                     }
                 }
+            }
+        }
+
+        // Draw isGlobal field first (disabled if another volume is already global)
+        serializedObject.Update();
+        SerializedProperty isGlobalProp = serializedObject.FindProperty("isGlobal");
+        
+        bool disableGlobalToggle = !volume.isGlobal && activeGlobal != null;
+        EditorGUI.BeginDisabledGroup(disableGlobalToggle);
+        EditorGUILayout.PropertyField(isGlobalProp);
+        EditorGUI.EndDisabledGroup();
+        
+        serializedObject.ApplyModifiedProperties();
+
+        // If not global, draw volume settings, otherwise skip volume boundaries settings
+        DrawInspectorFields(volume);
+
+        // Check 1: Check if PlanarReflectionManager exists in the scene
+        var manager = GameObject.FindAnyObjectByType<PlanarReflectionManager>();
+        if (manager == null)
+        {
+            EditorGUILayout.HelpBox("Planar Reflection Manager is missing from the scene. It will be created automatically at runtime, but you can create it now to customize global settings.", MessageType.Warning);
+            if (GUILayout.Button("Create Planar Reflection Manager"))
+            {
+                var go = new GameObject("Planar Reflection Manager");
+                go.AddComponent<PlanarReflectionManager>();
+                Undo.RegisterCreatedObjectUndo(go, "Create Planar Reflection Manager");
             }
         }
 
