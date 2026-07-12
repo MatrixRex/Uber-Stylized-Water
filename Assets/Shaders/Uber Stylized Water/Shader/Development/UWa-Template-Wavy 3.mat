@@ -26,8 +26,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _ENABLECAUSTICS
-  - _ENABLEREFRACTION
-  - _ENABLEWAVE
   m_InvalidKeywords:
   - _ENABLENORMAL
   - _ENABLE_UNDERWATERLAYER
@@ -83,7 +81,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal_Map:
-        m_Texture: {fileID: 2800000, guid: 6840629b1017eef4d97d428f11c51573, type: 3}
+        m_Texture: {fileID: 2800000, guid: 6c9dd2a018554fd448d0990c0e1463e3, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ParallaxMapping_3e1fcc83888a4187b62a584859a1136c_Heightmap_1_Texture2D:
@@ -242,11 +240,11 @@ Material:
     - _ENABLEINTERSECTION: 1
     - _ENABLENORMAL: 1
     - _ENABLEPLANERREFLECTION: 0
-    - _ENABLEREFRACTION: 1
+    - _ENABLEREFRACTION: 0
     - _ENABLESHORELINE: 0
     - _ENABLESURFACEFOAM: 1
     - _ENABLEUNDERWATERLAYER: 1
-    - _ENABLEWAVE: 1
+    - _ENABLEWAVE: 0
     - _ENABLE_FOAMSHADOW: 0
     - _ENABLE_UNDERWATERLAYER: 1
     - _ENVIRONMENTREFLECTIONS_OFF: 1
@@ -316,10 +314,10 @@ Material:
     - _NormalPan: 0.1
     - _NormalStrength: 0.2
     - _NormalTile: 4
-    - _Normal_DistanceStrength: 1
-    - _Normal_Pan: -2
+    - _Normal_DistanceStrength: 0.1
+    - _Normal_Pan: 2
     - _Normal_Scale: 10.95
-    - _Normal_Strength: 0.46
+    - _Normal_Strength: 0.15
     - _Normal_Tile: 5
     - _OrthoSunToogle: 1
     - _OrthoSun_Altitude: 0
@@ -336,8 +334,9 @@ Material:
     - _ReflectionDistortion: 0.07
     - _ReflectionFresnel: 2.24
     - _ReflectionFresnelStrength: 1.17
-    - _Reflection_Distortion: 0.1
-    - _Reflection_Fresnel: 1.5
+    - _Reflection_Distortion: 0.84
+    - _Reflection_Distortion_Strength: 1
+    - _Reflection_Fresnel: 0.79
     - _Reflection_Fresnel_Strength: 1
     - _Reflection_Strength: 1
     - _RefractionFadeDistance: 5
@@ -372,7 +371,7 @@ Material:
     - _ShoreFadeHardness: 0.368
     - _ShoreFadeSmoothness: 0.2
     - _ShoreFade_1: 0
-    - _ShoreFade_Smoothness: 0.025
+    - _ShoreFade_Smoothness: 0.045
     - _ShoreLineAmmount: 3.34
     - _ShoreLineCenterMask: 2.01
     - _ShoreLineCutoff: 0.66
@@ -443,9 +442,9 @@ Material:
     - _WaveSpeed2nd: 0.2
     - _Wave_Detail: 3
     - _Wave_Direction: 0
-    - _Wave_Length: 5
-    - _Wave_Speed: 1.24
-    - _Wave_Steep: 0.08
+    - _Wave_Length: 10
+    - _Wave_Speed: 1
+    - _Wave_Steep: 0.1
     - _WorkflowMode: 1
     - _WorldSpaceDepth: 1
     - _ZTest: 4
@@ -456,6 +455,7 @@ Material:
     - _mask: 0.731
     - _max: 1
     - _min: 0
+    - _normal: 0
     - _proceduralDistortion: 1
     - _shoreDistance: 0.731
     - _shoreLineAmmount: 0.25
@@ -472,6 +472,7 @@ Material:
     - _shoreTile: 9.47
     - _speed: 0.25
     - _tile: 10
+    - _wave: 0.3
     - _width: 116.5
     m_Colors:
     - _1st_Wave_Direction: {r: 1, g: 0, b: 0, a: 0}
