@@ -27,6 +27,7 @@ Material:
   m_ValidKeywords:
   - _ENABLECAUSTICS
   - _ENABLEREFRACTION
+  - _REFLECTIONTYPE_PROB_ONLY
   m_InvalidKeywords:
   - _ENABLENORMAL
   - _ENABLE_UNDERWATERLAYER
@@ -331,11 +332,13 @@ Material:
     - _ParalaxDepth: 30
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _REFLECTIONTYPE: 0
     - _ReceiveShadows: 1
     - _ReflectionDistortion: 0.07
     - _ReflectionFresnel: 2.24
     - _ReflectionFresnelStrength: 1.17
     - _Reflection_Distortion: 0.23
+    - _Reflection_Distortion_Strength: 0.5
     - _Reflection_Fresnel: 1.5
     - _Reflection_Fresnel_Strength: 1
     - _Reflection_Strength: 1
@@ -363,6 +366,9 @@ Material:
     - _SL_TrailFade: 0
     - _SL_Trail_Fade: 1.21
     - _SL_WaterDepth: 9.98
+    - _SSR_Max_Distance: 50
+    - _SSR_Steps: 32
+    - _SSR_Thickness: 0.5
     - _SSS_HeighMaskStrength: 1
     - _SSS_HeightMaskOffset: 0.1
     - _SSS_Power: 5

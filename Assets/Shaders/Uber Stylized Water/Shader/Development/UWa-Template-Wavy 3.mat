@@ -26,6 +26,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _ENABLECAUSTICS
+  - _REFLECTIONTYPE_SSR
   m_InvalidKeywords:
   - _ENABLENORMAL
   - _ENABLE_UNDERWATERLAYER
@@ -36,7 +37,7 @@ Material:
   stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
-  m_LockedProperties: 
+  m_LockedProperties: _ENABLEPLANERREFLECTION
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -317,7 +318,7 @@ Material:
     - _Normal_DistanceStrength: 0.1
     - _Normal_Pan: 2
     - _Normal_Scale: 10.95
-    - _Normal_Strength: 0.15
+    - _Normal_Strength: 0.02
     - _Normal_Tile: 5
     - _OrthoSunToogle: 1
     - _OrthoSun_Altitude: 0
@@ -330,6 +331,7 @@ Material:
     - _ParalaxDepth: 30
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _REFLECTIONTYPE: 1
     - _ReceiveShadows: 1
     - _ReflectionDistortion: 0.07
     - _ReflectionFresnel: 2.24
@@ -363,6 +365,9 @@ Material:
     - _SL_TrailFade: 0
     - _SL_Trail_Fade: 1.21
     - _SL_WaterDepth: 9.98
+    - _SSR_Max_Distance: 50
+    - _SSR_Steps: 128
+    - _SSR_Thickness: 2
     - _SSS_HeighMaskStrength: 1
     - _SSS_HeightMaskOffset: 0.1
     - _SSS_Power: 5
@@ -477,8 +482,8 @@ Material:
     m_Colors:
     - _1st_Wave_Direction: {r: 1, g: 0, b: 0, a: 0}
     - _2nd_Wave_Direction: {r: -1, g: 0, b: 1, a: 0}
-    - _Color_Deep: {r: 0.01249553, g: 0.079006314, b: 0.24528301, a: 0.9254902}
-    - _Color_Shallow: {r: 0.6024611, g: 0.82641506, b: 0.478697, a: 0}
+    - _Color_Deep: {r: 0.01249553, g: 0.079006314, b: 0.24528301, a: 1}
+    - _Color_Shallow: {r: 0.6024611, g: 0.82641506, b: 0.478697, a: 1}
     - _Deep_Color: {r: 0, g: 0.15303946, b: 1, a: 1}
     - _DistanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _FakeSun_Color: {r: 1, g: 1, b: 1, a: 1}
