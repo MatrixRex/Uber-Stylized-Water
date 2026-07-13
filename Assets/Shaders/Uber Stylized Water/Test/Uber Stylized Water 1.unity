@@ -747,7 +747,7 @@ MonoBehaviour:
   volumeSize: {x: 100, y: 100, z: 100}
   blendDistance: 2
   priority: 0
-  targetMaterial: {fileID: 2100000, guid: 3d405aed53ba927498ba6f4e50178024, type: 2}
+  targetMaterial: {fileID: 2100000, guid: f810fdd5721521146871aa8dcb6ab313, type: 2}
 --- !u!4 &235182958
 Transform:
   m_ObjectHideFlags: 0
@@ -925,7 +925,7 @@ Transform:
   m_GameObject: {fileID: 296735963}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 51.46, y: 20.8, z: 43.48}
+  m_LocalPosition: {x: 53.57, y: 20.8, z: 40.28}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3299,7 +3299,7 @@ PrefabInstance:
     - target: {fileID: 253793662146644955, guid: 083304791df7d434abd062946956fdad, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 3d405aed53ba927498ba6f4e50178024, type: 2}
+      objectReference: {fileID: 2100000, guid: f810fdd5721521146871aa8dcb6ab313, type: 2}
     - target: {fileID: 1427231106215768244, guid: 083304791df7d434abd062946956fdad, type: 3}
       propertyPath: m_LocalScale.x
       value: 1
@@ -3652,9 +3652,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80ed422438a81f747bd03074ceba4298, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  steepness: 0.02
+  steepness: 0.1
   wavelength: 5
-  speed: 1.24
+  speed: 1
   iterations: 3
   direction: 0
 --- !u!1 &977601173
@@ -7683,7 +7683,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isGlobal: 0
-  renderScale: 0.044
+  renderScale: 0.25
   reflectionLayer:
     serializedVersion: 2
     m_Bits: 4294967279

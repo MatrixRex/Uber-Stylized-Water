@@ -142,7 +142,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SurfFoam_Map:
-        m_Texture: {fileID: 2800000, guid: 5bc401fceedaea747a98548f8e58bc3c, type: 3}
+        m_Texture: {fileID: 2800000, guid: f1555b31bebb94d4fa8192eff16149ef, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SurfFoam_Mask:
@@ -289,7 +289,7 @@ Material:
     - _Fresnel_Power: 10
     - _InterSec_Dissolve: 0.22
     - _InterSec_Edge_Dissolve: 1
-    - _InterSec_Edge_Fade: 0.103
+    - _InterSec_Edge_Fade: 0.123
     - _InterSec_Foam_Distortion: 0
     - _InterSec_Foam_EdgeSmooth: 0
     - _InterSec_Foam_Invert: 1
@@ -298,7 +298,7 @@ Material:
     - _InterSec_GradientDissolve: 1
     - _InterSec_ReflectionPower: 0
     - _InterSec_SpecularPower: 0
-    - _InterSec_Width: 0.21
+    - _InterSec_Width: 0.46
     - _IntersectionDistanceCutoff: 2.5
     - _IntersectionDistanceDepth: 0.5
     - _IntersectionFoamCutoff: 8.6
@@ -409,9 +409,9 @@ Material:
     - _SurfFoam_AlphaBlend: 0
     - _SurfFoam_Edge: 0.547
     - _SurfFoam_EdgeSmooth: 0
-    - _SurfFoam_ReflectionPower: 0.234
+    - _SurfFoam_ReflectionPower: 0.482
     - _SurfFoam_Scale: 3.4
-    - _SurfFoam_SpecularPower: 0.303
+    - _SurfFoam_SpecularPower: 0
     - _Surface: 1
     - _SurfaceDistortionScale: 1.48
     - _SurfaceDistortionStrength: 0.1
@@ -491,7 +491,7 @@ Material:
     - _FoamDistortionSpeed: {r: 0.1, g: 0.1, b: 0, a: 0}
     - _FoamShadow_Color: {r: 0, g: 0, b: 0, a: 0.5019608}
     - _FresnelColor: {r: 0.2647297, g: 0.116945416, b: 0.82641506, a: 1}
-    - _InterSec_Color: {r: 1, g: 1, b: 1, a: 0.654902}
+    - _InterSec_Color: {r: 0, g: 1, b: 0.64240026, a: 0.654902}
     - _InterSec_Foam_Pan: {r: -1, g: 0, b: 0, a: 0}
     - _InterSec_Foam_Tile: {r: 1, g: 1, b: 0, a: 0}
     - _IntersectionDistanceTile: {r: 1, g: 1, b: 0, a: 0}
