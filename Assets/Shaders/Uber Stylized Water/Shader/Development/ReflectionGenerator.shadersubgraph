@@ -53,9 +53,6 @@
             "m_Id": "c0ab0b12cd8940738d3108dbafc33d33"
         },
         {
-            "m_Id": "9ab4dcfeedfc4336b2b4d86c77c6abe0"
-        },
-        {
             "m_Id": "a15770bd0a314e27a83b5a5a8e550df2"
         },
         {
@@ -193,20 +190,6 @@
                     "m_Id": "a15770bd0a314e27a83b5a5a8e550df2"
                 },
                 "m_SlotId": 3
-            }
-        },
-        {
-            "m_OutputSlot": {
-                "m_Node": {
-                    "m_Id": "9ab4dcfeedfc4336b2b4d86c77c6abe0"
-                },
-                "m_SlotId": 3
-            },
-            "m_InputSlot": {
-                "m_Node": {
-                    "m_Id": "c0ab0b12cd8940738d3108dbafc33d33"
-                },
-                "m_SlotId": -1481289899
             }
         },
         {
@@ -386,9 +369,9 @@
             },
             "m_InputSlot": {
                 "m_Node": {
-                    "m_Id": "9ab4dcfeedfc4336b2b4d86c77c6abe0"
+                    "m_Id": "c0ab0b12cd8940738d3108dbafc33d33"
                 },
-                "m_SlotId": 0
+                "m_SlotId": -1481289899
             }
         }
     ],
@@ -421,30 +404,6 @@
     },
     "m_SubDatas": [],
     "m_ActiveTargets": []
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.DynamicVectorMaterialSlot",
-    "m_ObjectId": "036efb53a58c4998b75630d358d05ede",
-    "m_Id": 3,
-    "m_DisplayName": "Out",
-    "m_SlotType": 1,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "Out",
-    "m_StageCapability": 3,
-    "m_Value": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0,
-        "w": 0.0
-    },
-    "m_DefaultValue": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0,
-        "w": 0.0
-    }
 }
 
 {
@@ -690,8 +649,8 @@
     "m_ObjectId": "202d178ed18349ca867a24c52d937368",
     "m_Title": "SSR",
     "m_Position": {
-        "x": -32.00000762939453,
-        "y": 151.1999969482422
+        "x": -32.00006103515625,
+        "y": 151.19992065429688
     }
 }
 
@@ -952,8 +911,8 @@
     "m_ObjectId": "49d97255d9b3406d9db368835b34fbbc",
     "m_Title": "Planner Reflections",
     "m_Position": {
-        "x": -733.6000366210938,
-        "y": -476.8000183105469
+        "x": -684.0,
+        "y": -478.39996337890627
     }
 }
 
@@ -1430,48 +1389,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.RemapNode",
-    "m_ObjectId": "9ab4dcfeedfc4336b2b4d86c77c6abe0",
-    "m_Group": {
-        "m_Id": "49d97255d9b3406d9db368835b34fbbc"
-    },
-    "m_Name": "Remap",
-    "m_DrawState": {
-        "m_Expanded": false,
-        "m_Position": {
-            "serializedVersion": "2",
-            "x": -444.0000305175781,
-            "y": -202.40005493164063,
-            "width": 127.99996948242188,
-            "height": 92.8000259399414
-        }
-    },
-    "m_Slots": [
-        {
-            "m_Id": "efcad52630c94790b4989b2a15c18a29"
-        },
-        {
-            "m_Id": "ee259cb696b44ff0ba845ca0ed3c1e34"
-        },
-        {
-            "m_Id": "c2ae2df0af7e4785a873f9988b1f1061"
-        },
-        {
-            "m_Id": "036efb53a58c4998b75630d358d05ede"
-        }
-    ],
-    "synonyms": [],
-    "m_Precision": 0,
-    "m_PreviewExpanded": false,
-    "m_DismissedVersion": 0,
-    "m_PreviewMode": 0,
-    "m_CustomColors": {
-        "m_SerializableColors": []
-    }
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Texture2DInputMaterialSlot",
     "m_ObjectId": "9b31b4b04e1845a4a7a50736475be934",
     "m_Id": -1965919011,
@@ -1859,27 +1776,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector2MaterialSlot",
-    "m_ObjectId": "c2ae2df0af7e4785a873f9988b1f1061",
-    "m_Id": 2,
-    "m_DisplayName": "Out Min Max",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "OutMinMax",
-    "m_StageCapability": 3,
-    "m_Value": {
-        "x": 0.0,
-        "y": 0.5
-    },
-    "m_DefaultValue": {
-        "x": 0.0,
-        "y": 1.0
-    },
-    "m_Labels": []
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
     "m_ObjectId": "c78b92e01480453ab835be59e9e93393",
     "m_Group": {
@@ -2010,8 +1906,8 @@
     "m_ObjectId": "dbee51fa58084572a950bf54762a5bc1",
     "m_Title": "ReflectionProbe",
     "m_Position": {
-        "x": -572.800048828125,
-        "y": -71.20002746582031
+        "x": -572.7999877929688,
+        "y": -71.20001220703125
     }
 }
 
@@ -2171,51 +2067,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector2MaterialSlot",
-    "m_ObjectId": "ee259cb696b44ff0ba845ca0ed3c1e34",
-    "m_Id": 1,
-    "m_DisplayName": "In Min Max",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "InMinMax",
-    "m_StageCapability": 3,
-    "m_Value": {
-        "x": 0.0,
-        "y": 1.0
-    },
-    "m_DefaultValue": {
-        "x": -1.0,
-        "y": 1.0
-    },
-    "m_Labels": []
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.DynamicVectorMaterialSlot",
-    "m_ObjectId": "efcad52630c94790b4989b2a15c18a29",
-    "m_Id": 0,
-    "m_DisplayName": "In",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "In",
-    "m_StageCapability": 3,
-    "m_Value": {
-        "x": -1.0,
-        "y": -1.0,
-        "z": -1.0,
-        "w": -1.0
-    },
-    "m_DefaultValue": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0,
-        "w": 0.0
-    }
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
     "m_ObjectId": "f01cbe4b43a6474298ed1a445305c99f",
     "m_Id": 0,
@@ -2358,10 +2209,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -708.0000610351563,
-            "y": -161.60003662109376,
-            "width": 232.00003051757813,
-            "height": 33.60002136230469
+            "x": -764.0,
+            "y": -197.60000610351563,
+            "width": 232.0,
+            "height": 33.600006103515628
         }
     },
     "m_Slots": [
