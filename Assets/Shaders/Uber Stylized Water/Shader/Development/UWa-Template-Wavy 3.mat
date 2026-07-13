@@ -26,7 +26,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _ENABLECAUSTICS
-  - _REFLECTIONTYPE_PLANNER
+  - _REFLECTIONTYPE_PROB_ONLY
   m_InvalidKeywords:
   - _ENABLENORMAL
   - _ENABLE_UNDERWATERLAYER
@@ -82,7 +82,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal_Map:
-        m_Texture: {fileID: 2800000, guid: 6c9dd2a018554fd448d0990c0e1463e3, type: 3}
+        m_Texture: {fileID: 2800000, guid: 50c9b96bf58917c4e97fea677a8ff18d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ParallaxMapping_3e1fcc83888a4187b62a584859a1136c_Heightmap_1_Texture2D:
@@ -142,7 +142,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SurfFoam_Map:
-        m_Texture: {fileID: 2800000, guid: f1555b31bebb94d4fa8192eff16149ef, type: 3}
+        m_Texture: {fileID: 2800000, guid: ff0a279251580d24f9a7282f3047c8bf, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SurfFoam_Mask:
@@ -250,8 +250,8 @@ Material:
     - _ENABLE_UNDERWATERLAYER: 1
     - _ENVIRONMENTREFLECTIONS_OFF: 1
     - _Enable_Intersection: 1
-    - _Enable_Normal: 0
-    - _Enable_ShoreLine: 1
+    - _Enable_Normal: 1
+    - _Enable_ShoreLine: 0
     - _Enable_SurfaceFoam: 1
     - _Enable_SurfaceFoamTexture: 0
     - _Environment_Reflections: 1
@@ -289,7 +289,7 @@ Material:
     - _Fresnel_Power: 10
     - _InterSec_Dissolve: 0.22
     - _InterSec_Edge_Dissolve: 1
-    - _InterSec_Edge_Fade: 0.123
+    - _InterSec_Edge_Fade: 0
     - _InterSec_Foam_Distortion: 0
     - _InterSec_Foam_EdgeSmooth: 0
     - _InterSec_Foam_Invert: 1
@@ -331,7 +331,7 @@ Material:
     - _ParalaxDepth: 30
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _REFLECTIONTYPE: 2
+    - _REFLECTIONTYPE: 0
     - _ReceiveShadows: 1
     - _ReflectionDistortion: 0.07
     - _ReflectionFresnel: 2.24
@@ -407,7 +407,7 @@ Material:
     - _SufFoam_Subtractor: 0
     - _SunShadowOcclusion: 0
     - _SurfFoam_AlphaBlend: 0
-    - _SurfFoam_Edge: 0.547
+    - _SurfFoam_Edge: 0.182
     - _SurfFoam_EdgeSmooth: 0
     - _SurfFoam_ReflectionPower: 0.482
     - _SurfFoam_Scale: 3.4
@@ -415,8 +415,8 @@ Material:
     - _Surface: 1
     - _SurfaceDistortionScale: 1.48
     - _SurfaceDistortionStrength: 0.1
-    - _SurfaceDistortion_Scale: 10
-    - _SurfaceDistortion_Strength: 0.1
+    - _SurfaceDistortion_Scale: 1
+    - _SurfaceDistortion_Strength: 1
     - _SurfaceFoamDistortion: 0.1
     - _SurfaceFoamScale: 2.5
     - _SurfaceFomShaodwDepth: 24.99
@@ -491,7 +491,7 @@ Material:
     - _FoamDistortionSpeed: {r: 0.1, g: 0.1, b: 0, a: 0}
     - _FoamShadow_Color: {r: 0, g: 0, b: 0, a: 0.5019608}
     - _FresnelColor: {r: 0.2647297, g: 0.116945416, b: 0.82641506, a: 1}
-    - _InterSec_Color: {r: 0, g: 1, b: 0.64240026, a: 0.654902}
+    - _InterSec_Color: {r: 0, g: 1, b: 0.64240026, a: 1}
     - _InterSec_Foam_Pan: {r: -1, g: 0, b: 0, a: 0}
     - _InterSec_Foam_Tile: {r: 1, g: 1, b: 0, a: 0}
     - _IntersectionDistanceTile: {r: 1, g: 1, b: 0, a: 0}

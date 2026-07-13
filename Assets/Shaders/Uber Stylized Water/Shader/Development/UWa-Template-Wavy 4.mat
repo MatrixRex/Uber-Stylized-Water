@@ -27,7 +27,7 @@ Material:
   m_ValidKeywords:
   - _ENABLECAUSTICS
   - _ENABLEREFRACTION
-  - _REFLECTIONTYPE_SSR
+  - _REFLECTIONTYPE_PLANNER
   m_InvalidKeywords:
   - _ENABLENORMAL
   - _ENABLE_UNDERWATERLAYER
@@ -222,10 +222,10 @@ Material:
     - _Caustics_Fade_Distance: 50
     - _Caustics_Fade_Smoothness: 5
     - _Caustics_Pan: 5
-    - _Caustics_Scale: 5
+    - _Caustics_Scale: 10
     - _Caustics_ShadowOcclusion: 1
     - _Caustics_Start: 50
-    - _Caustics_Strength: 1
+    - _Caustics_Strength: 2.33
     - _ConformToGeometry: 0
     - _Cull: 2
     - _Depth_Distance: 1.26
@@ -332,7 +332,7 @@ Material:
     - _ParalaxDepth: 30
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _REFLECTIONTYPE: 1
+    - _REFLECTIONTYPE: 2
     - _ReceiveShadows: 1
     - _ReflectionDistortion: 0.07
     - _ReflectionFresnel: 2.24
@@ -400,10 +400,10 @@ Material:
     - _Specular_Hardness: 1
     - _Specular_Size: 0.7
     - _Specular_Size_Additional: 1
-    - _Specular_Size_Sun: 5.26
-    - _Specular_Spread: 0.4
+    - _Specular_Size_Sun: 3
+    - _Specular_Spread: 0.523
     - _Specular_Strength: 50
-    - _Specular_SunMultiplier: 1
+    - _Specular_SunMultiplier: 2
     - _SrcBlend: 5
     - _SufFoam_Subtractor: 0
     - _SunShadowOcclusion: 0
@@ -482,7 +482,7 @@ Material:
     - _1st_Wave_Direction: {r: 1, g: 0, b: 0, a: 0}
     - _2nd_Wave_Direction: {r: -1, g: 0, b: 1, a: 0}
     - _Color_Deep: {r: 0.01249553, g: 0.079006314, b: 0.24528301, a: 1}
-    - _Color_Shallow: {r: 0.09115692, g: 0.81886786, b: 0.57766026, a: 1}
+    - _Color_Shallow: {r: 0.09115692, g: 0.81886786, b: 0.57766026, a: 0.9254902}
     - _Deep_Color: {r: 0, g: 0.15303946, b: 1, a: 1}
     - _DistanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _FakeSun_Color: {r: 1, g: 1, b: 1, a: 1}

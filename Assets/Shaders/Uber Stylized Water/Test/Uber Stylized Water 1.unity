@@ -741,13 +741,18 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967279
   reflectSkybox: 1
-  reflectionTarget: {fileID: 909347833}
+  reflectionTarget: {fileID: 0}
+  reflectionTargets:
+  - {fileID: 2003941505}
+  - {fileID: 909347833}
   reflectionPlaneOffset: 0
   hideReflectionCamera: 1
   volumeSize: {x: 100, y: 100, z: 100}
   blendDistance: 2
-  priority: 0
-  targetMaterial: {fileID: 2100000, guid: f810fdd5721521146871aa8dcb6ab313, type: 2}
+  priority: 1
+  targetMaterials:
+  - {fileID: 2100000, guid: 3d405aed53ba927498ba6f4e50178024, type: 2}
+  - {fileID: 2100000, guid: f810fdd5721521146871aa8dcb6ab313, type: 2}
 --- !u!4 &235182958
 Transform:
   m_ObjectHideFlags: 0
@@ -3251,7 +3256,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &832575518
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7653,6 +7658,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1427231106215768244, guid: 083304791df7d434abd062946956fdad, type: 3}
   m_PrefabInstance: {fileID: 2003941503}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2003941505 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1766919092122462734, guid: 083304791df7d434abd062946956fdad, type: 3}
+  m_PrefabInstance: {fileID: 2003941503}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2022628875
 GameObject:
   m_ObjectHideFlags: 0
@@ -7669,7 +7679,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2022628876
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7688,13 +7698,16 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967279
   reflectSkybox: 1
-  reflectionTarget: {fileID: 592099009}
+  reflectionTarget: {fileID: 0}
+  reflectionTargets:
+  - {fileID: 592099009}
   reflectionPlaneOffset: 0
   hideReflectionCamera: 1
   volumeSize: {x: 100, y: 100, z: 100}
   blendDistance: 5
   priority: 1
-  targetMaterial: {fileID: 2100000, guid: 3d405aed53ba927498ba6f4e50178024, type: 2}
+  targetMaterials:
+  - {fileID: 2100000, guid: 3d405aed53ba927498ba6f4e50178024, type: 2}
 --- !u!4 &2022628877
 Transform:
   m_ObjectHideFlags: 0
