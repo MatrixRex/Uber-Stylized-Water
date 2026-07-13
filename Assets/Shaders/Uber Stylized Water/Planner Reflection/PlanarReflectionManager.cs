@@ -143,7 +143,7 @@ public class PlanarReflectionManager : MonoBehaviour
         foreach (var volume in _volumes)
         {
             if (!volume.gameObject.activeInHierarchy || !volume.enabled) continue;
-            if (volume.reflectionTarget == null) continue;
+            if (volume.GetPrimaryTarget() == null) continue;
 
             float blend = volume.GetBlendFactor(camera);
             if (blend < 1f)
@@ -185,18 +185,27 @@ public class PlanarReflectionManager : MonoBehaviour
         foreach (var volume in _volumes)
         {
             if (volume == null) continue;
-            volume.UpdateTargetMaterial();
-            if (volume.targetMaterial == null) continue;
+            volume.UpdateTargetMaterials();
+            if (volume.targetMaterials == null || volume.targetMaterials.Count == 0) continue;
 
             if (activeVolume == volume)
             {
-                volume.targetMaterial.SetFloat(_planarReflectionBlendId, activeBlend);
+                foreach (var mat in volume.targetMaterials)
+                {
+                    if (mat != null) mat.SetFloat(_planarReflectionBlendId, activeBlend);
+                }
             }
             else
             {
-                if (activeVolume == null || activeVolume.targetMaterial != volume.targetMaterial)
+                foreach (var mat in volume.targetMaterials)
                 {
-                    volume.targetMaterial.SetFloat(_planarReflectionBlendId, 1f);
+                    if (mat != null)
+                    {
+                        if (activeVolume == null || !activeVolume.targetMaterials.Contains(mat))
+                        {
+                            mat.SetFloat(_planarReflectionBlendId, 1f);
+                        }
+                    }
                 }
             }
         }
@@ -211,7 +220,8 @@ public class PlanarReflectionManager : MonoBehaviour
 
         BeginPlanarReflections?.Invoke(context, _reflectionCamera);
 
-        if (_reflectionCamera.WorldToViewportPoint(activeVolume.reflectionTarget.transform.position).z < 100000)
+        var activePrimaryTarget = activeVolume.GetPrimaryTarget();
+        if (activePrimaryTarget != null && _reflectionCamera.WorldToViewportPoint(activePrimaryTarget.transform.position).z < 100000)
         {
             RenderPipeline.SubmitRenderRequest(_reflectionCamera, new UniversalRenderPipeline.SingleCameraRequest());
         }
@@ -244,10 +254,11 @@ public class PlanarReflectionManager : MonoBehaviour
         Vector3 pos = Vector3.zero;
         Vector3 normal = Vector3.up;
 
-        if (volume.reflectionTarget != null)
+        var primaryTarget = volume.GetPrimaryTarget();
+        if (primaryTarget != null)
         {
-            pos = volume.reflectionTarget.transform.position + Vector3.up * volume.reflectionPlaneOffset;
-            normal = volume.reflectionTarget.transform.up;
+            pos = primaryTarget.transform.position + Vector3.up * volume.reflectionPlaneOffset;
+            normal = primaryTarget.transform.up;
         }
 
         UpdateCamera(realCamera, _reflectionCamera, volume);

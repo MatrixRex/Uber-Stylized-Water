@@ -33,8 +33,9 @@ public static class PlanarReflectionEditor
             if (r.gameObject.name.ToLower().Contains("water") || 
                 (r.sharedMaterial != null && r.sharedMaterial.shader != null && r.sharedMaterial.shader.name.ToLower().Contains("water")))
             {
-                volume.reflectionTarget = r.gameObject;
-                volume.UpdateTargetMaterial();
+                if (volume.reflectionTargets == null) volume.reflectionTargets = new System.Collections.Generic.List<GameObject>();
+                volume.reflectionTargets.Add(r.gameObject);
+                volume.UpdateTargetMaterials();
                 EditorUtility.SetDirty(volume);
                 Debug.Log($"[UWa] Automatically assigned reflection target: '{r.gameObject.name}'");
                 break;

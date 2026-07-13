@@ -15,7 +15,11 @@ public class PlanarReflectionVolume : MonoBehaviour
     [Range(0.01f, 1f)] public float renderScale = 1f;
     public LayerMask reflectionLayer = -1;
     public bool reflectSkybox;
+    [System.Obsolete("Use reflectionTargets instead")]
+    [HideInInspector]
     public GameObject reflectionTarget;
+
+    public List<GameObject> reflectionTargets = new List<GameObject>();
     [Range(-2f, 3f)] public float reflectionPlaneOffset;
     public bool hideReflectionCamera;
 
@@ -25,32 +29,32 @@ public class PlanarReflectionVolume : MonoBehaviour
     public int priority = 0;
 
     [HideInInspector]
-    public Material targetMaterial;
+    public List<Material> targetMaterials = new List<Material>();
 
     private readonly int _planarReflectionBlendId = Shader.PropertyToID("_PlannerReflectionBlend");
 
     void OnEnable()
     {
         reflectionLayer = ~(1 << 4);
-        UpdateTargetMaterial();
+        UpdateTargetMaterials();
         PlanarReflectionManager.RegisterVolume(this);
     }
 
     void OnDisable()
     {
         PlanarReflectionManager.UnregisterVolume(this);
-        ResetMaterial();
+        ResetMaterials();
     }
 
     void OnDestroy()
     {
         PlanarReflectionManager.UnregisterVolume(this);
-        ResetMaterial();
+        ResetMaterials();
     }
 
     void OnValidate()
     {
-        UpdateTargetMaterial();
+        UpdateTargetMaterials();
         if (isGlobal)
         {
             #if UNITY_EDITOR
@@ -82,23 +86,59 @@ public class PlanarReflectionVolume : MonoBehaviour
         }
     }
 
-    public void UpdateTargetMaterial()
+    public GameObject GetPrimaryTarget()
     {
+        if (reflectionTargets != null)
+        {
+            foreach (var target in reflectionTargets)
+            {
+                if (target != null) return target;
+            }
+        }
+        return null;
+    }
+
+    public void UpdateTargetMaterials()
+    {
+        targetMaterials.Clear();
+
+        #pragma warning disable CS0618
         if (reflectionTarget != null)
         {
-            var renderer = reflectionTarget.GetComponent<Renderer>();
-            if (renderer != null)
+            if (!reflectionTargets.Contains(reflectionTarget))
             {
-                targetMaterial = renderer.sharedMaterial;
+                reflectionTargets.Add(reflectionTarget);
+            }
+            reflectionTarget = null;
+        }
+        #pragma warning restore CS0618
+
+        if (reflectionTargets != null)
+        {
+            foreach (var target in reflectionTargets)
+            {
+                if (target != null && target.TryGetComponent<Renderer>(out var renderer))
+                {
+                    if (renderer.sharedMaterial != null && !targetMaterials.Contains(renderer.sharedMaterial))
+                    {
+                        targetMaterials.Add(renderer.sharedMaterial);
+                    }
+                }
             }
         }
     }
 
-    public void ResetMaterial()
+    public void ResetMaterials()
     {
-        if (targetMaterial != null)
+        if (targetMaterials != null)
         {
-            targetMaterial.SetFloat(_planarReflectionBlendId, 1f);
+            foreach (var mat in targetMaterials)
+            {
+                if (mat != null)
+                {
+                    mat.SetFloat(_planarReflectionBlendId, 1f);
+                }
+            }
         }
     }
 
@@ -221,6 +261,9 @@ public class PlanarReflectionVolumeEditor : Editor
         // If not global, draw volume settings, otherwise skip volume boundaries settings
         DrawInspectorFields(volume);
 
+        // Target validation
+        VerifyTargets(volume);
+
         // Check 1: Check if PlanarReflectionManager exists in the scene
         var manager = GameObject.FindAnyObjectByType<PlanarReflectionManager>();
         if (manager == null)
@@ -247,6 +290,54 @@ public class PlanarReflectionVolumeEditor : Editor
         }
     }
 
+    private void VerifyTargets(PlanarReflectionVolume volume)
+    {
+        if (volume.reflectionTargets == null || volume.reflectionTargets.Count == 0) return;
+
+        bool duplicateMaterials = false;
+        bool differentYPlanes = false;
+        float? firstY = null;
+        var uniqueMaterials = new System.Collections.Generic.HashSet<Material>();
+
+        foreach (var target in volume.reflectionTargets)
+        {
+            if (target == null) continue;
+
+            // 1. Check Y heights
+            float currentY = target.transform.position.y;
+            if (firstY == null)
+            {
+                firstY = currentY;
+            }
+            else if (Mathf.Abs(firstY.Value - currentY) > 0.001f)
+            {
+                differentYPlanes = true;
+            }
+
+            // 2. Check duplicate materials
+            if (target.TryGetComponent<Renderer>(out var r))
+            {
+                if (r.sharedMaterial != null)
+                {
+                    if (!uniqueMaterials.Add(r.sharedMaterial))
+                    {
+                        duplicateMaterials = true;
+                    }
+                }
+            }
+        }
+
+        if (duplicateMaterials)
+        {
+            EditorGUILayout.HelpBox("Some targets share the same material. You only need to assign one target per unique material to apply the reflection settings.", MessageType.Info);
+        }
+
+        if (differentYPlanes)
+        {
+            EditorGUILayout.HelpBox("Targets are at different global Y heights! Planar reflection will not align correctly with all surfaces. The world Y of the first non-null target will be used for the reflection plane calculation.", MessageType.Warning);
+        }
+    }
+
     private void DrawInspectorFields(PlanarReflectionVolume volume)
     {
         serializedObject.Update();
@@ -255,7 +346,7 @@ public class PlanarReflectionVolumeEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("renderScale"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("reflectionLayer"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("reflectSkybox"));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("reflectionTarget"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("reflectionTargets"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("reflectionPlaneOffset"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("hideReflectionCamera"));
 
