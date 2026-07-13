@@ -169,5 +169,11 @@ public class WaterFloatingSystem : MonoBehaviour
     /// Convenience overload using the current application time.
     /// </summary>
     public WaveSample SampleWave(Vector3 worldPos)
-        => SampleWave(worldPos, Application.isPlaying ? Time.time : (float)UnityEditor.EditorApplication.timeSinceStartup);
+    {
+#if UNITY_EDITOR
+        return SampleWave(worldPos, Application.isPlaying ? Time.time : (float)UnityEditor.EditorApplication.timeSinceStartup);
+#else
+        return SampleWave(worldPos, Time.time);
+#endif
+    }
 }

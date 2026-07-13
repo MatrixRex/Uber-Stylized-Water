@@ -10,6 +10,7 @@
 //  R = signed distance to shoreline (meters, + in water, - on land)
 //  G = water depth (meters)
 
+#if UNITY_EDITOR
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -224,3 +225,4 @@ public class WaterSDFBaker : EditorWindow
                         .ConcatenatedLayersMaskToLayerMask(concat);
     }
 }
+#endif

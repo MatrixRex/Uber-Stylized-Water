@@ -91,10 +91,12 @@ public class FloatingObject : MonoBehaviour
         // Re-scan children every frame so adding/removing points works live
         RefreshSamplePoints();
 
+#if UNITY_EDITOR
         if (!Application.isPlaying && previewInEditMode)
         {
             EditModeUpdate();
         }
+#endif
     }
 
     private void FixedUpdate()
@@ -156,6 +158,7 @@ public class FloatingObject : MonoBehaviour
         return bounds;
     }
 
+#if UNITY_EDITOR
     // ─────────────────────────────────────────────────────────────────────
     /// <summary>Edit-mode preview: move + rotate transform directly.</summary>
     private void EditModeUpdate()
@@ -215,6 +218,7 @@ public class FloatingObject : MonoBehaviour
 
         transform.rotation = Quaternion.FromToRotation(transform.up, avgNormal) * transform.rotation;
     }
+#endif
 
     /// <summary>Play-mode: apply Rigidbody buoyancy forces (Archimedes' principle).</summary>
     private void PlayModeFixedUpdate()
