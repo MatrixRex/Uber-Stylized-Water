@@ -3561,27 +3561,27 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 3d405aed53ba927498ba6f4e50178024, type: 2}
     - target: {fileID: 1427231106215768244, guid: 083304791df7d434abd062946956fdad, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.7773795
+      value: 3.4461691
       objectReference: {fileID: 0}
     - target: {fileID: 1427231106215768244, guid: 083304791df7d434abd062946956fdad, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.7773795
+      value: 3.4461691
       objectReference: {fileID: 0}
     - target: {fileID: 1427231106215768244, guid: 083304791df7d434abd062946956fdad, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.7773795
+      value: 3.4461691
       objectReference: {fileID: 0}
     - target: {fileID: 1427231106215768244, guid: 083304791df7d434abd062946956fdad, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 37.48
+      value: 72.57
       objectReference: {fileID: 0}
     - target: {fileID: 1427231106215768244, guid: 083304791df7d434abd062946956fdad, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.029994
+      value: -2.37
       objectReference: {fileID: 0}
     - target: {fileID: 1427231106215768244, guid: 083304791df7d434abd062946956fdad, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -158.52
+      value: -175.21
       objectReference: {fileID: 0}
     - target: {fileID: 1427231106215768244, guid: 083304791df7d434abd062946956fdad, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3694,7 +3694,7 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 128
   m_UpdateFrequency: 0
-  m_BoxSize: {x: 182.79753, y: 40.894268, z: 165.46678}
+  m_BoxSize: {x: 527.6564, y: 159.23454, z: 481.4465}
   m_BoxOffset: {x: 19.218548, y: 11.575596, z: 1.9017868}
   m_NearClip: 0.3
   m_FarClip: 1000
@@ -3721,7 +3721,7 @@ Transform:
   m_GameObject: {fileID: 977601173}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 63.730892, y: 22.174366, z: -96.26337}
+  m_LocalPosition: {x: 80.1, y: 22.174366, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7213,9 +7213,9 @@ MonoBehaviour:
           z: -0.003980039
           w: 0.70709556
     - Position:
-        x: -86.52855
-        y: 2.2732239
-        z: -84.800865
+        x: -89.38855
+        y: 2.573223
+        z: -84.75086
       TangentIn:
         x: 0
         y: 0
@@ -7226,28 +7226,46 @@ MonoBehaviour:
         z: 29.719368
       Rotation:
         value:
-          x: -6.585434e-10
+          x: -6.58537e-10
           y: 0.7071068
-          z: -6.585443e-10
+          z: -6.58542e-10
           w: -0.70710665
     - Position:
-        x: -114.258545
-        y: 2.233223
-        z: -18.210861
+        x: -113.94855
+        y: 1.9732246
+        z: -38.96086
       TangentIn:
         x: 0
         y: 0
-        z: -15.390488
+        z: -8.534326
       TangentOut:
         x: 0
         y: 0
-        z: 15.390488
+        z: 8.534326
       Rotation:
         value:
           x: 0
           y: 0
           z: 0
           w: 1
+    - Position:
+        x: -106.19855
+        y: -1.7667761
+        z: -6.2308617
+      TangentIn:
+        x: 0
+        y: 0
+        z: -10.841494
+      TangentOut:
+        x: 0
+        y: 0
+        z: 2.4066496
+      Rotation:
+        value:
+          x: 0.15467088
+          y: 0.15464191
+          z: -0.029731108
+          w: 0.9753353
     m_MetaData:
     - Mode: 3
       Tension: 0.5
@@ -7258,6 +7276,8 @@ MonoBehaviour:
     - Mode: 2
       Tension: 0.5
     - Mode: 2
+      Tension: 0.5
+    - Mode: 3
       Tension: 0.5
     m_Closed: 0
     m_IntData:
@@ -7303,6 +7323,7 @@ MonoBehaviour:
   - 1
   - 1
   - 1
+  - 0.6
   - 1
   - 1
   m_CrossSections: 10
@@ -7312,6 +7333,8 @@ MonoBehaviour:
   m_RebuildOnSplineChange: 1
   m_RebuildEveryFrame: 0
   m_UpdateMeshCollider: 0
+  m_IsBaked: 0
+  m_BakedMesh: {fileID: 0}
 --- !u!1 &1841442775
 GameObject:
   m_ObjectHideFlags: 0
