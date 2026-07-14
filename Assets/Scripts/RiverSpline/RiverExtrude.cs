@@ -49,8 +49,31 @@ namespace RiverTools
         [Header("Collider (optional)")]
         [SerializeField] bool m_UpdateMeshCollider = false;
 
+        [HideInInspector] [SerializeField] bool m_IsBaked = false;
+        [HideInInspector] [SerializeField] Mesh m_BakedMesh = null;
+
         Mesh m_Mesh;
         bool m_RebuildRequested = true;
+
+        public Mesh GeneratedMesh => m_Mesh;
+
+        public bool IsBaked
+        {
+            get => m_IsBaked;
+            set => m_IsBaked = value;
+        }
+
+        public Mesh BakedMesh
+        {
+            get => m_BakedMesh;
+            set => m_BakedMesh = value;
+        }
+
+        public bool UpdateMeshCollider
+        {
+            get => m_UpdateMeshCollider;
+            set => m_UpdateMeshCollider = value;
+        }
 
         public SplineContainer Container
         {
@@ -183,14 +206,24 @@ namespace RiverTools
 
         void EnsureMeshExists()
         {
+            var filter = GetComponent<MeshFilter>();
+            if (m_IsBaked)
+            {
+                if (m_BakedMesh != null && filter != null)
+                {
+                    if (filter.sharedMesh != m_BakedMesh)
+                        filter.sharedMesh = m_BakedMesh;
+                }
+                return;
+            }
+
             if (m_Mesh == null)
             {
                 m_Mesh = new Mesh { name = "River Mesh" };
                 m_Mesh.hideFlags = HideFlags.DontSave;
             }
 
-            var filter = GetComponent<MeshFilter>();
-            if (filter.sharedMesh != m_Mesh)
+            if (filter != null && filter.sharedMesh != m_Mesh)
                 filter.sharedMesh = m_Mesh;
         }
 
@@ -200,6 +233,17 @@ namespace RiverTools
         /// </summary>
         public void Rebuild()
         {
+            if (m_IsBaked)
+            {
+                EnsureMeshExists();
+                if (m_UpdateMeshCollider && TryGetComponent<MeshCollider>(out var bakedCollider) && m_BakedMesh != null)
+                {
+                    if (bakedCollider.sharedMesh != m_BakedMesh)
+                        bakedCollider.sharedMesh = m_BakedMesh;
+                }
+                return;
+            }
+
             if (m_Container == null || m_Container.Spline == null || m_Container.Spline.Count < 2)
                 return;
 
