@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RiverTools
@@ -6,8 +7,8 @@ namespace RiverTools
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class VertexColorPainter : MonoBehaviour
     {
-        [SerializeField] private Mesh m_OriginalMesh;
-        [SerializeField] private Mesh m_CopyMesh;
+        [HideInInspector] [SerializeField] private Mesh m_OriginalMesh;
+        [HideInInspector] [SerializeField] private Mesh m_CopyMesh;
 
         public Mesh OriginalMesh => m_OriginalMesh;
         public Mesh CopyMesh => m_CopyMesh;
@@ -31,6 +32,19 @@ namespace RiverTools
                     colors[i] = new Color(0f, 0f, 0f, 0f);
                 }
                 m_CopyMesh.colors = colors;
+            }
+
+            // Initialize UV2 (channel 1) as Vector4 list if missing or incorrect length
+            List<Vector4> uv2 = new List<Vector4>();
+            m_CopyMesh.GetUVs(1, uv2);
+            if (uv2 == null || uv2.Count != m_CopyMesh.vertexCount)
+            {
+                uv2 = new List<Vector4>(m_CopyMesh.vertexCount);
+                for (int i = 0; i < m_CopyMesh.vertexCount; i++)
+                {
+                    uv2.Add(new Vector4(1f, 1f, 1f, 1f));
+                }
+                m_CopyMesh.SetUVs(1, uv2);
             }
 
             GetComponent<MeshFilter>().sharedMesh = m_CopyMesh;
