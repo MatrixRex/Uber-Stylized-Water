@@ -142,7 +142,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SurfFoam_Map:
-        m_Texture: {fileID: 2800000, guid: ff0a279251580d24f9a7282f3047c8bf, type: 3}
+        m_Texture: {fileID: 2800000, guid: f1555b31bebb94d4fa8192eff16149ef, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SurfFoam_Mask:
@@ -340,7 +340,7 @@ Material:
     - _Reflection_Distortion_Strength: 1
     - _Reflection_Fresnel: 0.7
     - _Reflection_Fresnel_Strength: 1
-    - _Reflection_Strength: 1
+    - _Reflection_Strength: 0
     - _RefractionFadeDistance: 5
     - _RefractionStrength: 0.2
     - _Refraction_Distace_Mask: 10
@@ -410,7 +410,7 @@ Material:
     - _SurfFoam_Edge: 0.182
     - _SurfFoam_EdgeSmooth: 0
     - _SurfFoam_ReflectionPower: 0.482
-    - _SurfFoam_Scale: 3.4
+    - _SurfFoam_Scale: 10
     - _SurfFoam_SpecularPower: 0
     - _Surface: 1
     - _SurfaceDistortionScale: 1.48
@@ -436,7 +436,7 @@ Material:
     - _UseMeshUV: 1
     - _WORLDSPACEDEPTH: 1
     - _WaterDepth: 0.6
-    - _Water_Depth: 0.75
+    - _Water_Depth: 1.08
     - _WaveHeight: 0.01
     - _WaveHeight2nd: 0.01
     - _WaveLength: 10
@@ -483,7 +483,7 @@ Material:
     - _1st_Wave_Direction: {r: 1, g: 0, b: 0, a: 0}
     - _2nd_Wave_Direction: {r: -1, g: 0, b: 1, a: 0}
     - _Color_Deep: {r: 0.01249553, g: 0.079006314, b: 0.24528301, a: 1}
-    - _Color_Shallow: {r: 0.6024611, g: 0.82641506, b: 0.478697, a: 1}
+    - _Color_Shallow: {r: 0.6024611, g: 0.82641506, b: 0.478697, a: 0}
     - _Deep_Color: {r: 0, g: 0.15303946, b: 1, a: 1}
     - _DistanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _FakeSun_Color: {r: 1, g: 1, b: 1, a: 1}

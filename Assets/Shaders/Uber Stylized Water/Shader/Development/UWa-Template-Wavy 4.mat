@@ -27,7 +27,7 @@ Material:
   m_ValidKeywords:
   - _ENABLECAUSTICS
   - _ENABLEREFRACTION
-  - _REFLECTIONTYPE_PLANNER
+  - _REFLECTIONTYPE_SSR
   m_InvalidKeywords:
   - _ENABLENORMAL
   - _ENABLE_UNDERWATERLAYER
@@ -332,7 +332,7 @@ Material:
     - _ParalaxDepth: 30
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _REFLECTIONTYPE: 2
+    - _REFLECTIONTYPE: 1
     - _ReceiveShadows: 1
     - _ReflectionDistortion: 0.07
     - _ReflectionFresnel: 2.24

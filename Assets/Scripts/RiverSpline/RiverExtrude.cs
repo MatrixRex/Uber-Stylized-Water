@@ -342,6 +342,23 @@ namespace RiverTools
             m_Mesh.SetVertices(vertices);
             m_Mesh.SetNormals(normals);
             m_Mesh.SetUVs(0, uvs);
+
+            // Initialize vertex colors to clear black with 1.0 alpha (no overlay)
+            Color[] colors = new Color[vertices.Count];
+            for (int k = 0; k < colors.Length; k++)
+            {
+                colors[k] = new Color(0f, 0f, 0f, 1f);
+            }
+            m_Mesh.colors = colors;
+
+            // Initialize UV2 (channel 1) with Vector4 values (1, 1, 1, 0)
+            List<Vector4> uv2 = new List<Vector4>(vertices.Count);
+            for (int k = 0; k < vertices.Count; k++)
+            {
+                uv2.Add(new Vector4(1f, 1f, 1f, 0f));
+            }
+            m_Mesh.SetUVs(1, uv2);
+
             m_Mesh.SetTriangles(tris, 0);
             m_Mesh.RecalculateBounds();
             m_Mesh.RecalculateTangents();

@@ -8,7 +8,6 @@ namespace RiverTools
     {
         public override void OnInspectorGUI()
         {
-            // Draw default inspector (which will be empty since fields are hidden)
             DrawDefaultInspector();
 
             VertexColorPainter painter = (VertexColorPainter)target;

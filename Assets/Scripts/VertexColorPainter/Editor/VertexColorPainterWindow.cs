@@ -17,18 +17,24 @@ namespace RiverTools
         private enum PaintTool
         {
             Select,
-            PaintColorAlpha,
-            PaintAlphaOnly,
-            EraseColorAlpha,
-            EraseAlphaOnly
+            Paint,
+            Erase
+        }
+
+        private enum PaintSubTool
+        {
+            ColorAndAlpha,
+            OnlyAlpha
         }
 
         private PaintTool m_ActiveTool = PaintTool.Select;
+        private PaintSubTool m_ActiveSubTool = PaintSubTool.ColorAndAlpha;
+
         private float m_BrushSize = 1.0f;
         private float m_BrushStrength = 0.5f;
         private bool m_SmoothFalloff = true;
         private Color m_BrushColor = Color.red;
-        private float m_BrushAlpha = 1.0f; // Slider for Alpha-only mode
+        private float m_BrushAlpha = 1.0f;
 
         private VertexColorPainter m_ActivePainter;
         private Vector3 m_HitPointWorld;
@@ -37,22 +43,31 @@ namespace RiverTools
 
         private Tool m_LastActiveTool = Tool.Move;
 
-        // UI Toolkit Panels
+        // UI Panels
         private VisualElement m_NoSelectionPanel;
         private VisualElement m_InitPanel;
         private VisualElement m_BrushPanel;
 
-        // UI Toolkit Controls
+        // Controls
         private Button m_SelectBtn;
         private Button m_PaintBtn;
-        private Button m_PaintAlphaBtn;
         private Button m_EraseBtn;
-        private Button m_EraseAlphaBtn;
-        private ColorField m_ColorField;
-        private Slider m_AlphaSlider;
+
+        private VisualElement m_SubToolContainer;
+        private Button m_SubColorBtn;
+        private Button m_SubAlphaBtn;
+
+        private VisualElement m_BrushSettingsContainer;
         private Slider m_SizeSlider;
         private Slider m_StrengthSlider;
         private Toggle m_FalloffToggle;
+        private ColorField m_ColorField;
+        private Slider m_AlphaSlider;
+
+        // Collapsible Helpboxes
+        private Foldout m_SelectHelpFoldout;
+        private Foldout m_PaintHelpFoldout;
+        private Foldout m_EraseHelpFoldout;
 
         private void OnEnable()
         {
@@ -75,7 +90,6 @@ namespace RiverTools
         {
             VisualElement root = rootVisualElement;
 
-            // 1. No Selection Panel
             m_NoSelectionPanel = new VisualElement
             {
                 style = {
@@ -91,7 +105,6 @@ namespace RiverTools
             });
             root.Add(m_NoSelectionPanel);
 
-            // 2. Init Panel
             m_InitPanel = new VisualElement
             {
                 style = {
@@ -108,7 +121,6 @@ namespace RiverTools
             m_InitPanel.Add(new Button(OnInitPaintClick) { text = "Init Paint" });
             root.Add(m_InitPanel);
 
-            // 3. Brush Panel
             m_BrushPanel = new VisualElement
             {
                 style = {
@@ -119,12 +131,14 @@ namespace RiverTools
                 }
             };
 
-            // Toolbar Container (5 Buttons)
+            // --- Main Tools ---
+            m_BrushPanel.Add(new Label("Vertex Painter Tool") { style = { unityFontStyleAndWeight = FontStyle.Bold, marginBottom = 5 } });
+
             var toolbarContainer = new VisualElement
             {
                 style = {
                     flexDirection = FlexDirection.Row,
-                    marginBottom = 10
+                    marginBottom = 15
                 }
             };
 
@@ -141,7 +155,7 @@ namespace RiverTools
                 }
             };
 
-            m_PaintBtn = new Button(() => SetActiveTool(PaintTool.PaintColorAlpha))
+            m_PaintBtn = new Button(() => SetActiveTool(PaintTool.Paint))
             {
                 text = "Paint",
                 style = {
@@ -154,35 +168,9 @@ namespace RiverTools
                 }
             };
 
-            m_PaintAlphaBtn = new Button(() => SetActiveTool(PaintTool.PaintAlphaOnly))
-            {
-                text = "Paint Alpha",
-                style = {
-                    flexGrow = 1.0f,
-                    height = 25,
-                    borderTopLeftRadius = 0,
-                    borderBottomLeftRadius = 0,
-                    borderTopRightRadius = 0,
-                    borderBottomRightRadius = 0
-                }
-            };
-
-            m_EraseBtn = new Button(() => SetActiveTool(PaintTool.EraseColorAlpha))
+            m_EraseBtn = new Button(() => SetActiveTool(PaintTool.Erase))
             {
                 text = "Erase",
-                style = {
-                    flexGrow = 1.0f,
-                    height = 25,
-                    borderTopLeftRadius = 0,
-                    borderBottomLeftRadius = 0,
-                    borderTopRightRadius = 0,
-                    borderBottomRightRadius = 0
-                }
-            };
-
-            m_EraseAlphaBtn = new Button(() => SetActiveTool(PaintTool.EraseAlphaOnly))
-            {
-                text = "Erase Alpha",
                 style = {
                     flexGrow = 1.0f,
                     height = 25,
@@ -195,39 +183,96 @@ namespace RiverTools
 
             toolbarContainer.Add(m_SelectBtn);
             toolbarContainer.Add(m_PaintBtn);
-            toolbarContainer.Add(m_PaintAlphaBtn);
             toolbarContainer.Add(m_EraseBtn);
-            toolbarContainer.Add(m_EraseAlphaBtn);
             m_BrushPanel.Add(toolbarContainer);
 
-            // Size Slider
+            // --- Paint Sub-Tools ---
+            m_SubToolContainer = new VisualElement { style = { marginBottom = 15 } };
+            m_SubToolContainer.Add(new Label("Paint Sub-Tool") { style = { unityFontStyleAndWeight = FontStyle.Bold, marginBottom = 5 } });
+
+            var subToolbar = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+            m_SubColorBtn = new Button(() => SetActiveSubTool(PaintSubTool.ColorAndAlpha))
+            {
+                text = "Color + Alpha",
+                style = {
+                    flexGrow = 1.0f,
+                    height = 22,
+                    borderTopLeftRadius = 4,
+                    borderBottomLeftRadius = 4,
+                    borderTopRightRadius = 0,
+                    borderBottomRightRadius = 0
+                }
+            };
+            m_SubAlphaBtn = new Button(() => SetActiveSubTool(PaintSubTool.OnlyAlpha))
+            {
+                text = "Only Alpha",
+                style = {
+                    flexGrow = 1.0f,
+                    height = 22,
+                    borderTopLeftRadius = 0,
+                    borderBottomLeftRadius = 0,
+                    borderTopRightRadius = 4,
+                    borderBottomRightRadius = 4
+                }
+            };
+            subToolbar.Add(m_SubColorBtn);
+            subToolbar.Add(m_SubAlphaBtn);
+            m_SubToolContainer.Add(subToolbar);
+            m_BrushPanel.Add(m_SubToolContainer);
+
+            // --- Brush Settings ---
+            m_BrushSettingsContainer = new VisualElement { style = { marginBottom = 15 } };
+            m_BrushSettingsContainer.Add(new Label("Brush Settings") { style = { unityFontStyleAndWeight = FontStyle.Bold, marginBottom = 5 } });
+
             m_SizeSlider = new Slider("Brush Size", 0.1f, 10f) { value = m_BrushSize };
             m_SizeSlider.RegisterValueChangedCallback(evt => m_BrushSize = evt.newValue);
-            m_BrushPanel.Add(m_SizeSlider);
+            m_BrushSettingsContainer.Add(m_SizeSlider);
 
-            // Strength Slider
             m_StrengthSlider = new Slider("Brush Strength", 0.01f, 1.0f) { value = m_BrushStrength };
             m_StrengthSlider.RegisterValueChangedCallback(evt => m_BrushStrength = evt.newValue);
-            m_BrushPanel.Add(m_StrengthSlider);
+            m_BrushSettingsContainer.Add(m_StrengthSlider);
 
-            // Falloff Toggle
             m_FalloffToggle = new Toggle("Smooth Falloff") { value = m_SmoothFalloff };
             m_FalloffToggle.RegisterValueChangedCallback(evt => m_SmoothFalloff = evt.newValue);
-            m_BrushPanel.Add(m_FalloffToggle);
+            m_BrushSettingsContainer.Add(m_FalloffToggle);
 
-            // Color Field (Paint Color+Alpha)
             m_ColorField = new ColorField("Brush Color (RGBA)") { value = m_BrushColor };
             m_ColorField.RegisterValueChangedCallback(evt => m_BrushColor = evt.newValue);
-            m_BrushPanel.Add(m_ColorField);
+            m_BrushSettingsContainer.Add(m_ColorField);
 
-            // Alpha Slider (Paint Alpha-Only)
             m_AlphaSlider = new Slider("Brush Alpha", 0.0f, 1.0f) { value = m_BrushAlpha };
             m_AlphaSlider.RegisterValueChangedCallback(evt => m_BrushAlpha = evt.newValue);
-            m_BrushPanel.Add(m_AlphaSlider);
+            m_BrushSettingsContainer.Add(m_AlphaSlider);
+
+            m_BrushPanel.Add(m_BrushSettingsContainer);
+
+            // --- Collapsible Helpboxes ---
+            m_BrushPanel.Add(new Label("Help & Shortcuts") { style = { unityFontStyleAndWeight = FontStyle.Bold, marginBottom = 5 } });
+
+            m_SelectHelpFoldout = new Foldout { text = "Select Mode Help", value = false };
+            m_SelectHelpFoldout.Add(new Label("• Hides the brush gizmo.\n• Allows you to use Unity's default transform tools (Move, Rotate, Scale).\n• Safe mode for selection changes.")
+            {
+                style = { whiteSpace = WhiteSpace.Normal, paddingLeft = 10 }
+            });
+            m_BrushPanel.Add(m_SelectHelpFoldout);
+
+            m_PaintHelpFoldout = new Foldout { text = "Paint Mode Help", value = false };
+            m_PaintHelpFoldout.Add(new Label("• Drag left-mouse in Scene View to paint.\n• Sub-tools:\n  - Color + Alpha: Paints RGB color to vertex channels, and Color's Alpha to UV2.w.\n  - Only Alpha: Paints transparency values (Brush Alpha) directly to UV2.w.\n• Escape (Esc): Switched back to Select Mode.\n• Orbit (Alt + drag) & zoom are fully preserved.")
+            {
+                style = { whiteSpace = WhiteSpace.Normal, paddingLeft = 10 }
+            });
+            m_BrushPanel.Add(m_PaintHelpFoldout);
+
+            m_EraseHelpFoldout = new Foldout { text = "Erase Mode Help", value = false };
+            m_EraseHelpFoldout.Add(new Label("• Drag left-mouse in Scene View to erase.\n• Erases both painted colors (resets to transparent) and transparency multipliers (resets to 1.0) simultaneously.\n• Escape (Esc): Switched back to Select Mode.")
+            {
+                style = { whiteSpace = WhiteSpace.Normal, paddingLeft = 10 }
+            });
+            m_BrushPanel.Add(m_EraseHelpFoldout);
 
             root.Add(m_BrushPanel);
 
-            UpdateToolbarStyles();
+            UpdateToolStyles();
             OnSelectionChanged();
         }
 
@@ -248,27 +293,45 @@ namespace RiverTools
                 Tools.current = Tool.None;
             }
 
-            UpdateToolbarStyles();
+            UpdateToolStyles();
             SceneView.RepaintAll();
         }
 
-        private void UpdateToolbarStyles()
+        private void SetActiveSubTool(PaintSubTool subTool)
         {
-            if (m_SelectBtn == null || m_PaintBtn == null || m_PaintAlphaBtn == null || m_EraseBtn == null || m_EraseAlphaBtn == null || m_ColorField == null || m_AlphaSlider == null) return;
+            m_ActiveSubTool = subTool;
+            UpdateToolStyles();
+            SceneView.RepaintAll();
+        }
+
+        private void UpdateToolStyles()
+        {
+            if (m_SelectBtn == null || m_PaintBtn == null || m_EraseBtn == null) return;
 
             Color activeColor = new Color(0.2f, 0.4f, 0.6f);
 
             m_SelectBtn.style.backgroundColor = m_ActiveTool == PaintTool.Select ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
-            m_PaintBtn.style.backgroundColor = m_ActiveTool == PaintTool.PaintColorAlpha ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
-            m_PaintAlphaBtn.style.backgroundColor = m_ActiveTool == PaintTool.PaintAlphaOnly ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
-            m_EraseBtn.style.backgroundColor = m_ActiveTool == PaintTool.EraseColorAlpha ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
-            m_EraseAlphaBtn.style.backgroundColor = m_ActiveTool == PaintTool.EraseAlphaOnly ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
+            m_PaintBtn.style.backgroundColor = m_ActiveTool == PaintTool.Paint ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
+            m_EraseBtn.style.backgroundColor = m_ActiveTool == PaintTool.Erase ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
 
-            // Show ColorField only for Paint (Color + Alpha)
-            m_ColorField.style.display = m_ActiveTool == PaintTool.PaintColorAlpha ? DisplayStyle.Flex : DisplayStyle.None;
+            if (m_SubColorBtn != null && m_SubAlphaBtn != null)
+            {
+                m_SubColorBtn.style.backgroundColor = m_ActiveSubTool == PaintSubTool.ColorAndAlpha ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
+                m_SubAlphaBtn.style.backgroundColor = m_ActiveSubTool == PaintSubTool.OnlyAlpha ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
+            }
 
-            // Show AlphaSlider only for Paint Alpha
-            m_AlphaSlider.style.display = m_ActiveTool == PaintTool.PaintAlphaOnly ? DisplayStyle.Flex : DisplayStyle.None;
+            bool isPaint = m_ActiveTool == PaintTool.Paint;
+            bool isErase = m_ActiveTool == PaintTool.Erase;
+
+            if (m_SubToolContainer != null) m_SubToolContainer.style.display = isPaint ? DisplayStyle.Flex : DisplayStyle.None;
+            if (m_BrushSettingsContainer != null) m_BrushSettingsContainer.style.display = (isPaint || isErase) ? DisplayStyle.Flex : DisplayStyle.None;
+
+            if (m_ColorField != null) m_ColorField.style.display = (isPaint && m_ActiveSubTool == PaintSubTool.ColorAndAlpha) ? DisplayStyle.Flex : DisplayStyle.None;
+            if (m_AlphaSlider != null) m_AlphaSlider.style.display = (isPaint && m_ActiveSubTool == PaintSubTool.OnlyAlpha) ? DisplayStyle.Flex : DisplayStyle.None;
+
+            if (m_SelectHelpFoldout != null) m_SelectHelpFoldout.style.display = m_ActiveTool == PaintTool.Select ? DisplayStyle.Flex : DisplayStyle.None;
+            if (m_PaintHelpFoldout != null) m_PaintHelpFoldout.style.display = m_ActiveTool == PaintTool.Paint ? DisplayStyle.Flex : DisplayStyle.None;
+            if (m_EraseHelpFoldout != null) m_EraseHelpFoldout.style.display = m_ActiveTool == PaintTool.Erase ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         private void OnInitPaintClick()
@@ -283,7 +346,7 @@ namespace RiverTools
             m_ActivePainter = selected.GetComponent<VertexColorPainter>();
             m_ActivePainter.Initialize(filter.sharedMesh);
             
-            SetActiveTool(PaintTool.PaintColorAlpha);
+            SetActiveTool(PaintTool.Paint);
             OnSelectionChanged();
         }
 
@@ -339,7 +402,7 @@ namespace RiverTools
                 return;
             }
 
-            // Check if user is trying to navigate the Scene view (e.g. Orbit/Pan/Zoom)
+            // Check navigation
             bool isNavigating = current.alt || current.button == 1 || current.button == 2;
             if (isNavigating)
             {
@@ -350,11 +413,9 @@ namespace RiverTools
             Mesh copyMesh = m_ActivePainter.CopyMesh;
             if (copyMesh == null) return;
 
-            // Intercept control clicks to prevent default Unity selection changes in Scene view
             int controlID = GUIUtility.GetControlID(FocusType.Passive);
             HandleUtility.AddDefaultControl(controlID);
 
-            // Compute Local Ray
             Ray worldRay = HandleUtility.GUIPointToWorldRay(current.mousePosition);
             Vector3 localOrigin = targetTransform.InverseTransformPoint(worldRay.origin);
             Vector3 localDirection = targetTransform.InverseTransformDirection(worldRay.direction).normalized;
@@ -367,11 +428,9 @@ namespace RiverTools
                 m_HitPointWorld = targetTransform.TransformPoint(localHitPoint);
                 m_HitNormalWorld = targetTransform.TransformDirection(localHitNormal).normalized;
 
-                // Render brush outline
-                Handles.color = (m_ActiveTool == PaintTool.EraseColorAlpha || m_ActiveTool == PaintTool.EraseAlphaOnly) ? Color.blue : m_BrushColor;
+                Handles.color = m_ActiveTool == PaintTool.Erase ? Color.blue : m_BrushColor;
                 Handles.DrawWireDisc(m_HitPointWorld, m_HitNormalWorld, m_BrushSize);
 
-                // Perform painting on MouseDown/Drag
                 if ((current.type == EventType.MouseDown || current.type == EventType.MouseDrag) && current.button == 0)
                 {
                     PaintMesh(m_HitPointWorld, targetTransform, copyMesh);
@@ -417,63 +476,64 @@ namespace RiverTools
                     float factor = 1.0f - (dist / m_BrushSize);
                     if (m_SmoothFalloff)
                     {
-                        factor = factor * factor * (3.0f - 2.0f * factor); // Hermite smoothstep
+                        factor = factor * factor * (3.0f - 2.0f * factor);
                     }
 
                     float stepStrength = opacityStep * factor;
                     
-                    // 1. Process Colors
-                    if (m_ActiveTool == PaintTool.PaintColorAlpha)
-                      {
-                          Color oldColor = colors[i];
-                          float newAlpha = oldColor.a * (1.0f - stepStrength) + stepStrength;
-                          float newR = oldColor.r * (1.0f - stepStrength) + m_BrushColor.r * stepStrength;
-                          float newG = oldColor.g * (1.0f - stepStrength) + m_BrushColor.g * stepStrength;
-                          float newB = oldColor.b * (1.0f - stepStrength) + m_BrushColor.b * stepStrength;
-                          Color targetColor = new Color(newR, newG, newB, newAlpha);
-                          if (oldColor != targetColor)
-                          {
-                              colors[i] = targetColor;
-                              isDirty = true;
-                          }
-                      }
-                      else if (m_ActiveTool == PaintTool.EraseColorAlpha)
-                      {
-                          Color oldColor = colors[i];
-                          float newAlpha = oldColor.a * (1.0f - stepStrength);
-                          float newR = oldColor.r * (1.0f - stepStrength);
-                          float newG = oldColor.g * (1.0f - stepStrength);
-                          float newB = oldColor.b * (1.0f - stepStrength);
-                          Color targetColor = new Color(newR, newG, newB, newAlpha);
-                          if (oldColor != targetColor)
-                          {
-                              colors[i] = targetColor;
-                              isDirty = true;
-                          }
-                      }
+                    if (m_ActiveTool == PaintTool.Paint && m_ActiveSubTool == PaintSubTool.ColorAndAlpha)
+                    {
+                        Color oldColor = colors[i];
+                        float newAlpha = Mathf.Lerp(oldColor.a, 0.0f, stepStrength);
+                        float newR = oldColor.r * (1.0f - stepStrength) + m_BrushColor.r * stepStrength;
+                        float newG = oldColor.g * (1.0f - stepStrength) + m_BrushColor.g * stepStrength;
+                        float newB = oldColor.b * (1.0f - stepStrength) + m_BrushColor.b * stepStrength;
+                        Color targetColor = new Color(newR, newG, newB, newAlpha);
+                        if (oldColor != targetColor)
+                        {
+                            colors[i] = targetColor;
+                            isDirty = true;
+                        }
+                    }
+                    else if (m_ActiveTool == PaintTool.Erase)
+                    {
+                        Color oldColor = colors[i];
+                        float newAlpha = Mathf.Lerp(oldColor.a, 1.0f, stepStrength);
+                        float newR = oldColor.r * (1.0f - stepStrength);
+                        float newG = oldColor.g * (1.0f - stepStrength);
+                        float newB = oldColor.b * (1.0f - stepStrength);
+                        Color targetColor = new Color(newR, newG, newB, newAlpha);
+                        if (oldColor != targetColor)
+                        {
+                            colors[i] = targetColor;
+                            isDirty = true;
+                        }
+                    }
 
-                      // 2. Process UV2.w (transparency)
-                      Vector4 oldUV = uv2[i];
-                      float newW = oldUV.w;
+                    Vector4 oldUV = uv2[i];
+                    float newW = oldUV.w;
 
-                      if (m_ActiveTool == PaintTool.PaintColorAlpha)
-                      {
-                          newW = Mathf.Lerp(oldUV.w, m_BrushColor.a, stepStrength);
-                      }
-                      else if (m_ActiveTool == PaintTool.PaintAlphaOnly)
-                      {
-                          newW = Mathf.Lerp(oldUV.w, m_BrushAlpha, stepStrength);
-                      }
-                      else if (m_ActiveTool == PaintTool.EraseColorAlpha || m_ActiveTool == PaintTool.EraseAlphaOnly)
-                      {
-                          newW = Mathf.Lerp(oldUV.w, 1.0f, stepStrength);
-                      }
+                    if (m_ActiveTool == PaintTool.Paint)
+                    {
+                        if (m_ActiveSubTool == PaintSubTool.ColorAndAlpha)
+                        {
+                            newW = Mathf.Lerp(oldUV.w, 1.0f - m_BrushColor.a, stepStrength);
+                        }
+                        else if (m_ActiveSubTool == PaintSubTool.OnlyAlpha)
+                        {
+                            newW = Mathf.Lerp(oldUV.w, 1.0f - m_BrushAlpha, stepStrength);
+                        }
+                    }
+                    else if (m_ActiveTool == PaintTool.Erase)
+                    {
+                        newW = Mathf.Lerp(oldUV.w, 0.0f, stepStrength);
+                    }
 
-                      if (newW != oldUV.w)
-                      {
-                          uv2[i] = new Vector4(oldUV.x, oldUV.y, oldUV.z, newW);
-                          isDirty = true;
-                      }
+                    if (newW != oldUV.w)
+                    {
+                        uv2[i] = new Vector4(oldUV.x, oldUV.y, oldUV.z, newW);
+                        isDirty = true;
+                    }
                   }
               }
 

@@ -22,14 +22,14 @@ namespace RiverTools
             m_CopyMesh = Instantiate(original);
             m_CopyMesh.name = original.name + "_ColorPainted";
 
-            // Initialize vertex colors array to clear black (0,0,0,0) if missing
+            // Initialize vertex colors array to clear black with 1.0 alpha (no overlay) if missing
             Color[] colors = m_CopyMesh.colors;
             if (colors == null || colors.Length != m_CopyMesh.vertexCount)
             {
                 colors = new Color[m_CopyMesh.vertexCount];
                 for (int i = 0; i < colors.Length; i++)
                 {
-                    colors[i] = new Color(0f, 0f, 0f, 0f);
+                    colors[i] = new Color(0f, 0f, 0f, 1f); // Alpha = 1.0 (no overlay)
                 }
                 m_CopyMesh.colors = colors;
             }
@@ -42,7 +42,7 @@ namespace RiverTools
                 uv2 = new List<Vector4>(m_CopyMesh.vertexCount);
                 for (int i = 0; i < m_CopyMesh.vertexCount; i++)
                 {
-                    uv2.Add(new Vector4(1f, 1f, 1f, 1f));
+                    uv2.Add(new Vector4(1f, 1f, 1f, 0f)); // W component is 0 (no reduction)
                 }
                 m_CopyMesh.SetUVs(1, uv2);
             }
