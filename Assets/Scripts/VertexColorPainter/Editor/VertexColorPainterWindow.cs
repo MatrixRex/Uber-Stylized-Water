@@ -18,7 +18,9 @@ namespace RiverTools
         {
             Select,
             Paint,
-            Erase
+            PaintFlow,
+            Erase,
+            EraseFlow
         }
 
         private enum PaintSubTool
@@ -38,8 +40,10 @@ namespace RiverTools
 
         private VertexColorPainter m_ActivePainter;
         private Vector3 m_HitPointWorld;
+        private Vector3 m_LastHitPointWorld;
         private Vector3 m_HitNormalWorld;
         private bool m_HasHit = false;
+        private bool m_ShowFlowDirection = false;
 
         private Tool m_LastActiveTool = Tool.Move;
 
@@ -51,7 +55,9 @@ namespace RiverTools
         // Controls
         private Button m_SelectBtn;
         private Button m_PaintBtn;
+        private Button m_PaintFlowBtn;
         private Button m_EraseBtn;
+        private Button m_EraseFlowBtn;
 
         private VisualElement m_SubToolContainer;
         private Button m_SubColorBtn;
@@ -63,6 +69,7 @@ namespace RiverTools
         private Toggle m_FalloffToggle;
         private ColorField m_ColorField;
         private Slider m_AlphaSlider;
+        private Toggle m_ShowFlowToggle;
 
         // Collapsible Helpboxes
         private Foldout m_SelectHelpFoldout;
@@ -83,6 +90,12 @@ namespace RiverTools
             if (m_ActiveTool != PaintTool.Select)
             {
                 Tools.current = m_LastActiveTool;
+            }
+
+            if (m_ShowFlowDirection)
+            {
+                m_ShowFlowDirection = false;
+                UpdateFlowVisualization();
             }
         }
 
@@ -168,9 +181,35 @@ namespace RiverTools
                 }
             };
 
+            m_PaintFlowBtn = new Button(() => SetActiveTool(PaintTool.PaintFlow))
+            {
+                text = "Paint Flow",
+                style = {
+                    flexGrow = 1.0f,
+                    height = 25,
+                    borderTopLeftRadius = 0,
+                    borderBottomLeftRadius = 0,
+                    borderTopRightRadius = 0,
+                    borderBottomRightRadius = 0
+                }
+            };
+
             m_EraseBtn = new Button(() => SetActiveTool(PaintTool.Erase))
             {
                 text = "Erase",
+                style = {
+                    flexGrow = 1.0f,
+                    height = 25,
+                    borderTopLeftRadius = 0,
+                    borderBottomLeftRadius = 0,
+                    borderTopRightRadius = 0,
+                    borderBottomRightRadius = 0
+                }
+            };
+
+            m_EraseFlowBtn = new Button(() => SetActiveTool(PaintTool.EraseFlow))
+            {
+                text = "Erase Flow",
                 style = {
                     flexGrow = 1.0f,
                     height = 25,
@@ -183,7 +222,9 @@ namespace RiverTools
 
             toolbarContainer.Add(m_SelectBtn);
             toolbarContainer.Add(m_PaintBtn);
+            toolbarContainer.Add(m_PaintFlowBtn);
             toolbarContainer.Add(m_EraseBtn);
+            toolbarContainer.Add(m_EraseFlowBtn);
             m_BrushPanel.Add(toolbarContainer);
 
             // --- Paint Sub-Tools ---
@@ -243,6 +284,13 @@ namespace RiverTools
             m_AlphaSlider = new Slider("Brush Alpha", 0.0f, 1.0f) { value = m_BrushAlpha };
             m_AlphaSlider.RegisterValueChangedCallback(evt => m_BrushAlpha = evt.newValue);
             m_BrushSettingsContainer.Add(m_AlphaSlider);
+
+            m_ShowFlowToggle = new Toggle("Show Flow Direction") { value = m_ShowFlowDirection };
+            m_ShowFlowToggle.RegisterValueChangedCallback(evt => {
+                m_ShowFlowDirection = evt.newValue;
+                UpdateFlowVisualization();
+            });
+            m_BrushSettingsContainer.Add(m_ShowFlowToggle);
 
             m_BrushPanel.Add(m_BrushSettingsContainer);
 
@@ -306,13 +354,15 @@ namespace RiverTools
 
         private void UpdateToolStyles()
         {
-            if (m_SelectBtn == null || m_PaintBtn == null || m_EraseBtn == null) return;
+            if (m_SelectBtn == null || m_PaintBtn == null || m_PaintFlowBtn == null || m_EraseBtn == null || m_EraseFlowBtn == null) return;
 
             Color activeColor = new Color(0.2f, 0.4f, 0.6f);
 
             m_SelectBtn.style.backgroundColor = m_ActiveTool == PaintTool.Select ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
             m_PaintBtn.style.backgroundColor = m_ActiveTool == PaintTool.Paint ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
+            m_PaintFlowBtn.style.backgroundColor = m_ActiveTool == PaintTool.PaintFlow ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
             m_EraseBtn.style.backgroundColor = m_ActiveTool == PaintTool.Erase ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
+            m_EraseFlowBtn.style.backgroundColor = m_ActiveTool == PaintTool.EraseFlow ? new StyleColor(activeColor) : new StyleColor(StyleKeyword.Null);
 
             if (m_SubColorBtn != null && m_SubAlphaBtn != null)
             {
@@ -322,9 +372,11 @@ namespace RiverTools
 
             bool isPaint = m_ActiveTool == PaintTool.Paint;
             bool isErase = m_ActiveTool == PaintTool.Erase;
+            bool isPaintFlow = m_ActiveTool == PaintTool.PaintFlow;
+            bool isEraseFlow = m_ActiveTool == PaintTool.EraseFlow;
 
             if (m_SubToolContainer != null) m_SubToolContainer.style.display = isPaint ? DisplayStyle.Flex : DisplayStyle.None;
-            if (m_BrushSettingsContainer != null) m_BrushSettingsContainer.style.display = (isPaint || isErase) ? DisplayStyle.Flex : DisplayStyle.None;
+            if (m_BrushSettingsContainer != null) m_BrushSettingsContainer.style.display = (isPaint || isErase || isPaintFlow || isEraseFlow) ? DisplayStyle.Flex : DisplayStyle.None;
 
             if (m_ColorField != null) m_ColorField.style.display = (isPaint && m_ActiveSubTool == PaintSubTool.ColorAndAlpha) ? DisplayStyle.Flex : DisplayStyle.None;
             if (m_AlphaSlider != null) m_AlphaSlider.style.display = (isPaint && m_ActiveSubTool == PaintSubTool.OnlyAlpha) ? DisplayStyle.Flex : DisplayStyle.None;
@@ -352,6 +404,15 @@ namespace RiverTools
 
         private void OnSelectionChanged()
         {
+            if (m_ActivePainter != null)
+            {
+                var renderer = m_ActivePainter.GetComponent<MeshRenderer>();
+                if (renderer != null && renderer.sharedMaterial != null)
+                {
+                    renderer.sharedMaterial.SetFloat("_ShowFlowDirection", 0.0f);
+                }
+            }
+
             GameObject selected = Selection.activeGameObject;
             if (selected == null)
             {
@@ -376,6 +437,19 @@ namespace RiverTools
             else
             {
                 SetPanelVisibility(showNoSelection: false, showInit: false, showBrush: true);
+                UpdateFlowVisualization();
+            }
+        }
+
+        private void UpdateFlowVisualization()
+        {
+            if (m_ActivePainter == null) return;
+            var renderer = m_ActivePainter.GetComponent<MeshRenderer>();
+            if (renderer == null) return;
+            var mat = renderer.sharedMaterial;
+            if (mat != null)
+            {
+                mat.SetFloat("_ShowFlowDirection", m_ShowFlowDirection ? 1.0f : 0.0f);
             }
         }
 
@@ -388,7 +462,15 @@ namespace RiverTools
 
         private void OnSceneGUI(SceneView sceneView)
         {
-            if (m_ActivePainter == null || m_ActiveTool == PaintTool.Select)
+            if (m_ActivePainter == null)
+                return;
+
+            if (m_ShowFlowDirection)
+            {
+                DrawFlowArrows();
+            }
+
+            if (m_ActiveTool == PaintTool.Select)
                 return;
 
             Event current = Event.current;
@@ -428,12 +510,41 @@ namespace RiverTools
                 m_HitPointWorld = targetTransform.TransformPoint(localHitPoint);
                 m_HitNormalWorld = targetTransform.TransformDirection(localHitNormal).normalized;
 
-                Handles.color = m_ActiveTool == PaintTool.Erase ? Color.blue : m_BrushColor;
+                if (m_ActiveTool == PaintTool.Erase || m_ActiveTool == PaintTool.EraseFlow)
+                    Handles.color = Color.blue;
+                else if (m_ActiveTool == PaintTool.PaintFlow)
+                    Handles.color = Color.cyan;
+                else
+                    Handles.color = m_BrushColor;
+
                 Handles.DrawWireDisc(m_HitPointWorld, m_HitNormalWorld, m_BrushSize);
 
-                if ((current.type == EventType.MouseDown || current.type == EventType.MouseDrag) && current.button == 0)
+                if (current.type == EventType.MouseDown && current.button == 0)
                 {
-                    PaintMesh(m_HitPointWorld, targetTransform, copyMesh);
+                    m_LastHitPointWorld = m_HitPointWorld;
+                    if (m_ActiveTool == PaintTool.Paint || m_ActiveTool == PaintTool.Erase || m_ActiveTool == PaintTool.EraseFlow)
+                    {
+                        PaintMesh(m_HitPointWorld, Vector3.zero, targetTransform, copyMesh);
+                    }
+                    current.Use();
+                }
+                else if (current.type == EventType.MouseDrag && current.button == 0)
+                {
+                    if (m_ActiveTool == PaintTool.PaintFlow)
+                    {
+                        Vector3 dragDirWorld = m_HitPointWorld - m_LastHitPointWorld;
+                        float dragDist = dragDirWorld.magnitude;
+                        if (dragDist > 0.01f)
+                        {
+                            Vector3 dragDirWorldNormalized = dragDirWorld / dragDist;
+                            PaintMesh(m_HitPointWorld, dragDirWorldNormalized, targetTransform, copyMesh);
+                            m_LastHitPointWorld = m_HitPointWorld;
+                        }
+                    }
+                    else if (m_ActiveTool == PaintTool.Paint || m_ActiveTool == PaintTool.Erase || m_ActiveTool == PaintTool.EraseFlow)
+                    {
+                        PaintMesh(m_HitPointWorld, Vector3.zero, targetTransform, copyMesh);
+                    }
                     current.Use();
                 }
             }
@@ -441,7 +552,77 @@ namespace RiverTools
             sceneView.Repaint();
         }
 
-        private void PaintMesh(Vector3 hitPointWorld, Transform targetTransform, Mesh mesh)
+        private void DrawFlowArrows()
+        {
+            Transform targetTransform = m_ActivePainter.transform;
+            Mesh copyMesh = m_ActivePainter.CopyMesh;
+            if (copyMesh == null) return;
+
+            Vector3[] vertices = copyMesh.vertices;
+            Vector3[] normals = copyMesh.normals;
+            Vector4[] tangents = copyMesh.tangents;
+            List<Vector4> uv2 = new List<Vector4>();
+            copyMesh.GetUVs(1, uv2);
+
+            if (vertices == null || uv2 == null || uv2.Count != vertices.Length) return;
+
+            bool hasTangents = (tangents != null && tangents.Length == vertices.Length);
+            bool hasNormals = (normals != null && normals.Length == vertices.Length);
+
+            Handles.color = Color.cyan;
+            int maxArrows = 1000;
+            int stride = Mathf.Max(1, vertices.Length / maxArrows);
+
+            for (int i = 0; i < vertices.Length; i += stride)
+            {
+                Vector4 flowData = uv2[i];
+                Vector2 flowVec = new Vector2(flowData.x, flowData.y);
+                float strength = flowVec.magnitude;
+
+                if (strength > 0.01f)
+                {
+                    Vector3 localPos = vertices[i];
+                    Vector3 worldPos = targetTransform.TransformPoint(localPos);
+
+                    Vector3 localNormal = hasNormals ? normals[i] : Vector3.up;
+                    Vector3 worldNormal = targetTransform.TransformDirection(localNormal).normalized;
+
+                    Vector3 localTangent = Vector3.right;
+                    if (hasTangents)
+                    {
+                        Vector4 t = tangents[i];
+                        localTangent = new Vector3(t.x, t.y, t.z);
+                    }
+                    Vector3 localBitangent = Vector3.Cross(localNormal, localTangent).normalized;
+                    if (hasTangents)
+                    {
+                        localBitangent *= tangents[i].w;
+                    }
+
+                    Vector3 localFlowDir = localTangent * (flowVec.x / strength) + localBitangent * (flowVec.y / strength);
+                    Vector3 worldFlowDir = targetTransform.TransformDirection(localFlowDir).normalized;
+
+                    // Calculate arrow properties based on brush size and strength
+                    float arrowLength = Mathf.Clamp(m_BrushSize * 0.5f * strength, 0.1f, 2.0f);
+
+                    Vector3 endPoint = worldPos + worldFlowDir * arrowLength;
+
+                    // Draw main stem
+                    Handles.DrawLine(worldPos, endPoint);
+
+                    // Draw arrowhead lying flat on the surface
+                    Vector3 worldRight = Vector3.Cross(worldFlowDir, worldNormal).normalized;
+                    float headSize = arrowLength * 0.3f;
+                    Vector3 headLeftPoint = endPoint - worldFlowDir * headSize + worldRight * (headSize * 0.5f);
+                    Vector3 headRightPoint = endPoint - worldFlowDir * headSize - worldRight * (headSize * 0.5f);
+
+                    Handles.DrawLine(endPoint, headLeftPoint);
+                    Handles.DrawLine(endPoint, headRightPoint);
+                }
+            }
+        }
+
+        private void PaintMesh(Vector3 hitPointWorld, Vector3 dragDirWorld, Transform targetTransform, Mesh mesh)
         {
             Undo.RegisterCompleteObjectUndo(mesh, "Paint Vertex Colors and UV2");
 
@@ -459,7 +640,15 @@ namespace RiverTools
             if (uv2 == null || uv2.Count != vertices.Length)
             {
                 uv2 = new List<Vector4>(vertices.Length);
-                for (int i = 0; i < vertices.Length; i++) uv2.Add(new Vector4(1f, 1f, 1f, 1f));
+                for (int i = 0; i < vertices.Length; i++) uv2.Add(new Vector4(0f, 0f, 1f, 0f));
+            }
+
+            Vector4[] tangents = mesh.tangents;
+            Vector3[] normals = mesh.normals;
+            if (m_ActiveTool == PaintTool.PaintFlow && (tangents == null || tangents.Length != vertices.Length))
+            {
+                mesh.RecalculateTangents();
+                tangents = mesh.tangents;
             }
 
             float deltaTime = 0.016f;
@@ -511,10 +700,11 @@ namespace RiverTools
                     }
 
                     Vector4 oldUV = uv2[i];
-                    float newW = oldUV.w;
+                    Vector4 newUV = oldUV;
 
                     if (m_ActiveTool == PaintTool.Paint)
                     {
+                        float newW = oldUV.w;
                         if (m_ActiveSubTool == PaintSubTool.ColorAndAlpha)
                         {
                             newW = Mathf.Lerp(oldUV.w, 1.0f - m_BrushColor.a, stepStrength);
@@ -523,27 +713,63 @@ namespace RiverTools
                         {
                             newW = Mathf.Lerp(oldUV.w, 1.0f - m_BrushAlpha, stepStrength);
                         }
+                        newUV.w = newW;
                     }
                     else if (m_ActiveTool == PaintTool.Erase)
                     {
-                        newW = Mathf.Lerp(oldUV.w, 0.0f, stepStrength);
+                        newUV.w = Mathf.Lerp(oldUV.w, 0.0f, stepStrength);
+                    }
+                    else if (m_ActiveTool == PaintTool.PaintFlow)
+                    {
+                        Vector3 localNormal = normals[i];
+                        Vector4 localTangent4 = tangents[i];
+                        Vector3 localTangent = new Vector3(localTangent4.x, localTangent4.y, localTangent4.z);
+                        Vector3 localBitangent = Vector3.Cross(localNormal, localTangent).normalized * localTangent4.w;
+
+                        Vector3 localDragDir = targetTransform.InverseTransformDirection(dragDirWorld);
+
+                        float uDir = Vector3.Dot(localDragDir, localTangent);
+                        float vDir = Vector3.Dot(localDragDir, localBitangent);
+                        Vector2 flowDir = new Vector2(uDir, vDir);
+                        if (flowDir.sqrMagnitude > 0.0001f)
+                        {
+                            flowDir.Normalize();
+                        }
+                        else
+                        {
+                            flowDir = Vector2.up;
+                        }
+
+                        Vector2 oldFlow = new Vector2(oldUV.x, oldUV.y);
+                        Vector2 targetFlow = flowDir * m_BrushStrength;
+                        Vector2 newFlow = Vector2.Lerp(oldFlow, targetFlow, stepStrength);
+
+                        newUV.x = newFlow.x;
+                        newUV.y = newFlow.y;
+                    }
+                    else if (m_ActiveTool == PaintTool.EraseFlow)
+                    {
+                        Vector2 oldFlow = new Vector2(oldUV.x, oldUV.y);
+                        Vector2 newFlow = Vector2.Lerp(oldFlow, Vector2.zero, stepStrength);
+                        newUV.x = newFlow.x;
+                        newUV.y = newFlow.y;
                     }
 
-                    if (newW != oldUV.w)
+                    if (newUV != oldUV)
                     {
-                        uv2[i] = new Vector4(oldUV.x, oldUV.y, oldUV.z, newW);
+                        uv2[i] = newUV;
                         isDirty = true;
                     }
-                  }
-              }
+                }
+            }
 
-              if (isDirty)
-              {
-                  mesh.colors = colors;
-                  mesh.SetUVs(1, uv2);
-                  mesh.UploadMeshData(false);
-              }
-          }
+            if (isDirty)
+            {
+                mesh.colors = colors;
+                mesh.SetUVs(1, uv2);
+                mesh.UploadMeshData(false);
+            }
+        }
 
           private static bool RaycastMesh(Ray localRay, Mesh mesh, out Vector3 localHitPoint, out Vector3 localHitNormal, out float hitDistance)
           {

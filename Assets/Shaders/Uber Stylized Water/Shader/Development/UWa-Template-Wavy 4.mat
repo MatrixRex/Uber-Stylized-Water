@@ -289,6 +289,7 @@ Material:
     - _FresnelStrength: 1
     - _Fresnel_Opacity: 1
     - _Fresnel_Power: 10
+    - _Global_UV_Multiplier: 1
     - _InterSec_Dissolve: 0.32
     - _InterSec_Edge_Dissolve: 1
     - _InterSec_Edge_Fade: 0
@@ -395,6 +396,7 @@ Material:
     - _ShoreLineTile: 4.43
     - _ShoreLineWidth: 0.96
     - _ShoreLine_Cutoff: 0.27
+    - _ShowFlowDirection: 0
     - _Smoothness: 1
     - _Specular_AdditionalMultiplier: 1
     - _Specular_Distortion: 1

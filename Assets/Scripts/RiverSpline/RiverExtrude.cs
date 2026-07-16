@@ -351,11 +351,11 @@ namespace RiverTools
             }
             m_Mesh.colors = colors;
 
-            // Initialize UV2 (channel 1) with Vector4 values (1, 1, 1, 0)
+            // Initialize UV2 (channel 1) with Vector4 values (0, 0, 1, 0)
             List<Vector4> uv2 = new List<Vector4>(vertices.Count);
             for (int k = 0; k < vertices.Count; k++)
             {
-                uv2.Add(new Vector4(1f, 1f, 1f, 0f));
+                uv2.Add(new Vector4(0f, 0f, 1f, 0f));
             }
             m_Mesh.SetUVs(1, uv2);
 

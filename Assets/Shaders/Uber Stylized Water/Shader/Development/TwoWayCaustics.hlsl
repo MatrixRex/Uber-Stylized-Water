@@ -22,6 +22,7 @@ void TwoWayCaustics_float(
     float CausticsScale,
     float DistortionScale,
     float DistortionStrength,
+    float2 FlowDir,
     out float3 Caustics
 )
 {
@@ -35,6 +36,7 @@ void TwoWayCaustics_float(
         DistortionScale,
         DistortionStrength,
         UseMeshUV,
+        FlowDir,
         distortion
     );
 
@@ -46,28 +48,73 @@ void TwoWayCaustics_float(
     float2 tile2 = CausticsScale * 0.87;
     float2 uv1, uv2;
 
-    if (UseMeshUV)
-    {
-        // River mode: Scroll both taps downstream along the V-axis at ±45 degree angles.
-        float2 speed1 = float2( 0, -0.7) * CausticsPan;
-        float2 speed2 = float2(0, 0.1) * CausticsPan;
+    float flowStrength = length(FlowDir);
+    float flowWeight = saturate(flowStrength);
+    float3 c1, c2;
 
-        uv1 = baseUV *  tile1                       + distortion + speed1 * 0.1 * Time;
-        uv2 = baseUV * (tile2 * float2(-1.0, 1.0))  + distortion + speed2 * 0.1 * Time;
+    if (flowWeight > 0.001)
+    {
+        // 2-Phase Flow Mapping to avoid infinite UV stretching over time
+        float2 flowDirNormalized = FlowDir / (flowStrength + 0.0001);
+
+        // Rotate flowDirNormalized for each layer to match default crossing angles:
+        // Layer 1 default speed is (0, 0.7)
+        // Layer 2 default speed is (0, -0.1)
+        float2 flowDir1;
+        float2 s1 = float2(0.0, 0.7);
+        flowDir1.x = s1.x * flowDirNormalized.y + s1.y * flowDirNormalized.x;
+        flowDir1.y = -s1.x * flowDirNormalized.x + s1.y * flowDirNormalized.y;
+        flowDir1 = normalize(flowDir1);
+
+        float2 flowDir2;
+        float2 s2 = float2(0.0, -0.1);
+        flowDir2.x = s2.x * flowDirNormalized.y + s2.y * flowDirNormalized.x;
+        flowDir2.y = -s2.x * flowDirNormalized.x + s2.y * flowDirNormalized.y;
+        flowDir2 = normalize(flowDir2);
+
+        float speedScale = CausticsPan * 0.1;
+        float phase0 = frac(Time * speedScale);
+        float phase1 = frac(Time * speedScale + 0.5);
+
+        float maxDistortion = 0.15 * flowWeight;
+        float2 flowVector1 = flowDir1 * maxDistortion;
+        float2 flowVector2 = flowDir2 * maxDistortion;
+
+        uv1 = baseUV * tile1 + distortion - flowVector1 * phase0;
+        uv2 = baseUV * tile2 + distortion - flowVector2 * phase1;
+
+        c1 = SAMPLE_TEXTURE2D(CausticsMap.tex, sampler_CausticsMap.samplerstate, uv1).rgb;
+        c2 = SAMPLE_TEXTURE2D(CausticsMap.tex, sampler_CausticsMap.samplerstate, uv2).rgb;
+
+        float blend = abs(0.5 - phase0) / 0.5;
+        float3 blendedCaustics = lerp(c1, c2, blend);
+        c1 = blendedCaustics;
+        c2 = blendedCaustics;
     }
     else
     {
-        // Still water mode: Cancel drifts using a 60-degree rotated tap 2 and opposite panning.
-        const float2x2 rot2 = float2x2(0.5, -0.866, 0.866, 0.5);
-        float2 speed1 = float2(-0.5, -0.35) * CausticsPan;
-        float2 speed2 = -mul(rot2, speed1) * (tile2 / tile1);
+        // Unpainted: default continuous panning
+        float2 speed1 = float2(0.0, 0.7) * CausticsPan;
+        float2 speed2 = float2(0.0, -0.1) * CausticsPan;
 
-        uv1 =           baseUV  * tile1 + distortion + speed1 * 0.1 * Time;
-        uv2 = mul(rot2, baseUV) * tile2 + distortion + speed2 * 0.1 * Time;
+        if (UseMeshUV)
+        {
+            uv1 = baseUV * tile1 + distortion - speed1 * 0.1 * Time;
+            uv2 = baseUV * (tile2 * float2(-1.0, 1.0)) + distortion - speed2 * 0.1 * Time;
+        }
+        else
+        {
+            const float2x2 rot2 = float2x2(0.5, -0.866, 0.866, 0.5);
+            float2 defaultSpeed1 = float2(0.5, 0.35) * CausticsPan;
+            float2 defaultSpeed2 = mul(rot2, defaultSpeed1) * (tile2 / tile1);
+
+            uv1 =           baseUV  * tile1 + distortion - defaultSpeed1 * 0.1 * Time;
+            uv2 = mul(rot2, baseUV) * tile2 + distortion - defaultSpeed2 * 0.1 * Time;
+        }
+
+        c1 = SAMPLE_TEXTURE2D(CausticsMap.tex, sampler_CausticsMap.samplerstate, uv1).rgb;
+        c2 = SAMPLE_TEXTURE2D(CausticsMap.tex, sampler_CausticsMap.samplerstate, uv2).rgb;
     }
-
-    float3 c1 = SAMPLE_TEXTURE2D(CausticsMap.tex, sampler_CausticsMap.samplerstate, uv1).rgb;
-    float3 c2 = SAMPLE_TEXTURE2D(CausticsMap.tex, sampler_CausticsMap.samplerstate, uv2).rgb;
 
     Caustics = min(c1, c2);
 }
@@ -82,6 +129,7 @@ void TwoWayCaustics_half(
     half CausticsScale,
     half DistortionScale,
     half DistortionStrength,
+    half2 FlowDir,
     out half3 Caustics
 )
 {
@@ -97,6 +145,7 @@ void TwoWayCaustics_half(
         float(CausticsScale),
         float(DistortionScale),
         float(DistortionStrength),
+        float2(FlowDir),
         causticsFloat
     );
 

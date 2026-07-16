@@ -42,7 +42,7 @@ namespace RiverTools
                 uv2 = new List<Vector4>(m_CopyMesh.vertexCount);
                 for (int i = 0; i < m_CopyMesh.vertexCount; i++)
                 {
-                    uv2.Add(new Vector4(1f, 1f, 1f, 0f)); // W component is 0 (no reduction)
+                    uv2.Add(new Vector4(0f, 0f, 1f, 0f)); // W component is 0 (no reduction)
                 }
                 m_CopyMesh.SetUVs(1, uv2);
             }
