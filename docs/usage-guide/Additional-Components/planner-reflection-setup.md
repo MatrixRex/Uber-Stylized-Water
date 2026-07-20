@@ -29,12 +29,14 @@ The **Planar Reflection System** in this asset provides realtime mirrorlike refl
 ### Step 2: Set up the Centralized Manager
 
 The system requires a **PlanarReflectionManager** in the scene to coordinate the shared camera and rendering:
+
 - If a manager is missing, one will be created automatically at runtime.
 - Alternatively, you can click the **Create Planar Reflection Manager** button in the volume's inspector to customize global settings.
 
 ### Step 3: Configure the Volume and Targets
 
 The volume can be local or global:
+
 - **Global Volume**: Check **Is Global** to make the volume cover the entire scene. Boundaries and blending will be ignored.
 - **Local Volume**: Define boundaries using **Volume Size** and **Blend Distance** (distance where reflections gradually blend out).
 - **Reflection Targets**: Add your water plane mesh GameObjects to the **Reflection Targets** list. This determines the plane height and assigns the reflection texture to their materials. Only one target per unique material is needed to apply the reflection settings.
@@ -71,11 +73,10 @@ The volume can be local or global:
 
 ## Troubleshooting
 
-- **Reflection Not Visible**: Ensure the reflection target and volume settings are configured correctly.
-- **Artifacts or Clipping Issues**: Adjust the **Reflection Plane Offset** or the clipping plane in the script.
+- **Reflection Not Visible**: Ensure the reflection target and volume settings are configured correctly. And the reflection power is more then 0.
+- **Gap Between Water and reflection**: Adjust the **Reflection Plane Offset.** Make sure to use proper reflection target.
 - **Performance Issues**: Lower the **Render Scale** or reduce the layer mask complexity.
 
 ---
-
 
 ---

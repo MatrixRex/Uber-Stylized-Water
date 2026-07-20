@@ -4,23 +4,19 @@
 
 ## Recommended Unity Version
 
-- **Unity Version**: 6000.0.30f (or later)
-- **Renderer**: Universal Render Pipeline (URP) **only**
-- **Shadergraph** 17.0.3 (or later)
+- **Unity Version:** 6000.0.30f (or later)
+- **Renderer:** Universal Render Pipeline (URP) **only**
+- **Shadergraph:** 17.0.3 (or later)
 
 ---
 
 ## Prerequisites
 
-To use the water shader, you only need to ensure your URP pipeline is active:
-
 ### URP Project Setup
 
 - Open **Project Settings** and ensure that the **Graphics** and **Quality** sections are set to your **Universal Render Pipeline Asset**.
-  ![alt text](../assets/images/getting-started-projectsetting-graphics.webp ":size=50%")
-  ![alt text](../assets/images/getting-started-projectsetting-quality.webp ":size=50%")
-
-
+  ![alt text](../assets/images/getting-started-projectsetting-graphics.jpg ":size=50%")
+  ![alt text](../assets/images/getting-started-projectsetting-quality.jpg ":size=50%")
 
 ---
 
@@ -29,9 +25,10 @@ To use the water shader, you only need to ensure your URP pipeline is active:
 There are two ways to import the asset:
 
 1. Download the repository as a zip file.
-   - Copy the `Assets/Shaders/Uber Stylized Water/` folder to your project.
 
+   - Copy the `Assets/Shaders/Uber Stylized Water/` folder to your project.
 2. Get the latest unity package from the [releases](https://github.com/MatrixRex/Uber-Stylized-Water/releases) page.
+
    - Import the package.
 
 ### Configure the URP Asset
@@ -44,7 +41,7 @@ Or Modify your URP Renderer Asset to support the shader:
 2. Check the **Depth Texture** option.
 3. Check the **Opaque Texture** option (Required for Refraction).
 
-![alt text](../assets/images/getting-started-rpasset.webp ":size=20%")
+![alt text](../assets/images/getting-started-rpasset.jpg ":size=20%")
 
 ---
 
@@ -54,7 +51,7 @@ Get started quickly with the provided **Demo Scene**:
 
 1. Open the `Uber Stylized Water/Demo/Uber Stylized Water.unity` scene.
 2. Explore a fully set up environment featuring:
-   - **8 Water Presets** (using the prebuilt compiled shader)
+   - **8 Water Presets**
    - A complete **Planar Reflection Setup**
 
 ---
@@ -75,27 +72,28 @@ There are three ways to use the shader in your custom scenes:
 ### 3. Create Your Own Material
 
 - Create a new Material in Unity.
-- Assign the **Uber Stylized Water** shader (under the shader selection menu) to your material. This uses the default prebuilt compiled shader.
+- Assign the **Uber Stylized Water** shader (under the shader selection menu) to your material.
 
----
-
-## Advanced: Modifying the Source Shader Graph
+## Modifying the Source Shader Graph
 
 If you want to customize or modify the water shader internals, you must use the source Shader Graph:
+
 - Locate the graph at `Assets/Shaders/Uber Stylized Water/Shader/Devlopment/UberStylizedWaterGraph.shadergraph`.
-- Before opening or saving this graph, you **must** increase the shader variant limits in both your project settings and editor preferences to prevent compilation timeouts or cut-offs:
+- Before opening or saving this graph, you **must** increase the shader variant limits in both your project settings and editor preferences to prevent pink shader error.
 
 ### 1. Adjusting Variant Limits in Project Settings:
+
+We need to update **"Shader Variant Limit"** on two areas:
+
 - Under **Project Settings -> Shadergraph**:
-  - **In Unity 6.0**: increase the 'Shader variant limit' to 500.
-  - **In Unity 6.1**: increase the 'Shader variant limit' to 25000.
-  ![alt text](../assets/images/getting-started-projectsetting-shadergraph.webp ":size=50%")
+  - increase the 'Shader variant limit' to **25000**.
+  - ![alt text](../assets/images/getting-started-projectsetting-shadergraph.jpg ":size=50%")
 
 ### 2. Adjusting Preview Variant Limits in Preferences:
+
 - Under **Preferences -> ShaderGraph**:
-  - **In Unity 6.0**: increase the 'Preview variant limit' to 500.
-  - **In Unity 6.1**: increase the 'Preview variant limit' to 25000.
-  ![alt text](../assets/images/getting-started-preferences-shadergraph.webp ":size=50%")
+  - increase the 'Preview variant limit' to **25000**.
+  - ![alt text](../assets/images/getting-started-preferences-shadergraph.jpg ":size=50%")
 
 ---
 
