@@ -12,16 +12,15 @@
 
 ## Prerequisites
 
-To use the default prebuilt water system, you only need to ensure your URP pipeline is active:
+To use the water shader, you only need to ensure your URP pipeline is active:
 
 ### URP Project Setup
-- Open **Project Settings** and ensure that the **Graphics** and **Quality** sections are set to your **Universal Render Pipeline Asset**.
-  ![alt text](../assets/images/getting-started-projectsetting-graphics.jpg ":size=50%")
-  ![alt text](../assets/images/getting-started-projectsetting-quality.jpg ":size=50%")
 
-> [!NOTE]
-> **Prebuilt Compiled Shader is the Default:**  
-> The default shader used by the presets, template materials, and demo scene is the prebuilt compiled shader (`Assets/Shaders/Uber Stylized Water/Shader/UberStylizedWater.shader`). This works out of the box and **does not require** any project settings or shadergraph variant limit adjustments.
+- Open **Project Settings** and ensure that the **Graphics** and **Quality** sections are set to your **Universal Render Pipeline Asset**.
+  ![alt text](../assets/images/getting-started-projectsetting-graphics.webp ":size=50%")
+  ![alt text](../assets/images/getting-started-projectsetting-quality.webp ":size=50%")
+
+
 
 ---
 
@@ -45,7 +44,7 @@ Or Modify your URP Renderer Asset to support the shader:
 2. Check the **Depth Texture** option.
 3. Check the **Opaque Texture** option (Required for Refraction).
 
-![alt text](../assets/images/getting-started-rpasset.jpg ":size=20%")
+![alt text](../assets/images/getting-started-rpasset.webp ":size=20%")
 
 ---
 
@@ -90,13 +89,13 @@ If you want to customize or modify the water shader internals, you must use the 
 - Under **Project Settings -> Shadergraph**:
   - **In Unity 6.0**: increase the 'Shader variant limit' to 500.
   - **In Unity 6.1**: increase the 'Shader variant limit' to 25000.
-  ![alt text](../assets/images/getting-started-projectsetting-shadergraph.jpg ":size=50%")
+  ![alt text](../assets/images/getting-started-projectsetting-shadergraph.webp ":size=50%")
 
 ### 2. Adjusting Preview Variant Limits in Preferences:
 - Under **Preferences -> ShaderGraph**:
   - **In Unity 6.0**: increase the 'Preview variant limit' to 500.
   - **In Unity 6.1**: increase the 'Preview variant limit' to 25000.
-  ![alt text](../assets/images/getting-started-preferences-shadergraph.jpg ":size=50%")
+  ![alt text](../assets/images/getting-started-preferences-shadergraph.webp ":size=50%")
 
 ---
 
