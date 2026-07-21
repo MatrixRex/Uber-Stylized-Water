@@ -175,15 +175,29 @@ namespace RiverTools
         }
 
         /// <summary>
+        /// Evaluates the actual world width of the river at normalized spline position t [0, 1].
+        /// </summary>
+        public float GetEvaluatedWidthAt(float normalizedT)
+        {
+            if (m_Container == null || m_Container.Spline == null)
+                return m_BaseWidth;
+
+            float mult = EvaluateKnotWidthMultiplier(m_Container.Spline, normalizedT, m_Container.Spline.Count);
+            return Mathf.Max(0f, m_BaseWidth * mult);
+        }
+
+        /// <summary>
         /// Converts a normalized spline t into a fractional knot index, then linearly
         /// interpolates between the two surrounding entries in m_KnotWidthMultipliers.
         /// </summary>
-        float EvaluateKnotWidthMultiplier(Spline spline, float normalizedT, int knotCount)
+        public float EvaluateKnotWidthMultiplier(Spline spline, float normalizedT, int knotCount)
         {
-            if (knotCount <= 0)
+            if (knotCount <= 0 || m_KnotWidthMultipliers == null || m_KnotWidthMultipliers.Count == 0)
                 return 1f;
             if (knotCount == 1)
                 return m_KnotWidthMultipliers[0];
+
+            EnsureKnotWidthListSize(knotCount);
 
             float knotT = spline.ConvertIndexUnit(normalizedT, PathIndexUnit.Normalized, PathIndexUnit.Knot);
             int i0 = Mathf.FloorToInt(knotT);

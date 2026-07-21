@@ -34,6 +34,34 @@ namespace RiverTools
             DrawDefaultInspector();
 
             GUILayout.Space(15);
+            GUILayout.Label("Terrain Carving Tools", EditorStyles.boldLabel);
+
+            var carver = extrude.GetComponent<RiverTerrainCarver>();
+            if (carver == null)
+            {
+                if (GUILayout.Button("Add River Terrain Carver", GUILayout.Height(30)))
+                {
+                    Undo.AddComponent<RiverTerrainCarver>(extrude.gameObject);
+                }
+            }
+            else
+            {
+                using (new GUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("Carve Terrain Dynamic Layer", GUILayout.Height(30)))
+                    {
+                        carver.CarveDynamic();
+                    }
+
+                    if (GUILayout.Button("Select Terrain Carver", GUILayout.Height(30)))
+                    {
+                        Selection.activeGameObject = extrude.gameObject;
+                        EditorGUIUtility.PingObject(carver);
+                    }
+                }
+            }
+
+            GUILayout.Space(15);
             GUILayout.Label("Bake Mesh Tools", EditorStyles.boldLabel);
 
             using (new GUILayout.HorizontalScope())
