@@ -48,6 +48,9 @@ namespace RiverTools
         [Tooltip("Depth of river bed in world units below spline elevation.")]
         [SerializeField, Min(0f)] private float m_BedDepth = 2f;
 
+        [Tooltip("Ratio of riverbed carve width relative to full river width [0.1, 1.0]. Values < 1.0 ensure the riverbank meets the river mesh edge.")]
+        [SerializeField, Range(0.1f, 1.0f)] private float m_BedWidthRatio = 0.8f;
+
         [Tooltip("Distance in world units to smoothly blend river bank into original terrain height.")]
         [SerializeField, Min(0.1f)] private float m_BankFalloff = 4f;
 
@@ -57,6 +60,13 @@ namespace RiverTools
 
         [Tooltip("Distance between spline sample points for terrain distance calculations (meters). Lower = higher accuracy.")]
         [SerializeField, Min(0.1f)] private float m_SampleSpacing = 1f;
+
+        [Header("Smoothing")]
+        [Tooltip("Number of post-carve smoothing passes to soften bank transitions and remove heightmap grid stepping [0 = disabled].")]
+        [SerializeField, Range(0, 5)] private int m_SmoothPasses = 1;
+
+        [Tooltip("Strength of the post-carve smoothing filter [0 = no effect, 1 = maximum smooth].")]
+        [SerializeField, Range(0f, 1f)] private float m_SmoothStrength = 0.5f;
 
         [Header("Target Terrains")]
         [Tooltip("Terrains to carve. If empty, overlapping active scene terrains will be automatically detected.")]
@@ -100,8 +110,11 @@ namespace RiverTools
 
         public BedProfileMode BedProfile { get => m_BedProfile; set { m_BedProfile = value; RequestCarve(); } }
         public float BedDepth { get => m_BedDepth; set { m_BedDepth = Mathf.Max(0f, value); RequestCarve(); } }
+        public float BedWidthRatio { get => m_BedWidthRatio; set { m_BedWidthRatio = Mathf.Clamp(value, 0.1f, 1.0f); RequestCarve(); } }
         public float BankFalloff { get => m_BankFalloff; set { m_BankFalloff = Mathf.Max(0.1f, value); RequestCarve(); } }
         public CarveMode Mode { get => m_CarveMode; set { m_CarveMode = value; RequestCarve(); } }
+        public int SmoothPasses { get => m_SmoothPasses; set { m_SmoothPasses = Mathf.Clamp(value, 0, 5); RequestCarve(); } }
+        public float SmoothStrength { get => m_SmoothStrength; set { m_SmoothStrength = Mathf.Clamp01(value); RequestCarve(); } }
 
         private void OnEnable()
         {
@@ -120,8 +133,11 @@ namespace RiverTools
         {
             EnsureReferences();
             m_BedDepth = Mathf.Max(0f, m_BedDepth);
+            m_BedWidthRatio = Mathf.Clamp(m_BedWidthRatio, 0.1f, 1.0f);
             m_BankFalloff = Mathf.Max(0.1f, m_BankFalloff);
             m_SampleSpacing = Mathf.Max(0.1f, m_SampleSpacing);
+            m_SmoothPasses = Mathf.Clamp(m_SmoothPasses, 0, 5);
+            m_SmoothStrength = Mathf.Clamp01(m_SmoothStrength);
             m_IsDirty = true;
         }
 
@@ -300,7 +316,7 @@ namespace RiverTools
                 float halfWidth = Mathf.Max(0.1f, width * 0.5f);
                 if (halfWidth > maxHalfWidth) maxHalfWidth = halfWidth;
 
-                float influence = halfWidth + m_BankFalloff;
+                float influence = (halfWidth * m_BedWidthRatio) + m_BankFalloff;
                 if (influence > maxInfluence) maxInfluence = influence;
 
                 samples.Add(new SplinePointSample
@@ -387,6 +403,7 @@ namespace RiverTools
 
             float bankFalloff = m_BankFalloff;
             float bedDepth = m_BedDepth;
+            float bedWidthRatio = m_BedWidthRatio;
             CarveMode mode = m_CarveMode;
             BedProfileMode profile = m_BedProfile;
 
@@ -414,7 +431,8 @@ namespace RiverTools
 
                     FindClosestSplinePoint(cellWorld, samples, out Vector3 closestSplinePos, out float distToCenterline, out float localHalfWidth);
 
-                    float totalInfluence = localHalfWidth + bankFalloff;
+                    float bedHalfWidth = localHalfWidth * bedWidthRatio;
+                    float totalInfluence = bedHalfWidth + bankFalloff;
 
                     if (distToCenterline > totalInfluence)
                     {
@@ -426,10 +444,10 @@ namespace RiverTools
                     float splineWorldY = closestSplinePos.y;
                     float finalWorldY;
 
-                    if (distToCenterline <= localHalfWidth)
+                    if (distToCenterline <= bedHalfWidth)
                     {
-                        // Inside river bed: Always set bed height relative to splineWorldY
-                        float u = distToCenterline / localHalfWidth; // 0 at center, 1 at edge
+                        // Inside river bed (0 to bedHalfWidth):
+                        float u = distToCenterline / bedHalfWidth; // 0 at center, 1 at bed edge
                         float depthMult = EvaluateBedProfile(profile, u);
                         float targetBedY = splineWorldY - (bedDepth * depthMult);
 
@@ -444,8 +462,8 @@ namespace RiverTools
                     }
                     else
                     {
-                        // In river bank transition zone
-                        float bankFrac = (distToCenterline - localHalfWidth) / bankFalloff; // 0 at bed edge, 1 at bank end
+                        // In river bank transition zone (bedHalfWidth to bedHalfWidth + bankFalloff):
+                        float bankFrac = (distToCenterline - bedHalfWidth) / bankFalloff; // 0 at bed edge, 1 at bank end
                         float smoothBank = SmoothStep(0f, 1f, bankFrac);
 
                         float edgeDepthMult = EvaluateBedProfile(profile, 1f);
@@ -466,6 +484,32 @@ namespace RiverTools
                     newHeights[r, c] = Mathf.Clamp01((finalWorldY - tPos.y) / tSize.y);
                 }
             });
+
+            // Optional multithreaded post-carve heightmap smoothing pass (3x3 Gaussian filter)
+            if (m_SmoothPasses > 0 && m_SmoothStrength > 0f && height > 2 && width > 2)
+            {
+                float[,] tempHeights = new float[height, width];
+                float strength = m_SmoothStrength;
+
+                for (int pass = 0; pass < m_SmoothPasses; pass++)
+                {
+                    System.Array.Copy(newHeights, tempHeights, newHeights.Length);
+
+                    Parallel.For(1, height - 1, r =>
+                    {
+                        for (int c = 1; c < width - 1; c++)
+                        {
+                            float center = tempHeights[r, c];
+                            float sum = tempHeights[r - 1, c - 1] * 1f + tempHeights[r - 1, c] * 2f + tempHeights[r - 1, c + 1] * 1f +
+                                        tempHeights[r,     c - 1] * 2f + tempHeights[r,     c] * 4f + tempHeights[r,     c + 1] * 2f +
+                                        tempHeights[r + 1, c - 1] * 1f + tempHeights[r + 1, c] * 2f + tempHeights[r + 1, c + 1] * 1f;
+
+                            float smoothed = sum / 16f;
+                            newHeights[r, c] = Mathf.Lerp(center, smoothed, strength);
+                        }
+                    });
+                }
+            }
 
             tData.SetHeightsDelayLOD(unionX0, unionZ0, newHeights);
             tData.SyncHeightmap();

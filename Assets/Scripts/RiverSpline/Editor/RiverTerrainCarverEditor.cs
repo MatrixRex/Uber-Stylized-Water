@@ -89,28 +89,29 @@ namespace RiverTools
                 Handles.DrawLine(samples[i].Position, samples[i + 1].Position, 2f);
             }
 
-            // Draw bed width outlines
+            // Draw bed width outlines (where carved riverbed channel ends)
             Handles.color = new Color(0.2f, 0.5f, 1f, 0.7f);
+            float bedWidthRatio = carver.BedWidthRatio;
             for (int i = 0; i < samples.Count - 1; i++)
             {
-                Vector3 left0 = samples[i].Position - samples[i].Right * samples[i].HalfWidth;
-                Vector3 left1 = samples[i + 1].Position - samples[i + 1].Right * samples[i + 1].HalfWidth;
-                Vector3 right0 = samples[i].Position + samples[i].Right * samples[i].HalfWidth;
-                Vector3 right1 = samples[i + 1].Position + samples[i + 1].Right * samples[i + 1].HalfWidth;
+                Vector3 left0 = samples[i].Position - samples[i].Right * (samples[i].HalfWidth * bedWidthRatio);
+                Vector3 left1 = samples[i + 1].Position - samples[i + 1].Right * (samples[i + 1].HalfWidth * bedWidthRatio);
+                Vector3 right0 = samples[i].Position + samples[i].Right * (samples[i].HalfWidth * bedWidthRatio);
+                Vector3 right1 = samples[i + 1].Position + samples[i + 1].Right * (samples[i + 1].HalfWidth * bedWidthRatio);
 
                 Handles.DrawLine(left0, left1, 1.5f);
                 Handles.DrawLine(right0, right1, 1.5f);
             }
 
-            // Draw bank falloff boundaries
+            // Draw bank falloff boundaries (where terrain returns to original height)
             Handles.color = new Color(1f, 0.8f, 0.2f, 0.5f);
             float falloff = carver.BankFalloff;
             for (int i = 0; i < samples.Count - 1; i++)
             {
-                Vector3 bankLeft0 = samples[i].Position - samples[i].Right * (samples[i].HalfWidth + falloff);
-                Vector3 bankLeft1 = samples[i + 1].Position - samples[i + 1].Right * (samples[i + 1].HalfWidth + falloff);
-                Vector3 bankRight0 = samples[i].Position + samples[i].Right * (samples[i].HalfWidth + falloff);
-                Vector3 bankRight1 = samples[i + 1].Position + samples[i + 1].Right * (samples[i + 1].HalfWidth + falloff);
+                Vector3 bankLeft0 = samples[i].Position - samples[i].Right * (samples[i].HalfWidth * bedWidthRatio + falloff);
+                Vector3 bankLeft1 = samples[i + 1].Position - samples[i + 1].Right * (samples[i + 1].HalfWidth * bedWidthRatio + falloff);
+                Vector3 bankRight0 = samples[i].Position + samples[i].Right * (samples[i].HalfWidth * bedWidthRatio + falloff);
+                Vector3 bankRight1 = samples[i + 1].Position + samples[i + 1].Right * (samples[i + 1].HalfWidth * bedWidthRatio + falloff);
 
                 Handles.DrawLine(bankLeft0, bankLeft1, 1f);
                 Handles.DrawLine(bankRight0, bankRight1, 1f);
