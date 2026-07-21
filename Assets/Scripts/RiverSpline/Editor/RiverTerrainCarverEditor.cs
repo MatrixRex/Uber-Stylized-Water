@@ -14,34 +14,57 @@ namespace RiverTools
             serializedObject.Update();
 
             EditorGUILayout.Space(5);
-            EditorGUILayout.LabelField("Dynamic Layer Controls", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("River Terrain Carver Controls", EditorStyles.boldLabel);
 
-            bool prevDynamic = carver.EnableDynamicCarve;
-            bool newDynamic = EditorGUILayout.ToggleLeft(" Enable Dynamic Live Carve Layer", prevDynamic, EditorStyles.boldLabel);
-            if (newDynamic != prevDynamic)
+            // 1. Prominent Dynamic Layer Toggle Button (ON = Carves, OFF = Reverts)
+            bool isDynamic = carver.EnableDynamicCarve;
+            Color originalBg = GUI.backgroundColor;
+            GUI.backgroundColor = isDynamic ? new Color(0.25f, 0.85f, 0.35f) : new Color(0.85f, 0.3f, 0.3f);
+            if (GUILayout.Button(isDynamic ? "DYNAMIC LIVE CARVE LAYER: ACTIVE [ON]" : "DYNAMIC LIVE CARVE LAYER: INACTIVE [OFF]", GUILayout.Height(36)))
             {
                 Undo.RecordObject(carver, "Toggle Dynamic Terrain Carve");
-                carver.EnableDynamicCarve = newDynamic;
+                carver.EnableDynamicCarve = !isDynamic;
                 EditorUtility.SetDirty(carver);
             }
+            GUI.backgroundColor = originalBg;
 
-            if (carver.EnableDynamicCarve)
-            {
-                EditorGUILayout.HelpBox("Dynamic Carve Layer is LIVE. Changes to splines or settings update the terrain heightmap in real time.", MessageType.Info);
-            }
-            else
-            {
-                EditorGUILayout.HelpBox("Dynamic Carve Layer is OFF.", MessageType.None);
-            }
+            EditorGUILayout.Space(6);
 
+            // 2. Control Toggle Buttons Row (Realtime Update & Fast Edit Mode)
             using (new GUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("Carve Dynamic Layer Now", GUILayout.Height(30)))
+                bool isRealtime = carver.AutoRebuildOnSplineChange;
+                GUI.backgroundColor = isRealtime ? new Color(0.2f, 0.7f, 1f) : new Color(0.6f, 0.6f, 0.6f);
+                if (GUILayout.Button(isRealtime ? "Realtime Update: ON" : "Realtime Update: OFF", GUILayout.Height(28)))
                 {
-                    carver.CarveDynamic();
+                    Undo.RecordObject(carver, "Toggle Realtime Update");
+                    carver.AutoRebuildOnSplineChange = !isRealtime;
+                    EditorUtility.SetDirty(carver);
                 }
 
-                if (GUILayout.Button("Revert Dynamic Layer", GUILayout.Height(30)))
+                bool isFastMode = carver.EnableFastMode;
+                GUI.backgroundColor = isFastMode ? new Color(1f, 0.75f, 0.2f) : new Color(0.6f, 0.6f, 0.6f);
+                if (GUILayout.Button(isFastMode ? "Fast Edit Mode: ON" : "Fast Edit Mode: OFF", GUILayout.Height(28)))
+                {
+                    Undo.RecordObject(carver, "Toggle Fast Edit Mode");
+                    carver.EnableFastMode = !isFastMode;
+                    EditorUtility.SetDirty(carver);
+                }
+                GUI.backgroundColor = originalBg;
+            }
+
+            EditorGUILayout.Space(6);
+
+            // 3. Manual Carve & Revert Buttons
+            using (new GUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Manual Recarve Now", GUILayout.Height(30)))
+                {
+                    carver.CarveDynamic();
+                    EditorUtility.SetDirty(carver);
+                }
+
+                if (GUILayout.Button("Revert to Original", GUILayout.Height(30)))
                 {
                     carver.RestoreAllSnapshots();
                     carver.EnableDynamicCarve = false;
@@ -49,14 +72,15 @@ namespace RiverTools
                 }
             }
 
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("Permanent Baking", EditorStyles.boldLabel);
+            EditorGUILayout.Space(8);
+
+            // 4. Permanent Baking Action Button
             using (new EditorGUI.DisabledGroupScope(!carver.EnableDynamicCarve))
             {
-                if (GUILayout.Button("Bake Into Terrain (Stamp Permanently)", GUILayout.Height(40)))
+                if (GUILayout.Button("Bake Into Terrain (Stamp Permanently)", GUILayout.Height(32)))
                 {
                     if (EditorUtility.DisplayDialog("Bake Into Terrain",
-                        "This will permanently stamp the carved riverbed into the terrain heightmaps so you can use standard Unity Terrain sculpting and painting brushes on it.\n\nProceed?",
+                        "This will permanently stamp the carved riverbed into the terrain heightmaps so you can use standard Unity Terrain sculpting brushes on it.\n\nProceed?",
                         "Bake", "Cancel"))
                     {
                         carver.BakeIntoTerrain();
@@ -65,9 +89,11 @@ namespace RiverTools
                 }
             }
 
-            EditorGUILayout.Space(15);
+            EditorGUILayout.Space(12);
             EditorGUILayout.LabelField("Carving & Profile Settings", EditorStyles.boldLabel);
-            DrawPropertiesExcluding(serializedObject, "m_Script");
+
+            // Hide raw boolean checkboxes from inspector
+            DrawPropertiesExcluding(serializedObject, "m_Script", "m_EnableDynamicCarve", "m_AutoRebuildOnSplineChange", "m_EnableFastMode");
 
             serializedObject.ApplyModifiedProperties();
         }
@@ -76,6 +102,20 @@ namespace RiverTools
         {
             RiverTerrainCarver carver = (RiverTerrainCarver)target;
             if (carver == null || carver.Container == null || carver.Container.Spline == null) return;
+
+            // Detect active user spline drag interactions for Fast Mode switching (ignore camera orbit/pan)
+            Event e = Event.current;
+            if (e != null)
+            {
+                if (!e.alt && e.button == 0 && (e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && GUIUtility.hotControl != 0)
+                {
+                    carver.IsActivelyEditing = true;
+                }
+                else if (e.type == EventType.MouseUp || e.type == EventType.MouseLeaveWindow || GUIUtility.hotControl == 0)
+                {
+                    carver.IsActivelyEditing = false;
+                }
+            }
 
             carver.SamplePolyline(out var samples, out float maxHalfWidth, out float maxInfluence);
             if (samples == null || samples.Count < 2) return;

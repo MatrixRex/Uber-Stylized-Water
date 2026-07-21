@@ -75,6 +75,7 @@ namespace RiverTools
         [Header("Dynamic Layer")]
         [SerializeField] private bool m_EnableDynamicCarve = true;
         [SerializeField] private bool m_AutoRebuildOnSplineChange = true;
+        [SerializeField] private bool m_EnableFastMode = true;
 
         // Internal snapshot structure for non-destructive dynamic layer
         private class TerrainSnapshot
@@ -89,6 +90,7 @@ namespace RiverTools
         private readonly Dictionary<Terrain, TerrainSnapshot> m_Snapshots = new Dictionary<Terrain, TerrainSnapshot>();
         private bool m_IsDirty = true;
         private bool m_IsCarving = false;
+        private bool m_IsActivelyEditing = false;
 
         public RiverExtrude RiverExtrude => m_RiverExtrude;
         public SplineContainer Container => m_Container;
@@ -104,6 +106,35 @@ namespace RiverTools
                         RestoreAllSnapshots();
                     else
                         RequestCarve();
+                }
+            }
+        }
+
+        public bool AutoRebuildOnSplineChange
+        {
+            get => m_AutoRebuildOnSplineChange;
+            set => m_AutoRebuildOnSplineChange = value;
+        }
+
+        public bool EnableFastMode
+        {
+            get => m_EnableFastMode;
+            set => m_EnableFastMode = value;
+        }
+
+        public bool IsActivelyEditing
+        {
+            get => m_IsActivelyEditing;
+            set
+            {
+                if (m_IsActivelyEditing != value)
+                {
+                    m_IsActivelyEditing = value;
+                    if (!m_IsActivelyEditing)
+                    {
+                        // Editing completed: request high-quality final pass
+                        RequestCarve();
+                    }
                 }
             }
         }
@@ -166,6 +197,15 @@ namespace RiverTools
 
         private void Update()
         {
+            if (transform.hasChanged)
+            {
+                transform.hasChanged = false;
+                if (m_EnableDynamicCarve && m_AutoRebuildOnSplineChange)
+                {
+                    RequestCarve();
+                }
+            }
+
             if (m_IsDirty && m_EnableDynamicCarve)
             {
                 CarveDynamicInternal();
@@ -292,7 +332,8 @@ namespace RiverTools
             float length = m_Container.CalculateLength();
             if (length <= 0f) return;
 
-            int count = Mathf.Max(4, Mathf.CeilToInt(length / m_SampleSpacing));
+            float spacing = (m_EnableFastMode && m_IsActivelyEditing) ? 15f : m_SampleSpacing;
+            int count = Mathf.Max(4, Mathf.CeilToInt(length / spacing));
 
             for (int i = 0; i <= count; i++)
             {
@@ -485,13 +526,15 @@ namespace RiverTools
                 }
             });
 
+            int effectiveSmoothPasses = (m_EnableFastMode && m_IsActivelyEditing) ? 0 : m_SmoothPasses;
+
             // Optional multithreaded post-carve heightmap smoothing pass (3x3 Gaussian filter)
-            if (m_SmoothPasses > 0 && m_SmoothStrength > 0f && height > 2 && width > 2)
+            if (effectiveSmoothPasses > 0 && m_SmoothStrength > 0f && height > 2 && width > 2)
             {
                 float[,] tempHeights = new float[height, width];
                 float strength = m_SmoothStrength;
 
-                for (int pass = 0; pass < m_SmoothPasses; pass++)
+                for (int pass = 0; pass < effectiveSmoothPasses; pass++)
                 {
                     System.Array.Copy(newHeights, tempHeights, newHeights.Length);
 
