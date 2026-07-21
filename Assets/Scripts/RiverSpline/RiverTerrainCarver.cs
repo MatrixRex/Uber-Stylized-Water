@@ -338,11 +338,18 @@ namespace RiverTools
             for (int i = 0; i <= count; i++)
             {
                 float t = i / (float)count;
-                m_Container.Evaluate(t, out float3 worldPos, out float3 tangent, out float3 upVec);
-
-                float3 fwd = math.normalizesafe(tangent, new float3(0, 0, 1));
-                float3 up = math.normalizesafe(upVec, new float3(0, 1, 0));
-                float3 right = math.normalizesafe(math.cross(up, fwd), new float3(1, 0, 0));
+                float3 worldPos, fwd, up, right;
+                if (m_RiverExtrude != null)
+                {
+                    m_RiverExtrude.EvaluateFrame(t, out worldPos, out fwd, out up, out right);
+                }
+                else
+                {
+                    m_Container.Evaluate(t, out worldPos, out float3 tangent, out float3 upVec);
+                    fwd = math.normalizesafe(tangent, new float3(0, 0, 1));
+                    right = math.normalizesafe(math.cross(new float3(0, 1, 0), fwd), new float3(1, 0, 0));
+                    up = math.normalizesafe(math.cross(fwd, right), new float3(0, 1, 0));
+                }
 
                 float width = 4f;
                 if (m_RiverExtrude != null)

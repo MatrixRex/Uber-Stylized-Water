@@ -33,6 +33,19 @@ namespace RiverTools
 
             DrawDefaultInspector();
 
+            GUILayout.Space(15);
+            GUILayout.Label("Spline Knot Tools", EditorStyles.boldLabel);
+            if (GUILayout.Button("Align Spline Knots Level (Remove Roll)", GUILayout.Height(30)))
+            {
+                Undo.RegisterCompleteObjectUndo(extrude, "Align Spline Knots Level");
+                if (extrude.Container != null)
+                {
+                    Undo.RegisterCompleteObjectUndo(extrude.Container, "Align Spline Knots Level");
+                }
+                extrude.AlignKnotRotationsLevel();
+                EditorUtility.SetDirty(extrude);
+            }
+
             var carver = extrude.GetComponent<RiverTerrainCarver>();
             if (carver == null)
             {

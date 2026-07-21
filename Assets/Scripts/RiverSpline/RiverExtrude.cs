@@ -5,6 +5,12 @@ using System.Collections.Generic;
 
 namespace RiverTools
 {
+    public enum RiverOrientationMode
+    {
+        KeepLevel = 0,
+        SplineKnotRotation = 1
+    }
+
     /// <summary>
     /// Drop-in replacement for SplineExtrude, purpose-built for flat, variable-width
     /// river ribbons. Unlike SplineExtrude / IExtrudeShape, U is derived from actual
@@ -20,6 +26,10 @@ namespace RiverTools
     {
         [Header("Source")]
         [SerializeField] SplineContainer m_Container;
+
+        [Header("Orientation")]
+        [Tooltip("KeepLevel forces the river surface cross-section to stay flat and level (no banking/tilt along curves). SplineKnotRotation follows Unity Spline knot roll angles.")]
+        [SerializeField] RiverOrientationMode m_OrientationMode = RiverOrientationMode.KeepLevel;
 
         [Header("Shape")]
         [Tooltip("Flat width in world units, used everywhere a knot's multiplier is 1.")]
@@ -79,6 +89,12 @@ namespace RiverTools
         {
             get => m_Container;
             set { m_Container = value; m_RebuildRequested = true; }
+        }
+
+        public RiverOrientationMode OrientationMode
+        {
+            get => m_OrientationMode;
+            set { m_OrientationMode = value; m_RebuildRequested = true; NotifyCarver(); }
         }
 
         public float BaseWidth
@@ -182,6 +198,68 @@ namespace RiverTools
                 Rebuild();
                 m_RebuildRequested = false;
             }
+        }
+
+        /// <summary>
+        /// Evaluates world position and frame vectors (forward, up, right) at normalized spline position t [0, 1].
+        /// Respects OrientationMode to guarantee a level surface when configured.
+        /// </summary>
+        public void EvaluateFrame(float t, out float3 worldPos, out float3 fwd, out float3 up, out float3 right)
+        {
+            if (m_Container == null || m_Container.Spline == null)
+            {
+                worldPos = transform.position;
+                fwd = transform.forward;
+                up = transform.up;
+                right = transform.right;
+                return;
+            }
+
+            m_Container.Evaluate(t, out worldPos, out float3 tangent, out float3 splineUp);
+            fwd = math.normalizesafe(tangent, new float3(0, 0, 1));
+
+            if (m_OrientationMode == RiverOrientationMode.KeepLevel)
+            {
+                // Orthogonal to World Up (0,1,0) and forward tangent -> cross-section is strictly horizontal in XZ plane
+                float3 worldUpRef = new float3(0, 1, 0);
+                right = math.normalizesafe(math.cross(worldUpRef, fwd), new float3(1, 0, 0));
+                up = math.normalizesafe(math.cross(fwd, right), new float3(0, 1, 0));
+            }
+            else
+            {
+                // Follow Unity Spline knot frame evaluation
+                up = math.normalizesafe(splineUp, new float3(0, 1, 0));
+                right = math.normalizesafe(math.cross(up, fwd), new float3(1, 0, 0));
+            }
+        }
+
+        /// <summary>
+        /// Resets/aligns all knot rotations in the SplineContainer to be level with upright horizon orientation.
+        /// </summary>
+        public void AlignKnotRotationsLevel()
+        {
+            if (m_Container == null || m_Container.Spline == null)
+                return;
+
+            var spline = m_Container.Spline;
+            int count = spline.Count;
+            if (count == 0) return;
+
+            for (int i = 0; i < count; i++)
+            {
+                var knot = spline[i];
+                float3 tangent = math.mul(knot.Rotation, new float3(0, 0, 1));
+                float3 fwd = math.normalizesafe(tangent, new float3(0, 0, 1));
+                if (math.lengthsq(fwd) < 0.001f)
+                    fwd = new float3(0, 0, 1);
+
+                quaternion flatRot = quaternion.LookRotationSafe(fwd, new float3(0, 1, 0));
+                knot.Rotation = flatRot;
+                spline[i] = knot;
+            }
+
+            m_RebuildRequested = true;
+            NotifyCarver();
         }
 
         /// <summary>
@@ -308,11 +386,7 @@ namespace RiverTools
             {
                 float t = i / (float)steps;
 
-                m_Container.Evaluate(t, out float3 worldPos, out float3 tangent, out float3 upVec);
-
-                float3 fwd = math.normalizesafe(tangent, new float3(0, 0, 1));
-                float3 up = math.normalizesafe(upVec, new float3(0, 1, 0));
-                float3 right = math.normalizesafe(math.cross(up, fwd), new float3(1, 0, 0));
+                EvaluateFrame(t, out float3 worldPos, out float3 fwd, out float3 up, out float3 right);
 
                 if (i > 0)
                     distanceSoFar += math.distance(worldPos, prevWorldPos);
