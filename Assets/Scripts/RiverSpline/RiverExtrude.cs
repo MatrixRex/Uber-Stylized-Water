@@ -84,7 +84,7 @@ namespace RiverTools
         public float BaseWidth
         {
             get => m_BaseWidth;
-            set { m_BaseWidth = Mathf.Max(0f, value); m_RebuildRequested = true; }
+            set { m_BaseWidth = Mathf.Max(0f, value); m_RebuildRequested = true; NotifyCarver(); }
         }
 
         /// <summary>
@@ -96,6 +96,7 @@ namespace RiverTools
             EnsureKnotWidthListSize(knotIndex + 1);
             m_KnotWidthMultipliers[knotIndex] = multiplier;
             m_RebuildRequested = true;
+            NotifyCarver();
         }
 
         void EnsureKnotWidthListSize(int count)
@@ -150,6 +151,15 @@ namespace RiverTools
             m_UTexelSize = Mathf.Max(0.01f, m_UTexelSize);
             m_VTexelSize = Mathf.Max(0.01f, m_VTexelSize);
             m_RebuildRequested = true;
+            NotifyCarver();
+        }
+
+        public void NotifyCarver()
+        {
+            if (TryGetComponent<RiverTerrainCarver>(out var carver))
+            {
+                carver.RequestCarve();
+            }
         }
 
         void OnSplineChanged(Spline spline, int knotIndex, SplineModification modification)
