@@ -54,6 +54,9 @@ namespace RiverTools
         [Tooltip("Distance in world units to smoothly blend river bank into original terrain height.")]
         [SerializeField, Min(0.1f)] private float m_BankFalloff = 4f;
 
+        [Tooltip("Height offset in world units above spline elevation at the riverbank edge to ensure the terrain rises slightly above water surface [0 = flush with spline].")]
+        [SerializeField] private float m_BankEdgeOffset = 0.25f;
+
         [Header("Carve Settings")]
         [Tooltip("Carve mode. CarveDownOnly is recommended to avoid terrain clipping above river surface.")]
         [SerializeField] private CarveMode m_CarveMode = CarveMode.CarveDownOnly;
@@ -173,6 +176,7 @@ namespace RiverTools
         public float BedDepth { get => m_BedDepth; set { m_BedDepth = Mathf.Max(0f, value); RequestCarve(); } }
         public float BedWidthRatio { get => m_BedWidthRatio; set { m_BedWidthRatio = Mathf.Clamp(value, 0.1f, 1.0f); RequestCarve(); } }
         public float BankFalloff { get => m_BankFalloff; set { m_BankFalloff = Mathf.Max(0.1f, value); RequestCarve(); } }
+        public float BankEdgeOffset { get => m_BankEdgeOffset; set { m_BankEdgeOffset = value; RequestCarve(); } }
         public CarveMode Mode { get => m_CarveMode; set { m_CarveMode = value; RequestCarve(); } }
         public int SmoothPasses { get => m_SmoothPasses; set { m_SmoothPasses = Mathf.Clamp(value, 0, 5); RequestCarve(); } }
         public float SmoothStrength { get => m_SmoothStrength; set { m_SmoothStrength = Mathf.Clamp01(value); RequestCarve(); } }
@@ -554,6 +558,7 @@ namespace RiverTools
                     float bankFalloff = m_BankFalloff;
                     float bedDepth = m_BedDepth;
                     float bedWidthRatio = m_BedWidthRatio;
+                    float bankEdgeOffset = m_BankEdgeOffset;
                     CarveMode mode = m_CarveMode;
                     BedProfileMode profile = m_BedProfile;
 
@@ -597,11 +602,12 @@ namespace RiverTools
                             {
                                 float u = distToCenterline / bedHalfWidth;
                                 float depthMult = EvaluateBedProfile(profile, u);
-                                float targetBedY = splineWorldY - (bedDepth * depthMult);
+                                float targetBedY = splineWorldY + (bankEdgeOffset * u) - (bedDepth * depthMult);
 
-                                if (mode == CarveMode.CarveDownOnly && bedDepth > 0f)
+                                if (mode == CarveMode.CarveDownOnly)
                                 {
-                                    finalWorldY = Mathf.Min(origWorldY, targetBedY);
+                                    float upperLimitY = (bankEdgeOffset > 0f) ? Mathf.Max(origWorldY, splineWorldY + bankEdgeOffset * u) : origWorldY;
+                                    finalWorldY = Mathf.Min(upperLimitY, targetBedY);
                                 }
                                 else
                                 {
@@ -614,13 +620,15 @@ namespace RiverTools
                                 float smoothBank = SmoothStep(0f, 1f, bankFrac);
 
                                 float edgeDepthMult = EvaluateBedProfile(profile, 1f);
-                                float bedEdgeY = splineWorldY - (bedDepth * edgeDepthMult);
+                                float bedEdgeY = splineWorldY + bankEdgeOffset - (bedDepth * edgeDepthMult);
 
                                 float blendBankY = Mathf.Lerp(bedEdgeY, origWorldY, smoothBank);
 
-                                if (mode == CarveMode.CarveDownOnly && origWorldY > bedEdgeY)
+                                if (mode == CarveMode.CarveDownOnly)
                                 {
-                                    finalWorldY = Mathf.Min(origWorldY, blendBankY);
+                                    float targetLipY = Mathf.Lerp(splineWorldY + bankEdgeOffset, origWorldY, smoothBank);
+                                    float upperLimitY = (bankEdgeOffset > 0f) ? Mathf.Max(origWorldY, targetLipY) : origWorldY;
+                                    finalWorldY = Mathf.Min(upperLimitY, blendBankY);
                                 }
                                 else
                                 {
