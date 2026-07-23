@@ -129,15 +129,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 707971b6943da744884761982d525675, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 20.078503
+      value: -251.94283
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 707971b6943da744884761982d525675, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.16408157
+      value: -35.49087
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 707971b6943da744884761982d525675, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -4.1370354
+      value: -382.5114
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 707971b6943da744884761982d525675, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2715,13 +2715,43 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  m_BedDepth: 9.72
-  m_BedWidthRatio: 0.9
-  m_BankFalloff: 50
+  m_BedDepth: 2
+  m_BedWidthRatio: 0.677
+  m_BankFalloff: 10
   m_CarveMode: 1
-  m_SampleSpacing: 10
+  m_SampleSpacing: 20
   m_SmoothPasses: 5
   m_SmoothStrength: 1
+  m_EnableTexturePainting: 1
+  m_TargetTerrainLayer: {fileID: 8574412962073106934, guid: e85aa98471036cb49ab93eb69873f6a7, type: 2}
+  m_TargetLayerIndex: 1
+  m_TextureOpacity: 1
+  m_TextureWidthRatio: 1
+  m_TextureBankFalloff: 2.59
+  m_TextureBlendCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   m_TargetTerrains:
   - {fileID: 1233098944}
   - {fileID: 947768332}
@@ -2729,6 +2759,7 @@ MonoBehaviour:
   - {fileID: 1283542078}
   m_EnableDynamicCarve: 1
   m_AutoRebuildOnSplineChange: 1
+  m_EnableFastMode: 1
 --- !u!114 &1821346511
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2742,15 +2773,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Container: {fileID: 1821346514}
+  m_OrientationMode: 0
   m_BaseWidth: 45.5
   m_KnotWidthMultipliers:
   - 1
   - 1
   - 1
-  - 1
+  - 0.5
   - 1
   m_CrossSections: 2
-  m_SegmentsPerUnit: 2
+  m_SegmentsPerUnit: 1
   m_UTexelSize: 1
   m_VTexelSize: 1
   m_RebuildOnSplineChange: 1
@@ -2846,89 +2878,89 @@ MonoBehaviour:
       TangentIn:
         x: -0
         y: -0
-        z: -26.416454
+        z: -26.548601
       TangentOut:
         x: 0
         y: 0
-        z: 26.416454
+        z: 26.548601
       Rotation:
         value:
-          x: 0.055862073
-          y: -0.5981317
-          z: 0.05716849
-          w: 0.7974017
+          x: 0.067286976
+          y: -0.5975342
+          z: 0.06571575
+          w: 0.7963082
     - Position:
-        x: -190.3
-        y: 4.4
+        x: -190.29999
+        y: -3.3
         z: 126.5
       TangentIn:
         x: -0
         y: -0
-        z: -61.427307
+        z: -67.93415
       TangentOut:
         x: 0
         y: 0
-        z: 52.845837
+        z: 46.0649
       Rotation:
         value:
-          x: -0.032953326
-          y: 0.8422041
-          z: -0.070693575
-          w: -0.5334874
+          x: -0.012605684
+          y: 0.71774673
+          z: -0.07696904
+          w: -0.6919224
     - Position:
-        x: -268.7
+        x: -305.1
         y: -10.3
-        z: -52
+        z: 85.6
       TangentIn:
         x: -0
         y: -0
-        z: -54.872005
+        z: -42.564007
       TangentOut:
         x: 0
         y: 0
-        z: 46.258698
+        z: 69.34879
       Rotation:
         value:
-          x: -0.016490033
-          y: 0.9173658
-          z: -0.025784053
-          w: -0.39686677
+          x: 0.03324981
+          y: 0.9449433
+          z: -0.033913396
+          w: -0.32376918
     - Position:
-        x: -399
-        y: -15.3
-        z: -100
+        x: -336.3
+        y: -15
+        z: -236.9
       TangentIn:
         x: -0
         y: -0
-        z: -44.871212
+        z: -81.35401
       TangentOut:
         x: 0
         y: 0
-        z: 47.53616
+        z: 67.46471
       Rotation:
         value:
-          x: -0.0037725614
-          y: 0.7106642
-          z: -0.0070735854
-          w: -0.7034857
+          x: -0.0018466521
+          y: 0.9416043
+          z: -0.0028279936
+          w: -0.33670458
     - Position:
-        x: -546.4
+        x: -549.6
         y: -14.2
-        z: -49.1
+        z: -301.4
       TangentIn:
         x: -0
         y: -0
-        z: -15.594482
+        z: -22.284025
       TangentOut:
         x: 0
         y: 0
-        z: 15.594482
+        z: 22.284025
       Rotation:
         value:
-          x: -0.0046593053
-          y: -0.5803271
-          z: 0.00046096175
-          w: 0.8143701
+          x: 0.0016008059
+          y: 0.8029445
+          z: 0.0010472041
+          w: -0.5960507
     m_MetaData:
     - Mode: 0
       Tension: 0.5
@@ -2960,7 +2992,7 @@ Transform:
   m_GameObject: {fileID: 1821346509}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 137, y: 0, z: 9}
+  m_LocalPosition: {x: 132.9, y: 0, z: -107}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

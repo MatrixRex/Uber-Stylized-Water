@@ -55,7 +55,7 @@ namespace RiverTools
         [SerializeField, Min(0.1f)] private float m_BankFalloff = 4f;
 
         [Tooltip("Height offset in world units above spline elevation at the riverbank edge to ensure the terrain rises slightly above water surface [0 = flush with spline].")]
-        [SerializeField] private float m_BankEdgeOffset = 0.25f;
+        [SerializeField] private float m_BankEdgeOffset = 1f;
 
         [Header("Carve Settings")]
         [Tooltip("Carve mode. CarveDownOnly is recommended to avoid terrain clipping above river surface.")]
