@@ -713,6 +713,8 @@ namespace RiverTools
                     CarveMode mode = m_CarveMode;
                     BedProfileMode profile = m_BedProfile;
 
+                    var segments = PrepareSplineSegments(samples, bankFalloff + 2f);
+
                     // Multithreaded height calculation over rows
                     Parallel.For(0, height, r =>
                     {
@@ -735,7 +737,7 @@ namespace RiverTools
                             Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
                             float origWorldY = tPos.y + (origNorm * tSize.y);
 
-                            FindClosestSplinePoint(cellWorld, samples, out Vector3 closestSplinePos, out float distToCenterline, out float localHalfWidth);
+                            FindClosestSplinePoint(cellWorld, segments, out Vector3 closestSplinePos, out float distToCenterline, out float localHalfWidth);
 
                             float bedHalfWidth = localHalfWidth * bedWidthRatio;
                             float totalInfluence = bedHalfWidth + bankFalloff;
@@ -819,7 +821,10 @@ namespace RiverTools
                     }
 
                     tData.SetHeightsDelayLOD(unionX0, unionZ0, newHeights);
-                    tData.SyncHeightmap();
+                    if (!(m_EnableFastMode && m_IsActivelyEditing))
+                    {
+                        tData.SyncHeightmap();
+                    }
 
                     if (currentIntersects)
                     {
@@ -926,6 +931,8 @@ namespace RiverTools
             float texBankFalloff = m_TextureBankFalloff;
             float texOpacity = m_TextureOpacity;
 
+            var texSegments = PrepareSplineSegments(samples, texBankFalloff + 2f);
+
             Parallel.For(0, regionHeight, r =>
             {
                 int gz = unionAZ0 + r;
@@ -946,7 +953,7 @@ namespace RiverTools
                     }
 
                     Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
-                    FindClosestSplinePoint(cellWorld, samples, out Vector3 closestSplinePos, out float distToCenterline, out float localHalfWidth);
+                    FindClosestSplinePoint(cellWorld, texSegments, out Vector3 closestSplinePos, out float distToCenterline, out float localHalfWidth);
 
                     float texBedHalfWidth = localHalfWidth * texWidthRatio;
                     float totalTexInfluence = texBedHalfWidth + texBankFalloff;
@@ -1012,15 +1019,21 @@ namespace RiverTools
             }
         }
 
-        private static void FindClosestSplinePoint(Vector3 cellWorld, List<SplinePointSample> samples, out Vector3 closestPos, out float minDist, out float halfWidth)
+        public struct SplineSegment
         {
-            closestPos = Vector3.zero;
-            minDist = float.MaxValue;
-            halfWidth = 2f;
+            public Vector2 P0;
+            public Vector2 P1;
+            public Vector3 Pos0;
+            public Vector3 Pos1;
+            public float HW0;
+            public float HW1;
+            public float MinX, MaxX, MinZ, MaxZ;
+        }
 
-            if (samples == null || samples.Count < 2) return;
-
-            Vector2 cell2D = new Vector2(cellWorld.x, cellWorld.z);
+        private static List<SplineSegment> PrepareSplineSegments(List<SplinePointSample> samples, float padding)
+        {
+            var segments = new List<SplineSegment>();
+            if (samples == null || samples.Count < 2) return segments;
 
             for (int i = 0; i < samples.Count - 1; i++)
             {
@@ -1030,23 +1043,58 @@ namespace RiverTools
                 Vector2 p0 = new Vector2(s0.Position.x, s0.Position.z);
                 Vector2 p1 = new Vector2(s1.Position.x, s1.Position.z);
 
-                Vector2 v = p1 - p0;
+                float maxHW = Mathf.Max(s0.HalfWidth, s1.HalfWidth) + padding;
+
+                segments.Add(new SplineSegment
+                {
+                    P0 = p0,
+                    P1 = p1,
+                    Pos0 = s0.Position,
+                    Pos1 = s1.Position,
+                    HW0 = s0.HalfWidth,
+                    HW1 = s1.HalfWidth,
+                    MinX = Mathf.Min(p0.x, p1.x) - maxHW,
+                    MaxX = Mathf.Max(p0.x, p1.x) + maxHW,
+                    MinZ = Mathf.Min(p0.y, p1.y) - maxHW,
+                    MaxZ = Mathf.Max(p0.y, p1.y) + maxHW
+                });
+            }
+            return segments;
+        }
+
+        private static void FindClosestSplinePoint(Vector3 cellWorld, List<SplineSegment> segments, out Vector3 closestPos, out float minDist, out float halfWidth)
+        {
+            closestPos = Vector3.zero;
+            minDist = float.MaxValue;
+            halfWidth = 2f;
+
+            if (segments == null || segments.Count == 0) return;
+
+            Vector2 cell2D = new Vector2(cellWorld.x, cellWorld.z);
+
+            for (int i = 0; i < segments.Count; i++)
+            {
+                var seg = segments[i];
+                if (cell2D.x < seg.MinX || cell2D.x > seg.MaxX || cell2D.y < seg.MinZ || cell2D.y > seg.MaxZ)
+                    continue;
+
+                Vector2 v = seg.P1 - seg.P0;
                 float sqrLen = v.sqrMagnitude;
 
                 float t = 0f;
                 if (sqrLen > 0.0001f)
                 {
-                    t = Mathf.Clamp01(Vector2.Dot(cell2D - p0, v) / sqrLen);
+                    t = Mathf.Clamp01(Vector2.Dot(cell2D - seg.P0, v) / sqrLen);
                 }
 
-                Vector2 proj2D = p0 + v * t;
+                Vector2 proj2D = seg.P0 + v * t;
                 float dist = Vector2.Distance(cell2D, proj2D);
 
                 if (dist < minDist)
                 {
                     minDist = dist;
-                    closestPos = Vector3.Lerp(s0.Position, s1.Position, t);
-                    halfWidth = Mathf.Lerp(s0.HalfWidth, s1.HalfWidth, t);
+                    closestPos = Vector3.Lerp(seg.Pos0, seg.Pos1, t);
+                    halfWidth = Mathf.Lerp(seg.HW0, seg.HW1, t);
                 }
             }
         }
