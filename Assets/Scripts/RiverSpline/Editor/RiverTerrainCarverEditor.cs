@@ -80,7 +80,7 @@ namespace RiverTools
                 if (GUILayout.Button("Bake Into Terrain (Stamp Permanently)", GUILayout.Height(32)))
                 {
                     if (EditorUtility.DisplayDialog("Bake Into Terrain",
-                        "This will permanently stamp the carved riverbed into the terrain heightmaps so you can use standard Unity Terrain sculpting brushes on it.\n\nProceed?",
+                        "This will permanently stamp the carved riverbed heightmap and painted textures into the terrain so you can use standard Unity Terrain sculpting and painting brushes on it.\n\nProceed?",
                         "Bake", "Cancel"))
                     {
                         carver.BakeIntoTerrain();
@@ -90,7 +90,67 @@ namespace RiverTools
             }
 
             EditorGUILayout.Space(12);
-            EditorGUILayout.LabelField("Carving & Profile Settings", EditorStyles.boldLabel);
+
+            // Target Terrain Layer quick selector popup
+            SerializedProperty targetLayerProp = serializedObject.FindProperty("m_TargetTerrainLayer");
+            SerializedProperty targetLayerIdxProp = serializedObject.FindProperty("m_TargetLayerIndex");
+            SerializedProperty enableTexPaintProp = serializedObject.FindProperty("m_EnableTexturePainting");
+
+            if (enableTexPaintProp != null && enableTexPaintProp.boolValue)
+            {
+                List<Terrain> targets = carver.GetTargetTerrains();
+                List<TerrainLayer> availableLayers = new List<TerrainLayer>();
+                foreach (var t in targets)
+                {
+                    if (t != null && t.terrainData != null && t.terrainData.terrainLayers != null)
+                    {
+                        foreach (var layer in t.terrainData.terrainLayers)
+                        {
+                            if (layer != null && !availableLayers.Contains(layer))
+                            {
+                                availableLayers.Add(layer);
+                            }
+                        }
+                    }
+                }
+
+                if (availableLayers.Count > 0)
+                {
+                    TerrainLayer currentLayer = (TerrainLayer)targetLayerProp.objectReferenceValue;
+                    int selectedIdx = -1;
+                    string[] names = new string[availableLayers.Count + 1];
+                    names[0] = "-- Use Assigned Asset or Custom --";
+
+                    for (int i = 0; i < availableLayers.Count; i++)
+                    {
+                        names[i + 1] = $"Layer {i}: {(availableLayers[i] != null ? availableLayers[i].name : "Unnamed")}";
+                        if (availableLayers[i] == currentLayer)
+                        {
+                            selectedIdx = i + 1;
+                        }
+                    }
+
+                    if (selectedIdx == -1) selectedIdx = 0;
+
+                    EditorGUI.BeginChangeCheck();
+                    int newSelectedIdx = EditorGUILayout.Popup("Existing Layer Select", selectedIdx, names);
+                    if (EditorGUI.EndChangeCheck() && newSelectedIdx != selectedIdx)
+                    {
+                        if (newSelectedIdx == 0)
+                        {
+                            targetLayerProp.objectReferenceValue = null;
+                        }
+                        else
+                        {
+                            targetLayerProp.objectReferenceValue = availableLayers[newSelectedIdx - 1];
+                            targetLayerIdxProp.intValue = newSelectedIdx - 1;
+                        }
+                        carver.RequestCarve();
+                    }
+                }
+            }
+
+            EditorGUILayout.LabelField("Carving, Texturing & Profile Settings", EditorStyles.boldLabel);
 
             // Hide raw boolean checkboxes from inspector
             DrawPropertiesExcluding(serializedObject, "m_Script", "m_EnableDynamicCarve", "m_AutoRebuildOnSplineChange", "m_EnableFastMode");
@@ -155,6 +215,24 @@ namespace RiverTools
 
                 Handles.DrawLine(bankLeft0, bankLeft1, 1f);
                 Handles.DrawLine(bankRight0, bankRight1, 1f);
+            }
+
+            // Draw texture paint bank falloff boundaries (purple/magenta lines) when texture painting is active
+            if (carver.EnableTexturePainting)
+            {
+                Handles.color = new Color(0.85f, 0.35f, 1f, 0.6f);
+                float texWidthRatio = carver.TextureWidthRatio;
+                float texFalloff = carver.TextureBankFalloff;
+                for (int i = 0; i < samples.Count - 1; i++)
+                {
+                    Vector3 texLeft0 = samples[i].Position - samples[i].Right * (samples[i].HalfWidth * texWidthRatio + texFalloff);
+                    Vector3 texLeft1 = samples[i + 1].Position - samples[i + 1].Right * (samples[i + 1].HalfWidth * texWidthRatio + texFalloff);
+                    Vector3 texRight0 = samples[i].Position + samples[i].Right * (samples[i].HalfWidth * texWidthRatio + texFalloff);
+                    Vector3 texRight1 = samples[i + 1].Position + samples[i + 1].Right * (samples[i + 1].HalfWidth * texWidthRatio + texFalloff);
+
+                    Handles.DrawLine(texLeft0, texLeft1, 1.2f);
+                    Handles.DrawLine(texRight0, texRight1, 1.2f);
+                }
             }
         }
     }
