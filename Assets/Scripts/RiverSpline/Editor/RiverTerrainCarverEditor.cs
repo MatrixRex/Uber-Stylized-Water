@@ -72,9 +72,32 @@ namespace RiverTools
                 }
             }
 
+            EditorGUILayout.Space(6);
+
+            // 4. Baseline Snapshot Management Buttons
+            using (new GUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Update Baseline From Terrain", GUILayout.Height(26)))
+                {
+                    if (EditorUtility.DisplayDialog("Update Baseline Snapshot",
+                        "This will capture the current terrain state as the new baseline for dynamic carving.\nAny manual sculpting/painting edits you made will become part of the baseline.\n\nProceed?",
+                        "Update Baseline", "Cancel"))
+                    {
+                        carver.CaptureFreshBaseline();
+                        EditorUtility.SetDirty(carver);
+                    }
+                }
+
+                if (GUILayout.Button("Save Snapshot Asset", GUILayout.Height(26)))
+                {
+                    carver.SaveAllSnapshotsToAsset();
+                    EditorUtility.SetDirty(carver);
+                }
+            }
+
             EditorGUILayout.Space(8);
 
-            // 4. Permanent Baking Action Button
+            // 5. Permanent Baking Action Button
             using (new EditorGUI.DisabledGroupScope(!carver.EnableDynamicCarve))
             {
                 if (GUILayout.Button("Bake Into Terrain (Stamp Permanently)", GUILayout.Height(32)))

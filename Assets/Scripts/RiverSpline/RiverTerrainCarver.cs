@@ -102,6 +102,9 @@ namespace RiverTools
         [SerializeField] private bool m_AutoRebuildOnSplineChange = true;
         [SerializeField] private bool m_EnableFastMode = true;
 
+        [Tooltip("Persistent snapshot ScriptableObject asset to store baseline terrain heightmaps and alphamaps across Unity restarts.")]
+        [SerializeField] private RiverTerrainSnapshotData m_SnapshotAsset;
+
         // Internal snapshot structure for non-destructive dynamic layer
         private class TerrainSnapshot
         {
@@ -118,6 +121,8 @@ namespace RiverTools
             public float[,,] FullOriginalAlphamaps;
             public bool HasLastAlphaBounds;
             public int LastAlphaX0, LastAlphaX1, LastAlphaZ0, LastAlphaZ1;
+
+            public bool IsModified;
         }
 
         private readonly Dictionary<Terrain, TerrainSnapshot> m_Snapshots = new Dictionary<Terrain, TerrainSnapshot>();
@@ -127,6 +132,104 @@ namespace RiverTools
 
         public RiverExtrude RiverExtrude => m_RiverExtrude;
         public SplineContainer Container => m_Container;
+        public RiverTerrainSnapshotData SnapshotAsset
+        {
+            get => m_SnapshotAsset;
+            set { m_SnapshotAsset = value; RequestCarve(); }
+        }
+
+#if UNITY_EDITOR
+        public RiverTerrainSnapshotData GetOrCreateSnapshotAsset()
+        {
+            if (m_SnapshotAsset != null) return m_SnapshotAsset;
+
+            string dir = "Assets/RiverSnapshots";
+            if (!System.IO.Directory.Exists(dir))
+            {
+                System.IO.Directory.CreateDirectory(dir);
+                UnityEditor.AssetDatabase.Refresh();
+            }
+            string path = $"{dir}/RiverSnapshot_{gameObject.name}.asset";
+            path = UnityEditor.AssetDatabase.GenerateUniqueAssetPath(path);
+
+            m_SnapshotAsset = ScriptableObject.CreateInstance<RiverTerrainSnapshotData>();
+            UnityEditor.AssetDatabase.CreateAsset(m_SnapshotAsset, path);
+            UnityEditor.AssetDatabase.SaveAssets();
+            UnityEditor.EditorUtility.SetDirty(this);
+            return m_SnapshotAsset;
+        }
+
+        public void SaveSnapshotToAsset(Terrain terrain, TerrainSnapshot snapshot)
+        {
+            if (snapshot == null || terrain == null || snapshot.FullOriginalHeights == null) return;
+            RiverTerrainSnapshotData asset = GetOrCreateSnapshotAsset();
+            if (asset != null)
+            {
+                asset.SetSnapshot(terrain, snapshot.FullOriginalHeights, snapshot.FullOriginalAlphamaps);
+                UnityEditor.EditorUtility.SetDirty(asset);
+            }
+        }
+
+        public void SaveAllSnapshotsToAsset()
+        {
+            if (m_Snapshots == null || m_Snapshots.Count == 0) return;
+            RiverTerrainSnapshotData asset = GetOrCreateSnapshotAsset();
+            if (asset != null)
+            {
+                foreach (var kvp in m_Snapshots)
+                {
+                    if (kvp.Key != null && kvp.Value != null && kvp.Value.FullOriginalHeights != null)
+                    {
+                        asset.SetSnapshot(kvp.Key, kvp.Value.FullOriginalHeights, kvp.Value.FullOriginalAlphamaps);
+                    }
+                }
+                UnityEditor.EditorUtility.SetDirty(asset);
+                UnityEditor.AssetDatabase.SaveAssets();
+            }
+        }
+#endif
+
+        public void CaptureFreshBaseline()
+        {
+            EnsureReferences();
+            List<Terrain> targets = GetTargetTerrains();
+            foreach (var terrain in targets)
+            {
+                if (terrain == null || terrain.terrainData == null) continue;
+                TerrainData tData = terrain.terrainData;
+                int hRes = tData.heightmapResolution;
+                int aW = tData.alphamapWidth;
+                int aH = tData.alphamapHeight;
+                int aL = tData.alphamapLayers;
+
+                var snap = new TerrainSnapshot
+                {
+                    Terrain = terrain,
+                    Resolution = hRes,
+                    FullOriginalHeights = tData.GetHeights(0, 0, hRes, hRes),
+                    HasLastBounds = false,
+                    AlphamapWidth = aW,
+                    AlphamapHeight = aH,
+                    AlphamapLayers = aL,
+                    FullOriginalAlphamaps = tData.GetAlphamaps(0, 0, aW, aH),
+                    HasLastAlphaBounds = false
+                };
+                m_Snapshots[terrain] = snap;
+
+#if UNITY_EDITOR
+                SaveSnapshotToAsset(terrain, snap);
+#endif
+            }
+
+#if UNITY_EDITOR
+            if (m_SnapshotAsset != null)
+            {
+                UnityEditor.AssetDatabase.SaveAssets();
+            }
+#endif
+
+            RequestCarve();
+        }
         public bool EnableDynamicCarve
         {
             get => m_EnableDynamicCarve;
@@ -490,19 +593,47 @@ namespace RiverTools
             if (!m_Snapshots.TryGetValue(terrain, out var snapshot) || snapshot.FullOriginalHeights == null || snapshot.Resolution != hRes ||
                 snapshot.FullOriginalAlphamaps == null || snapshot.AlphamapWidth != aWidth || snapshot.AlphamapHeight != aHeight || snapshot.AlphamapLayers != aLayers)
             {
-                snapshot = new TerrainSnapshot
+                bool loadedFromAsset = false;
+                if (m_SnapshotAsset != null && m_SnapshotAsset.TryGetSnapshot(terrain, out float[,] loadedH, out float[,,] loadedA, out int lHRes, out int lAW, out int lAH, out int lAL))
                 {
-                    Terrain = terrain,
-                    Resolution = hRes,
-                    FullOriginalHeights = tData.GetHeights(0, 0, hRes, hRes),
-                    HasLastBounds = false,
-                    AlphamapWidth = aWidth,
-                    AlphamapHeight = aHeight,
-                    AlphamapLayers = aLayers,
-                    FullOriginalAlphamaps = tData.GetAlphamaps(0, 0, aWidth, aHeight),
-                    HasLastAlphaBounds = false
-                };
-                m_Snapshots[terrain] = snapshot;
+                    if (lHRes == hRes && lAW == aWidth && lAH == aHeight && lAL == aLayers)
+                    {
+                        snapshot = new TerrainSnapshot
+                        {
+                            Terrain = terrain,
+                            Resolution = hRes,
+                            FullOriginalHeights = loadedH,
+                            HasLastBounds = false,
+                            AlphamapWidth = aWidth,
+                            AlphamapHeight = aHeight,
+                            AlphamapLayers = aLayers,
+                            FullOriginalAlphamaps = loadedA,
+                            HasLastAlphaBounds = false
+                        };
+                        m_Snapshots[terrain] = snapshot;
+                        loadedFromAsset = true;
+                    }
+                }
+
+                if (!loadedFromAsset)
+                {
+                    snapshot = new TerrainSnapshot
+                    {
+                        Terrain = terrain,
+                        Resolution = hRes,
+                        FullOriginalHeights = tData.GetHeights(0, 0, hRes, hRes),
+                        HasLastBounds = false,
+                        AlphamapWidth = aWidth,
+                        AlphamapHeight = aHeight,
+                        AlphamapLayers = aLayers,
+                        FullOriginalAlphamaps = tData.GetAlphamaps(0, 0, aWidth, aHeight),
+                        HasLastAlphaBounds = false
+                    };
+                    m_Snapshots[terrain] = snapshot;
+#if UNITY_EDITOR
+                    SaveSnapshotToAsset(terrain, snapshot);
+#endif
+                }
             }
 
             Bounds splineBounds = CalculateSplineWorldBounds(maxInfluenceRadius);
@@ -926,20 +1057,33 @@ namespace RiverTools
 
         public void RestoreAllSnapshots()
         {
-            foreach (var kvp in m_Snapshots)
+            List<Terrain> targets = GetTargetTerrains();
+            foreach (var terrain in targets)
             {
-                var terrain = kvp.Key;
-                var snap = kvp.Value;
                 if (terrain != null && terrain.terrainData != null)
                 {
-                    if (snap.FullOriginalHeights != null)
+                    float[,] heightsToRestore = null;
+                    float[,,] alphaToRestore = null;
+
+                    if (m_Snapshots.TryGetValue(terrain, out var snap) && snap.FullOriginalHeights != null)
                     {
-                        terrain.terrainData.SetHeightsDelayLOD(0, 0, snap.FullOriginalHeights);
+                        heightsToRestore = snap.FullOriginalHeights;
+                        alphaToRestore = snap.FullOriginalAlphamaps;
+                    }
+                    else if (m_SnapshotAsset != null && m_SnapshotAsset.TryGetSnapshot(terrain, out float[,] loadedH, out float[,,] loadedA, out _, out _, out _, out _))
+                    {
+                        heightsToRestore = loadedH;
+                        alphaToRestore = loadedA;
+                    }
+
+                    if (heightsToRestore != null)
+                    {
+                        terrain.terrainData.SetHeightsDelayLOD(0, 0, heightsToRestore);
                         terrain.terrainData.SyncHeightmap();
                     }
-                    if (snap.FullOriginalAlphamaps != null)
+                    if (alphaToRestore != null)
                     {
-                        terrain.terrainData.SetAlphamaps(0, 0, snap.FullOriginalAlphamaps);
+                        terrain.terrainData.SetAlphamaps(0, 0, alphaToRestore);
                     }
                 }
             }
@@ -963,6 +1107,13 @@ namespace RiverTools
                     Undo.RegisterCompleteObjectUndo(terrain.terrainData, "Bake River Spline Terrain Carving & Texturing");
                     EditorUtility.SetDirty(terrain.terrainData);
                 }
+            }
+
+            if (m_SnapshotAsset != null)
+            {
+                m_SnapshotAsset.Clear();
+                EditorUtility.SetDirty(m_SnapshotAsset);
+                UnityEditor.AssetDatabase.SaveAssets();
             }
 #endif
 
