@@ -284,7 +284,6 @@ namespace RiverTools
 
         public bool EnableTexturePainting { get => m_EnableTexturePainting; set { m_EnableTexturePainting = value; RequestCarve(); } }
         public TerrainLayer TargetTerrainLayer { get => m_TargetTerrainLayer; set { m_TargetTerrainLayer = value; RequestCarve(); } }
-        public int TargetLayerIndex { get => m_TargetLayerIndex; set { m_TargetLayerIndex = Mathf.Max(0, value); RequestCarve(); } }
         public float TextureOpacity { get => m_TextureOpacity; set { m_TextureOpacity = Mathf.Clamp01(value); RequestCarve(); } }
         public float TextureWidthRatio { get => m_TextureWidthRatio; set { m_TextureWidthRatio = Mathf.Clamp(value, 0.1f, 1.0f); RequestCarve(); } }
         public float TextureBankFalloff { get => m_TextureBankFalloff; set { m_TextureBankFalloff = Mathf.Max(0.1f, value); RequestCarve(); } }
@@ -312,7 +311,6 @@ namespace RiverTools
             m_SampleSpacing = Mathf.Max(0.1f, m_SampleSpacing);
             m_SmoothPasses = Mathf.Clamp(m_SmoothPasses, 0, 5);
             m_SmoothStrength = Mathf.Clamp01(m_SmoothStrength);
-            m_TargetLayerIndex = Mathf.Max(0, m_TargetLayerIndex);
             m_TextureOpacity = Mathf.Clamp01(m_TextureOpacity);
             m_TextureWidthRatio = Mathf.Clamp(m_TextureWidthRatio, 0.1f, 1.0f);
             m_TextureBankFalloff = Mathf.Max(0.1f, m_TextureBankFalloff);
