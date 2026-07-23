@@ -89,73 +89,136 @@ namespace RiverTools
                 }
             }
 
-            EditorGUILayout.Space(12);
+            EditorGUILayout.Space(8);
 
-            // Target Terrain Layer quick selector popup
+            // 1. Spline & Asset References Group
+            EditorGUILayout.LabelField("References", EditorStyles.boldLabel);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_RiverExtrude"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_Container"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_SnapshotAsset"));
+            }
+
+            EditorGUILayout.Space(8);
+
+            // 2. Carving Profile & Geometry Group
+            EditorGUILayout.LabelField("River Bed & Bank Geometry", EditorStyles.boldLabel);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                SerializedProperty profileProp = serializedObject.FindProperty("m_BedProfile");
+                EditorGUILayout.PropertyField(profileProp);
+                if (profileProp.enumValueIndex == (int)BedProfileMode.CustomCurve)
+                {
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("m_CustomBedCurve"));
+                }
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_BedDepth"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_BedWidthRatio"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_BankEdgeOffset"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_BankFalloff"));
+            }
+
+            EditorGUILayout.Space(8);
+
+            // 3. Terrain Texture Painting Group
+            SerializedProperty enableTexPaintProp = serializedObject.FindProperty("m_EnableTexturePainting");
+            EditorGUILayout.LabelField("Terrain Texture Painting", EditorStyles.boldLabel);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.PropertyField(enableTexPaintProp);
+                if (enableTexPaintProp != null && enableTexPaintProp.boolValue)
+                {
+                    EditorGUI.indentLevel++;
+                    DrawTerrainLayerQuickSelect(carver);
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("m_TargetTerrainLayer"));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("m_TargetLayerIndex"));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("m_TextureOpacity"));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("m_TextureWidthRatio"));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("m_TextureBankFalloff"));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("m_TextureBlendCurve"));
+                    EditorGUI.indentLevel--;
+                }
+            }
+
+            EditorGUILayout.Space(8);
+
+            // 4. Carve Mode & Smoothing Settings Group
+            EditorGUILayout.LabelField("Carve & Smoothing Settings", EditorStyles.boldLabel);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_CarveMode"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_SampleSpacing"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_SmoothPasses"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_SmoothStrength"));
+            }
+
+            EditorGUILayout.Space(8);
+
+            // 5. Target Terrains Group
+            EditorGUILayout.LabelField("Target Terrains", EditorStyles.boldLabel);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_TargetTerrains"), true);
+            }
+
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        private void DrawTerrainLayerQuickSelect(RiverTerrainCarver carver)
+        {
             SerializedProperty targetLayerProp = serializedObject.FindProperty("m_TargetTerrainLayer");
             SerializedProperty targetLayerIdxProp = serializedObject.FindProperty("m_TargetLayerIndex");
-            SerializedProperty enableTexPaintProp = serializedObject.FindProperty("m_EnableTexturePainting");
 
-            if (enableTexPaintProp != null && enableTexPaintProp.boolValue)
+            List<Terrain> targets = carver.GetTargetTerrains();
+            List<TerrainLayer> availableLayers = new List<TerrainLayer>();
+            foreach (var t in targets)
             {
-                List<Terrain> targets = carver.GetTargetTerrains();
-                List<TerrainLayer> availableLayers = new List<TerrainLayer>();
-                foreach (var t in targets)
+                if (t != null && t.terrainData != null && t.terrainData.terrainLayers != null)
                 {
-                    if (t != null && t.terrainData != null && t.terrainData.terrainLayers != null)
+                    foreach (var layer in t.terrainData.terrainLayers)
                     {
-                        foreach (var layer in t.terrainData.terrainLayers)
+                        if (layer != null && !availableLayers.Contains(layer))
                         {
-                            if (layer != null && !availableLayers.Contains(layer))
-                            {
-                                availableLayers.Add(layer);
-                            }
+                            availableLayers.Add(layer);
                         }
-                    }
-                }
-
-                if (availableLayers.Count > 0)
-                {
-                    TerrainLayer currentLayer = (TerrainLayer)targetLayerProp.objectReferenceValue;
-                    int selectedIdx = -1;
-                    string[] names = new string[availableLayers.Count + 1];
-                    names[0] = "-- Use Assigned Asset or Custom --";
-
-                    for (int i = 0; i < availableLayers.Count; i++)
-                    {
-                        names[i + 1] = $"Layer {i}: {(availableLayers[i] != null ? availableLayers[i].name : "Unnamed")}";
-                        if (availableLayers[i] == currentLayer)
-                        {
-                            selectedIdx = i + 1;
-                        }
-                    }
-
-                    if (selectedIdx == -1) selectedIdx = 0;
-
-                    EditorGUI.BeginChangeCheck();
-                    int newSelectedIdx = EditorGUILayout.Popup("Existing Layer Select", selectedIdx, names);
-                    if (EditorGUI.EndChangeCheck() && newSelectedIdx != selectedIdx)
-                    {
-                        if (newSelectedIdx == 0)
-                        {
-                            targetLayerProp.objectReferenceValue = null;
-                        }
-                        else
-                        {
-                            targetLayerProp.objectReferenceValue = availableLayers[newSelectedIdx - 1];
-                            targetLayerIdxProp.intValue = newSelectedIdx - 1;
-                        }
-                        carver.RequestCarve();
                     }
                 }
             }
 
-            EditorGUILayout.LabelField("Carving, Texturing & Profile Settings", EditorStyles.boldLabel);
+            if (availableLayers.Count > 0)
+            {
+                TerrainLayer currentLayer = (TerrainLayer)targetLayerProp.objectReferenceValue;
+                int selectedIdx = -1;
+                string[] names = new string[availableLayers.Count + 1];
+                names[0] = "-- Use Assigned Asset or Custom --";
 
-            // Hide raw boolean checkboxes from inspector
-            DrawPropertiesExcluding(serializedObject, "m_Script", "m_EnableDynamicCarve", "m_AutoRebuildOnSplineChange", "m_EnableFastMode");
+                for (int i = 0; i < availableLayers.Count; i++)
+                {
+                    names[i + 1] = $"Layer {i}: {(availableLayers[i] != null ? availableLayers[i].name : "Unnamed")}";
+                    if (availableLayers[i] == currentLayer)
+                    {
+                        selectedIdx = i + 1;
+                    }
+                }
 
-            serializedObject.ApplyModifiedProperties();
+                if (selectedIdx == -1) selectedIdx = 0;
+
+                EditorGUI.BeginChangeCheck();
+                int newSelectedIdx = EditorGUILayout.Popup("Existing Layer Select", selectedIdx, names);
+                if (EditorGUI.EndChangeCheck() && newSelectedIdx != selectedIdx)
+                {
+                    if (newSelectedIdx == 0)
+                    {
+                        targetLayerProp.objectReferenceValue = null;
+                    }
+                    else
+                    {
+                        targetLayerProp.objectReferenceValue = availableLayers[newSelectedIdx - 1];
+                        targetLayerIdxProp.intValue = newSelectedIdx - 1;
+                    }
+                    carver.RequestCarve();
+                }
+            }
         }
 
         private void OnSceneGUI()
