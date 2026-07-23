@@ -20,8 +20,8 @@ namespace RiverTools
 
     public enum CarveMode
     {
-        CarveDownOnly,
-        ForceHeight
+        CarveDown,
+        SetHeight
     }
 
     /// <summary>
@@ -58,8 +58,8 @@ namespace RiverTools
         [SerializeField] private float m_BankEdgeOffset = 1f;
 
         [Header("Carve Settings")]
-        [Tooltip("Carve mode. CarveDownOnly is recommended to avoid terrain clipping above river surface.")]
-        [SerializeField] private CarveMode m_CarveMode = CarveMode.CarveDownOnly;
+        [Tooltip("Carve mode. CarveDown is recommended to avoid terrain clipping above river surface.")]
+        [SerializeField] private CarveMode m_CarveMode = CarveMode.CarveDown;
 
         [Tooltip("Distance between spline sample points for terrain distance calculations (meters). Lower = higher accuracy.")]
         [SerializeField, Min(0.1f)] private float m_SampleSpacing = 1f;
@@ -75,11 +75,8 @@ namespace RiverTools
         [Tooltip("Enable dynamic texture painting along the riverbed and banks.")]
         [SerializeField] private bool m_EnableTexturePainting = true;
 
-        [Tooltip("Target TerrainLayer to paint. If assigned, auto-detects or auto-adds to target terrains.")]
+        [Tooltip("Target TerrainLayer to paint. Auto-checks if layer is on terrain and auto-appends it if missing.")]
         [SerializeField] private TerrainLayer m_TargetTerrainLayer;
-
-        [Tooltip("Fallback target terrain layer index if TerrainLayer asset is not assigned [0 = first layer].")]
-        [SerializeField, Min(0)] private int m_TargetLayerIndex = 0;
 
         [Tooltip("Maximum opacity/strength of the painted terrain texture at river centerline [0, 1].")]
         [SerializeField, Range(0f, 1f)] private float m_TextureOpacity = 1f;
@@ -550,50 +547,41 @@ namespace RiverTools
             }
         }
 
-        private int FindOrAddTerrainLayer(TerrainData tData, TerrainLayer targetLayer, int fallbackIndex)
+        private int FindOrAddTerrainLayer(TerrainData tData, TerrainLayer targetLayer)
         {
-            if (tData == null) return fallbackIndex;
+            if (tData == null || targetLayer == null) return -1;
 
             TerrainLayer[] layers = tData.terrainLayers;
             if (layers == null || layers.Length == 0)
             {
-                if (targetLayer != null)
-                {
 #if UNITY_EDITOR
-                    Undo.RecordObject(tData, "Add Terrain Layer");
+                Undo.RecordObject(tData, "Add Terrain Layer");
 #endif
-                    tData.terrainLayers = new TerrainLayer[] { targetLayer };
-#if UNITY_EDITOR
-                    EditorUtility.SetDirty(tData);
-#endif
-                    return 0;
-                }
-                return 0;
-            }
-
-            if (targetLayer != null)
-            {
-                for (int i = 0; i < layers.Length; i++)
-                {
-                    if (layers[i] == targetLayer)
-                        return i;
-                }
-
-                // Layer not present on terrain: auto-add it!
-#if UNITY_EDITOR
-                Undo.RecordObject(tData, "Auto Add Terrain Layer");
-#endif
-                TerrainLayer[] newLayers = new TerrainLayer[layers.Length + 1];
-                System.Array.Copy(layers, newLayers, layers.Length);
-                newLayers[layers.Length] = targetLayer;
-                tData.terrainLayers = newLayers;
+                tData.terrainLayers = new TerrainLayer[] { targetLayer };
 #if UNITY_EDITOR
                 EditorUtility.SetDirty(tData);
 #endif
-                return layers.Length;
+                return 0;
             }
 
-            return Mathf.Clamp(fallbackIndex, 0, layers.Length - 1);
+            for (int i = 0; i < layers.Length; i++)
+            {
+                if (layers[i] == targetLayer)
+                    return i;
+            }
+
+            // Layer not present on terrain: auto-add it!
+#if UNITY_EDITOR
+            Undo.RecordObject(tData, "Auto Add Terrain Layer");
+#endif
+            TerrainLayer[] newLayers = new TerrainLayer[layers.Length + 1];
+            System.Array.Copy(layers, newLayers, layers.Length);
+            newLayers[layers.Length] = targetLayer;
+            tData.terrainLayers = newLayers;
+#if UNITY_EDITOR
+            EditorUtility.SetDirty(tData);
+#endif
+            return layers.Length;
         }
 
         private void CarveSingleTerrain(Terrain terrain, List<SplinePointSample> samples, float maxInfluenceRadius)
@@ -859,7 +847,7 @@ namespace RiverTools
             TerrainData tData = terrain.terrainData;
             if (tData == null) return;
 
-            int targetLayerIdx = FindOrAddTerrainLayer(tData, m_TargetTerrainLayer, m_TargetLayerIndex);
+            int targetLayerIdx = FindOrAddTerrainLayer(tData, m_TargetTerrainLayer);
 
             int aWidth = tData.alphamapWidth;
             int aHeight = tData.alphamapHeight;

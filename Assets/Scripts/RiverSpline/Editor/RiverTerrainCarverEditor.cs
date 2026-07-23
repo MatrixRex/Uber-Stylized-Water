@@ -91,12 +91,12 @@ namespace RiverTools
 
             EditorGUILayout.Space(8);
 
+            EditorGUILayout.Space(8);
+
             // 1. Spline & Asset References Group
             EditorGUILayout.LabelField("References", EditorStyles.boldLabel);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_RiverExtrude"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_Container"));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("m_SnapshotAsset"));
             }
 
@@ -129,9 +129,7 @@ namespace RiverTools
                 if (enableTexPaintProp != null && enableTexPaintProp.boolValue)
                 {
                     EditorGUI.indentLevel++;
-                    DrawTerrainLayerQuickSelect(carver);
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("m_TargetTerrainLayer"));
-                    EditorGUILayout.PropertyField(serializedObject.FindProperty("m_TargetLayerIndex"));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("m_TextureOpacity"));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("m_TextureWidthRatio"));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("m_TextureBankFalloff"));
@@ -162,63 +160,6 @@ namespace RiverTools
             }
 
             serializedObject.ApplyModifiedProperties();
-        }
-
-        private void DrawTerrainLayerQuickSelect(RiverTerrainCarver carver)
-        {
-            SerializedProperty targetLayerProp = serializedObject.FindProperty("m_TargetTerrainLayer");
-            SerializedProperty targetLayerIdxProp = serializedObject.FindProperty("m_TargetLayerIndex");
-
-            List<Terrain> targets = carver.GetTargetTerrains();
-            List<TerrainLayer> availableLayers = new List<TerrainLayer>();
-            foreach (var t in targets)
-            {
-                if (t != null && t.terrainData != null && t.terrainData.terrainLayers != null)
-                {
-                    foreach (var layer in t.terrainData.terrainLayers)
-                    {
-                        if (layer != null && !availableLayers.Contains(layer))
-                        {
-                            availableLayers.Add(layer);
-                        }
-                    }
-                }
-            }
-
-            if (availableLayers.Count > 0)
-            {
-                TerrainLayer currentLayer = (TerrainLayer)targetLayerProp.objectReferenceValue;
-                int selectedIdx = -1;
-                string[] names = new string[availableLayers.Count + 1];
-                names[0] = "-- Use Assigned Asset or Custom --";
-
-                for (int i = 0; i < availableLayers.Count; i++)
-                {
-                    names[i + 1] = $"Layer {i}: {(availableLayers[i] != null ? availableLayers[i].name : "Unnamed")}";
-                    if (availableLayers[i] == currentLayer)
-                    {
-                        selectedIdx = i + 1;
-                    }
-                }
-
-                if (selectedIdx == -1) selectedIdx = 0;
-
-                EditorGUI.BeginChangeCheck();
-                int newSelectedIdx = EditorGUILayout.Popup("Existing Layer Select", selectedIdx, names);
-                if (EditorGUI.EndChangeCheck() && newSelectedIdx != selectedIdx)
-                {
-                    if (newSelectedIdx == 0)
-                    {
-                        targetLayerProp.objectReferenceValue = null;
-                    }
-                    else
-                    {
-                        targetLayerProp.objectReferenceValue = availableLayers[newSelectedIdx - 1];
-                        targetLayerIdxProp.intValue = newSelectedIdx - 1;
-                    }
-                    carver.RequestCarve();
-                }
-            }
         }
 
         private void OnSceneGUI()
