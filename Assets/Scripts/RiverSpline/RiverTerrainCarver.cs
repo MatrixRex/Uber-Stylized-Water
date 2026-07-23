@@ -159,7 +159,7 @@ namespace RiverTools
             return m_SnapshotAsset;
         }
 
-        public void SaveSnapshotToAsset(Terrain terrain, TerrainSnapshot snapshot)
+        private void SaveSnapshotToAsset(Terrain terrain, TerrainSnapshot snapshot)
         {
             if (snapshot == null || terrain == null || snapshot.FullOriginalHeights == null) return;
             RiverTerrainSnapshotData asset = GetOrCreateSnapshotAsset();

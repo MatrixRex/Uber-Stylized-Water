@@ -129,15 +129,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 707971b6943da744884761982d525675, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -251.94283
+      value: -249.91714
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 707971b6943da744884761982d525675, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -35.49087
+      value: -34.971245
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 707971b6943da744884761982d525675, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -382.5114
+      value: -386.52277
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 707971b6943da744884761982d525675, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2690,7 +2690,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_RiverExtrude: {fileID: 1821346511}
   m_Container: {fileID: 1821346514}
-  m_BedProfile: 0
+  m_BedProfile: 2
   m_CustomBedCurve:
     serializedVersion: 2
     m_Curve:
@@ -2715,9 +2715,10 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  m_BedDepth: 2
-  m_BedWidthRatio: 0.677
-  m_BankFalloff: 10
+  m_BedDepth: 2.25
+  m_BedWidthRatio: 1
+  m_BankFalloff: 15.89
+  m_BankEdgeOffset: 1
   m_CarveMode: 1
   m_SampleSpacing: 20
   m_SmoothPasses: 5
