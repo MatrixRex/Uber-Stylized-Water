@@ -31,6 +31,7 @@ namespace RiverTools
     /// </summary>
     [ExecuteAlways]
     [DisallowMultipleComponent]
+    [RequireComponent(typeof(RiverExtrude))]
     [AddComponentMenu("Splines/River Terrain Carver")]
     public class RiverTerrainCarver : MonoBehaviour
     {
