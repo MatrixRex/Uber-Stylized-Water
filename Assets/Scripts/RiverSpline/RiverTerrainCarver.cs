@@ -744,7 +744,7 @@ namespace RiverTools
                                 float depthMult = EvaluateBedProfile(profile, u);
                                 float targetBedY = splineWorldY + (bankEdgeOffset * u) - (bedDepth * depthMult);
 
-                                if (mode == CarveMode.CarveDownOnly)
+                                if (mode == CarveMode.CarveDown)
                                 {
                                     float upperLimitY = (bankEdgeOffset > 0f) ? Mathf.Max(origWorldY, splineWorldY + bankEdgeOffset * u) : origWorldY;
                                     finalWorldY = Mathf.Min(upperLimitY, targetBedY);
@@ -764,7 +764,7 @@ namespace RiverTools
 
                                 float blendBankY = Mathf.Lerp(bedEdgeY, origWorldY, smoothBank);
 
-                                if (mode == CarveMode.CarveDownOnly)
+                                if (mode == CarveMode.CarveDown)
                                 {
                                     float targetLipY = Mathf.Lerp(splineWorldY + bankEdgeOffset, origWorldY, smoothBank);
                                     float upperLimitY = (bankEdgeOffset > 0f) ? Mathf.Max(origWorldY, targetLipY) : origWorldY;
