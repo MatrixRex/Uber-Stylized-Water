@@ -8,12 +8,12 @@ namespace RiverTools
     {
         public string TerrainName;
         public int HeightResolution;
-        public byte[] HeightDataBytes;
+        [HideInInspector] public byte[] HeightDataBytes;
 
         public int AlphamapWidth;
         public int AlphamapHeight;
         public int AlphamapLayers;
-        public byte[] AlphaDataBytes;
+        [HideInInspector] public byte[] AlphaDataBytes;
     }
 
     /// <summary>
