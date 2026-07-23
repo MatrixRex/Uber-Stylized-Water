@@ -167,11 +167,11 @@ namespace RiverTools
             Event e = Event.current;
             if (e != null)
             {
-                if (!e.alt && e.button == 0 && (e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && GUIUtility.hotControl != 0)
+                if (!e.alt && e.button == 0 && (e.type == EventType.MouseDown || e.type == EventType.MouseDrag))
                 {
                     carver.IsActivelyEditing = true;
                 }
-                else if (e.type == EventType.MouseUp || e.type == EventType.MouseLeaveWindow || GUIUtility.hotControl == 0)
+                else if (e.type == EventType.MouseUp || e.type == EventType.MouseLeaveWindow)
                 {
                     carver.IsActivelyEditing = false;
                 }

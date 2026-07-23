@@ -335,22 +335,42 @@ namespace RiverTools
             }
         }
 
+        private float m_LastEditTime = 0f;
+
         private void OnSplineChanged(Spline spline, int knotIndex, SplineModification modification)
         {
             if (!m_AutoRebuildOnSplineChange || m_Container == null)
                 return;
 
             if (spline == m_Container.Spline)
+            {
+                if (m_EnableFastMode)
+                {
+                    m_IsActivelyEditing = true;
+                    m_LastEditTime = Time.realtimeSinceStartup;
+                }
                 RequestCarve();
+            }
         }
 
         private void Update()
         {
+            if (m_IsActivelyEditing && (Time.realtimeSinceStartup - m_LastEditTime > 0.2f))
+            {
+                m_IsActivelyEditing = false;
+                RequestCarve();
+            }
+
             if (transform.hasChanged)
             {
                 transform.hasChanged = false;
                 if (m_EnableDynamicCarve && m_AutoRebuildOnSplineChange)
                 {
+                    if (m_EnableFastMode)
+                    {
+                        m_IsActivelyEditing = true;
+                        m_LastEditTime = Time.realtimeSinceStartup;
+                    }
                     RequestCarve();
                 }
             }
@@ -816,8 +836,8 @@ namespace RiverTools
                 }
             }
 
-            // Texture painting pass
-            if (m_EnableTexturePainting)
+            // Texture painting pass (deferred during active drag in Fast Mode for maximum edit responsiveness)
+            if (m_EnableTexturePainting && !(m_EnableFastMode && m_IsActivelyEditing))
             {
                 PaintSingleTerrainAlphamaps(terrain, snapshot, samples, splineBounds, currentIntersects);
             }
