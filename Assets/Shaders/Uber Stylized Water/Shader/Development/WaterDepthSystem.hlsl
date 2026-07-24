@@ -54,10 +54,6 @@ void GroundToMeshUV_float(float2 GroundXZ, float2 SurfaceWorldXZ, float2 Surface
     float2 dUVx = ddx(SurfaceUV);
     float2 dUVy = ddy(SurfaceUV);
 
-    // Remove projection discontinuities at UV seams by wrapping derivatives
-    dUVx = dUVx - round(dUVx);
-    dUVy = dUVy - round(dUVy);
-
     float2 dWx  = ddx(SurfaceWorldXZ);
     float2 dWy  = ddy(SurfaceWorldXZ);
 

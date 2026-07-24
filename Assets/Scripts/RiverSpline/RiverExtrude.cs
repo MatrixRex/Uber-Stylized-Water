@@ -38,12 +38,9 @@ namespace RiverTools
         [Tooltip("One multiplier per knot, in knot order (auto-resized to match the spline). 1 = BaseWidth at that knot, 0.5 = half width, 2 = double width. Values are linearly interpolated between knots.")]
         [SerializeField] List<float> m_KnotWidthMultipliers = new List<float>();
 
-        [Tooltip("Vertices across the width of the river. 2 = flat ribbon, more = smoother bank falloff / room for vertex colors.")]
-        [SerializeField, Range(2, 32)] int m_CrossSections = 2;
-
         [Header("Mesh Density")]
-        [Tooltip("How many edge loops per unit of spline length.")]
-        [SerializeField, Min(0.01f)] float m_SegmentsPerUnit = 2f;
+        [Tooltip("Target size of each quad face in world units. Automatically calculates longitudinal steps and lateral columns to keep quads square across variable river widths.")]
+        [SerializeField, Min(0.05f)] float m_TargetQuadSize = 1f;
 
         [Header("UVs / Tiling")]
         [Tooltip("World units covered by one texture tile across the width (U axis). Width-correct: no stretching as river width changes.")]
@@ -121,16 +118,10 @@ namespace RiverTools
                 m_KnotWidthMultipliers.Add(1f);
         }
 
-        public int CrossSections
+        public float TargetQuadSize
         {
-            get => m_CrossSections;
-            set { m_CrossSections = Mathf.Max(2, value); m_RebuildRequested = true; }
-        }
-
-        public float SegmentsPerUnit
-        {
-            get => m_SegmentsPerUnit;
-            set { m_SegmentsPerUnit = Mathf.Max(0.01f, value); m_RebuildRequested = true; }
+            get => m_TargetQuadSize;
+            set { m_TargetQuadSize = Mathf.Max(0.05f, value); m_RebuildRequested = true; NotifyCarver(); }
         }
 
         public float UTexelSize
@@ -162,8 +153,7 @@ namespace RiverTools
             m_BaseWidth = Mathf.Max(0f, m_BaseWidth);
             for (int i = 0; i < m_KnotWidthMultipliers.Count; i++)
                 m_KnotWidthMultipliers[i] = Mathf.Max(0f, m_KnotWidthMultipliers[i]);
-            m_CrossSections = Mathf.Max(2, m_CrossSections);
-            m_SegmentsPerUnit = Mathf.Max(0.01f, m_SegmentsPerUnit);
+            m_TargetQuadSize = Mathf.Max(0.05f, m_TargetQuadSize);
             m_UTexelSize = Mathf.Max(0.01f, m_UTexelSize);
             m_VTexelSize = Mathf.Max(0.01f, m_VTexelSize);
             m_RebuildRequested = true;
@@ -358,11 +348,25 @@ namespace RiverTools
             if (length <= 0f)
                 return;
 
-            int steps = Mathf.Max(1, Mathf.CeilToInt(length * m_SegmentsPerUnit));
-            int cols = m_CrossSections;
+            float targetSize = Mathf.Max(0.05f, m_TargetQuadSize);
+            int steps = Mathf.Max(1, Mathf.RoundToInt(length / targetSize));
+            float segLength = length / steps;
             int knotCount = spline.Count;
 
             EnsureKnotWidthListSize(knotCount);
+
+            // Sample width along spline to compute average river width across variable knots
+            float totalWidth = 0f;
+            for (int i = 0; i <= steps; i++)
+            {
+                float sampleT = i / (float)steps;
+                float wMult = EvaluateKnotWidthMultiplier(spline, sampleT, knotCount);
+                totalWidth += Mathf.Max(0f, m_BaseWidth * wMult);
+            }
+            float avgWidth = totalWidth / (steps + 1);
+
+            // Determine columns required to keep lateral width per quad approximately equal to segLength (square aspect ratio)
+            int cols = Mathf.Max(2, Mathf.RoundToInt(avgWidth / segLength) + 1);
 
             int vertCount = (steps + 1) * cols;
             var vertices = new List<Vector3>(vertCount);
