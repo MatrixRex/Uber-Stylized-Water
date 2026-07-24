@@ -2725,7 +2725,6 @@ MonoBehaviour:
   m_SmoothStrength: 1
   m_EnableTexturePainting: 1
   m_TargetTerrainLayer: {fileID: 8574412962073106934, guid: e85aa98471036cb49ab93eb69873f6a7, type: 2}
-  m_TargetLayerIndex: 1
   m_TextureOpacity: 1
   m_TextureWidthRatio: 1
   m_TextureBankFalloff: 2.59
@@ -2934,35 +2933,35 @@ MonoBehaviour:
       TangentIn:
         x: -0
         y: -0
-        z: -67.532
+        z: -67.21208
       TangentOut:
         x: 0
         y: 0
-        z: 81.56818
+        z: 63.731083
       Rotation:
         value:
-          x: -0.011923411
-          y: 0.9447205
-          z: 0.00089930714
-          w: -0.32765874
+          x: -0.011631236
+          y: 0.88713026
+          z: -0.00005056643
+          w: -0.4613725
     - Position:
-        x: -549.6
+        x: -629.8
         y: -14.2
-        z: -301.4
+        z: -136.5
       TangentIn:
         x: -0
         y: -0
-        z: -30.96502
+        z: -19.08345
       TangentOut:
         x: 0
         y: 0
-        z: 30.96502
+        z: 19.08345
       Rotation:
         value:
-          x: -0.0065296264
-          y: 0.99686533
-          z: -0.0079091145
-          w: -0.07845027
+          x: -0.004522411
+          y: 0.93228084
+          z: -0.01286052
+          w: -0.36147833
     m_MetaData:
     - Mode: 0
       Tension: 0.5
@@ -2994,7 +2993,7 @@ Transform:
   m_GameObject: {fileID: 1821346509}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 132.9, y: 0, z: -107}
+  m_LocalPosition: {x: 316, y: 0, z: -272}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

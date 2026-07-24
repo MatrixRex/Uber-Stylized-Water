@@ -349,7 +349,7 @@ namespace RiverTools
                 return;
 
             float targetSize = Mathf.Max(0.05f, m_TargetQuadSize);
-            int steps = Mathf.Max(1, Mathf.RoundToInt(length / targetSize));
+            int steps = Mathf.Clamp(Mathf.RoundToInt(length / targetSize), 1, 10000);
             float segLength = length / steps;
             int knotCount = spline.Count;
 
@@ -366,7 +366,7 @@ namespace RiverTools
             float avgWidth = totalWidth / (steps + 1);
 
             // Determine columns required to keep lateral width per quad approximately equal to segLength (square aspect ratio)
-            int cols = Mathf.Max(2, Mathf.RoundToInt(avgWidth / segLength) + 1);
+            int cols = Mathf.Clamp(Mathf.RoundToInt(avgWidth / segLength) + 1, 2, 256);
 
             int vertCount = (steps + 1) * cols;
             var vertices = new List<Vector3>(vertCount);
@@ -441,6 +441,9 @@ namespace RiverTools
             }
 
             m_Mesh.Clear();
+            m_Mesh.indexFormat = (vertCount > 65535) 
+                ? UnityEngine.Rendering.IndexFormat.UInt32 
+                : UnityEngine.Rendering.IndexFormat.UInt16;
             m_Mesh.SetVertices(vertices);
             m_Mesh.SetNormals(normals);
             m_Mesh.SetUVs(0, uvs);
