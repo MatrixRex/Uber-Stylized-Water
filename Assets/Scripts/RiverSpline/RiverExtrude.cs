@@ -40,7 +40,7 @@ namespace RiverTools
 
         [Header("Mesh Density")]
         [Tooltip("Target size of each quad face in world units. Automatically calculates longitudinal steps and lateral columns to keep quads square across variable river widths.")]
-        [SerializeField, Min(0.05f)] float m_TargetQuadSize = 1f;
+        [SerializeField, Min(0.05f)] float m_TargetQuadSize = 5f;
 
         [Header("UVs / Tiling")]
         [Tooltip("World units covered by one texture tile across the width (U axis). Width-correct: no stretching as river width changes.")]
@@ -101,13 +101,24 @@ namespace RiverTools
         }
 
         /// <summary>
+        /// Gets the width multiplier for a specific knot (0 = first knot).
+        /// Returns 1f if index is out of range.
+        /// </summary>
+        public float GetKnotWidthMultiplier(int knotIndex)
+        {
+            if (m_KnotWidthMultipliers == null || knotIndex < 0 || knotIndex >= m_KnotWidthMultipliers.Count)
+                return 1f;
+            return m_KnotWidthMultipliers[knotIndex];
+        }
+
+        /// <summary>
         /// Sets the width multiplier for a specific knot (0 = first knot). Resizes the
         /// list if needed. 1 = BaseWidth, 0.5 = half width at that knot, etc.
         /// </summary>
         public void SetKnotWidthMultiplier(int knotIndex, float multiplier)
         {
             EnsureKnotWidthListSize(knotIndex + 1);
-            m_KnotWidthMultipliers[knotIndex] = multiplier;
+            m_KnotWidthMultipliers[knotIndex] = Mathf.Max(0f, multiplier);
             m_RebuildRequested = true;
             NotifyCarver();
         }

@@ -1,5 +1,8 @@
 using UnityEngine;
 using UnityEditor;
+using UnityEngine.Splines;
+using UnityEditor.Splines;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Globalization;
@@ -33,19 +36,6 @@ namespace RiverTools
 
             DrawDefaultInspector();
 
-            GUILayout.Space(15);
-            GUILayout.Label("Spline Knot Tools", EditorStyles.boldLabel);
-            if (GUILayout.Button("Align Spline Knots Level (Remove Roll)", GUILayout.Height(30)))
-            {
-                Undo.RegisterCompleteObjectUndo(extrude, "Align Spline Knots Level");
-                if (extrude.Container != null)
-                {
-                    Undo.RegisterCompleteObjectUndo(extrude.Container, "Align Spline Knots Level");
-                }
-                extrude.AlignKnotRotationsLevel();
-                EditorUtility.SetDirty(extrude);
-            }
-
             var carver = extrude.GetComponent<RiverTerrainCarver>();
             if (carver == null)
             {
@@ -71,6 +61,151 @@ namespace RiverTools
                 {
                     BakeToOBJ(extrude);
                 }
+            }
+        }
+
+        private HashSet<int> GetSelectedKnotIndices(RiverExtrude extrude)
+        {
+            HashSet<int> selectedKnotIndices = new HashSet<int>();
+            if (extrude == null || extrude.Container == null || extrude.Container.Spline == null)
+                return selectedKnotIndices;
+
+            var container = extrude.Container;
+            var splineInfo = new SplineInfo(container, 0);
+
+            // 1. Query selected knots for this spline
+            List<SelectableKnot> selectedKnots = new List<SelectableKnot>();
+            SplineSelection.GetElements(splineInfo, selectedKnots);
+            foreach (var knot in selectedKnots)
+            {
+                if (knot.KnotIndex >= 0 && knot.KnotIndex < container.Spline.Count)
+                {
+                    selectedKnotIndices.Add(knot.KnotIndex);
+                }
+            }
+
+            // 2. Query selected tangents for this spline
+            List<SelectableTangent> selectedTangents = new List<SelectableTangent>();
+            SplineSelection.GetElements(splineInfo, selectedTangents);
+            foreach (var tangent in selectedTangents)
+            {
+                if (tangent.KnotIndex >= 0 && tangent.KnotIndex < container.Spline.Count)
+                {
+                    selectedKnotIndices.Add(tangent.KnotIndex);
+                }
+            }
+
+            return selectedKnotIndices;
+        }
+
+        private void OnSceneGUI()
+        {
+            RiverExtrude extrude = (RiverExtrude)target;
+            if (extrude == null || extrude.IsBaked || extrude.Container == null || extrude.Container.Spline == null)
+                return;
+
+            var spline = extrude.Container.Spline;
+            int knotCount = spline.Count;
+            if (knotCount < 1)
+                return;
+
+            HashSet<int> selectedIndices = GetSelectedKnotIndices(extrude);
+            if (selectedIndices.Count == 0)
+                return;
+
+            // Set up Label style
+            GUIStyle labelStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 12
+            };
+            labelStyle.normal.textColor = Color.white;
+
+            GUIStyle labelBgStyle = new GUIStyle(GUI.skin.box)
+            {
+                padding = new RectOffset(6, 6, 2, 2)
+            };
+
+            // Draw width gizmos ONLY for selected knots
+            foreach (int i in selectedIndices)
+            {
+                if (i < 0 || i >= knotCount)
+                    continue;
+
+                float normalizedT = knotCount == 1 ? 0f : spline.ConvertIndexUnit(i, PathIndexUnit.Knot, PathIndexUnit.Normalized);
+                extrude.EvaluateFrame(normalizedT, out Unity.Mathematics.float3 fWorldPos, out Unity.Mathematics.float3 fFwd, out Unity.Mathematics.float3 fUp, out Unity.Mathematics.float3 fRight);
+
+                Vector3 knotWorldPos = fWorldPos;
+                Vector3 rightDir = ((Vector3)fRight).normalized;
+                Vector3 upDir = ((Vector3)fUp).normalized;
+
+                float baseWidth = extrude.BaseWidth;
+                float knotMult = extrude.GetKnotWidthMultiplier(i);
+                float knotWidth = Mathf.Max(0.01f, baseWidth * knotMult);
+                float halfWidth = knotWidth * 0.5f;
+
+                Vector3 leftEdge = knotWorldPos - rightDir * halfWidth;
+                Vector3 rightEdge = knotWorldPos + rightDir * halfWidth;
+
+                // Draw SELECTED knot width gizmo bar
+                Handles.color = new Color(0f, 1f, 1f, 0.95f);
+                Handles.DrawLine(leftEdge, rightEdge, 4f);
+
+                // Draw reference circle at knot center
+                Handles.color = new Color(1f, 1f, 0.2f, 0.8f);
+                Handles.DrawWireDisc(knotWorldPos, upDir, HandleUtility.GetHandleSize(knotWorldPos) * 0.08f);
+
+                // Interactive Slider Handles on Left and Right Edges
+                float handleSize = HandleUtility.GetHandleSize(leftEdge) * 0.12f;
+
+                EditorGUI.BeginChangeCheck();
+
+                Handles.color = new Color(0.1f, 0.9f, 1f, 1f);
+                Vector3 newRightEdge = Handles.Slider(rightEdge, rightDir, handleSize, Handles.DotHandleCap, 0.05f);
+
+                Handles.color = new Color(0.1f, 0.9f, 1f, 1f);
+                Vector3 newLeftEdge = Handles.Slider(leftEdge, -rightDir, handleSize, Handles.DotHandleCap, 0.05f);
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    Undo.RegisterCompleteObjectUndo(extrude, "Change Knot Width");
+
+                    float distRight = Vector3.Dot(newRightEdge - knotWorldPos, rightDir);
+                    float distLeft = Vector3.Dot(knotWorldPos - newLeftEdge, rightDir);
+
+                    float newHalfWidth = halfWidth;
+                    if (Mathf.Abs(distRight - halfWidth) > 0.001f)
+                    {
+                        newHalfWidth = Mathf.Max(0.05f, distRight);
+                    }
+                    else if (Mathf.Abs(distLeft - halfWidth) > 0.001f)
+                    {
+                        newHalfWidth = Mathf.Max(0.05f, distLeft);
+                    }
+
+                    float newWidth = newHalfWidth * 2f;
+                    float newMultiplier = baseWidth > 0.0001f ? newWidth / baseWidth : 1f;
+
+                    extrude.SetKnotWidthMultiplier(i, newMultiplier);
+                    EditorUtility.SetDirty(extrude);
+                }
+
+                // Floating text label displaying Knot Width details
+                Vector3 labelPos = knotWorldPos + upDir * (HandleUtility.GetHandleSize(knotWorldPos) * 0.35f);
+                Handles.BeginGUI();
+                Vector2 guiPoint = HandleUtility.WorldToGUIPoint(labelPos);
+                string text = $"Knot #{i}\nWidth: {knotWidth:F2}m";
+                GUIContent content = new GUIContent(text);
+                Vector2 size = labelStyle.CalcSize(content);
+
+                Rect labelRect = new Rect(guiPoint.x - size.x * 0.5f - 6, guiPoint.y - size.y * 0.5f - 4, size.x + 12, size.y + 8);
+                Color prevBg = GUI.backgroundColor;
+                GUI.backgroundColor = new Color(0.05f, 0.15f, 0.25f, 0.85f);
+                GUI.Box(labelRect, GUIContent.none, labelBgStyle);
+                GUI.backgroundColor = prevBg;
+
+                GUI.Label(new Rect(guiPoint.x - size.x * 0.5f, guiPoint.y - size.y * 0.5f, size.x, size.y), content, labelStyle);
+                Handles.EndGUI();
             }
         }
 
