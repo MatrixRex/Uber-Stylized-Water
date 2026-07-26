@@ -554,6 +554,11 @@ namespace RiverTools
 
             if (spline == m_Container.Spline)
             {
+                if (!m_IsActivelyEditing)
+                {
+                    SyncSculptingIntoSnapshot();
+                }
+
                 if (m_EnableFastMode)
                 {
                     m_IsActivelyEditing = true;
@@ -576,6 +581,11 @@ namespace RiverTools
                 transform.hasChanged = false;
                 if (m_EnableDynamicCarve && m_AutoRebuildOnSplineChange)
                 {
+                    if (!m_IsActivelyEditing)
+                    {
+                        SyncSculptingIntoSnapshot();
+                    }
+
                     if (m_EnableFastMode)
                     {
                         m_IsActivelyEditing = true;
