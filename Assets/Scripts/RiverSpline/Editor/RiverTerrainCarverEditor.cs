@@ -116,11 +116,30 @@ namespace RiverTools
 
             EditorGUILayout.Space(8);
 
-            // 1. Spline & Asset References Group
-            EditorGUILayout.LabelField("References", EditorStyles.boldLabel);
+            // 1. Storage Status & Asset Fallback
+            EditorGUILayout.LabelField("Baseline Snapshot Storage", EditorStyles.boldLabel);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_SnapshotAsset"));
+                if (carver.SceneSnapshots != null && carver.SceneSnapshots.Count > 0)
+                {
+                    float totalKB = 0f;
+                    foreach (var entry in carver.SceneSnapshots)
+                    {
+                        if (entry == null) continue;
+                        int hLen = entry.CompressedHeightBytes != null ? entry.CompressedHeightBytes.Length : 0;
+                        int aLen = entry.CompressedAlphaBytes != null ? entry.CompressedAlphaBytes.Length : 0;
+                        totalKB += (hLen + aLen) / 1024f;
+                    }
+                    EditorGUILayout.LabelField($"Scene Snapshot Storage: ACTIVE ({totalKB:F1} KB compressed)", EditorStyles.boldLabel);
+                    EditorGUILayout.HelpBox("Baseline ground state is compressed & stored directly on this Scene GameObject.\nZero project asset re-imports & zero editor freezing!", MessageType.Info);
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox("No Scene baseline stored yet. Click 'Recapture Fresh Baseline' to capture ground state into scene.", MessageType.Warning);
+                }
+
+                EditorGUILayout.Space(2);
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_SnapshotAsset"), new GUIContent("Optional Asset Fallback"));
             }
 
             EditorGUILayout.Space(8);
