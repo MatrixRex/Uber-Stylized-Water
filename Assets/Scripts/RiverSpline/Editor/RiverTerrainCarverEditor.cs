@@ -137,9 +137,6 @@ namespace RiverTools
                 {
                     EditorGUILayout.HelpBox("No Scene baseline stored yet. Click 'Recapture Fresh Baseline' to capture ground state into scene.", MessageType.Warning);
                 }
-
-                EditorGUILayout.Space(2);
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_SnapshotAsset"), new GUIContent("Optional Asset Fallback"));
             }
 
             EditorGUILayout.Space(8);

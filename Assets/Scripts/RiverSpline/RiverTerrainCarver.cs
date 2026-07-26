@@ -156,9 +156,6 @@ namespace RiverTools
         [SerializeField] private bool m_AutoRebuildOnSplineChange = true;
         [SerializeField] private bool m_EnableFastMode = true;
 
-        [Tooltip("Persistent snapshot ScriptableObject asset to store baseline terrain heightmaps and alphamaps across Unity restarts.")]
-        [SerializeField] private RiverTerrainSnapshotData m_SnapshotAsset;
-
         [Header("Scene Snapshot Storage")]
         [Tooltip("Baseline terrain snapshots compressed and stored directly on this Scene GameObject for zero asset re-import delays.")]
         [SerializeField] private List<SceneTerrainSnapshotEntry> m_SceneSnapshots = new List<SceneTerrainSnapshotEntry>();
@@ -182,6 +179,9 @@ namespace RiverTools
             public bool HasLastAlphaBounds;
             public int LastAlphaX0, LastAlphaX1, LastAlphaZ0, LastAlphaZ1;
 
+            // Saved polyline samples from previous frame for exact channel tracking
+            public List<SplinePointSample> LastSamples;
+
             public bool IsModified;
         }
 
@@ -192,11 +192,6 @@ namespace RiverTools
 
         public RiverExtrude RiverExtrude => m_RiverExtrude;
         public SplineContainer Container => m_Container;
-        public RiverTerrainSnapshotData SnapshotAsset
-        {
-            get => m_SnapshotAsset;
-            set { m_SnapshotAsset = value; RequestCarve(); }
-        }
 
         private void SaveSnapshotToScene(Terrain terrain, TerrainSnapshot snapshot)
         {
@@ -950,6 +945,7 @@ namespace RiverTools
                     BedProfileMode profile = m_BedProfile;
 
                     var segments = PrepareSplineSegments(samples, bankFalloff + 2f);
+                    var lastSegments = (snapshot.LastSamples != null && snapshot.LastSamples.Count >= 2) ? PrepareSplineSegments(snapshot.LastSamples, bankFalloff + 6f) : null;
 
                     // Multithreaded height calculation over rows
                     Parallel.For(0, height, r =>
@@ -964,15 +960,20 @@ namespace RiverTools
 
                             float origNorm = fullOrig[gz, gx];
                             float liveNorm = liveHeights[r, c];
-                            bool wasCarvedLastFrame = hasLast && (gx >= lastX0 && gx <= lastX1 && gz >= lastZ0 && gz <= lastZ1);
+                            Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
+
+                            bool wasInRiverLastFrame = false;
+                            if (lastSegments != null && lastSegments.Count > 0)
+                            {
+                                FindClosestSplinePoint(cellWorld, lastSegments, out _, out float lastDist, out float lastHW);
+                                wasInRiverLastFrame = (lastDist <= lastHW * bedWidthRatio + bankFalloff + 4f);
+                            }
 
                             if (!currentIntersects)
                             {
-                                newHeights[r, c] = wasCarvedLastFrame ? origNorm : liveNorm;
+                                newHeights[r, c] = wasInRiverLastFrame ? origNorm : liveNorm;
                                 continue;
                             }
-
-                            Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
 
                             FindClosestSplinePoint(cellWorld, segments, out Vector3 closestSplinePos, out float distToCenterline, out float localHalfWidth);
 
@@ -981,9 +982,9 @@ namespace RiverTools
 
                             if (distToCenterline > totalInfluence)
                             {
-                                // If the cell was carved by the river in the previous frame, restore it to origNorm baseline.
-                                // Otherwise, preserve liveNorm so user sculpting inside the bounding box is not wiped out.
-                                newHeights[r, c] = wasCarvedLastFrame ? origNorm : liveNorm;
+                                // Restore only cells that were actually inside the river channel in the previous frame.
+                                // Preserve liveNorm for un-carved cells inside the bounding box rectangle.
+                                newHeights[r, c] = wasInRiverLastFrame ? origNorm : liveNorm;
                                 continue;
                             }
 
@@ -1074,10 +1075,12 @@ namespace RiverTools
                         snapshot.LastX1 = currX1;
                         snapshot.LastZ0 = currZ0;
                         snapshot.LastZ1 = currZ1;
+                        snapshot.LastSamples = samples;
                     }
                     else
                     {
                         snapshot.HasLastBounds = false;
+                        snapshot.LastSamples = null;
                     }
                 }
             }
@@ -1180,6 +1183,7 @@ namespace RiverTools
             float texOpacity = m_TextureOpacity;
 
             var texSegments = PrepareSplineSegments(samples, texBankFalloff + 2f);
+            var lastTexSegments = (snapshot.LastSamples != null && snapshot.LastSamples.Count >= 2) ? PrepareSplineSegments(snapshot.LastSamples, texBankFalloff + 6f) : null;
 
             Parallel.For(0, regionHeight, r =>
             {
@@ -1190,19 +1194,24 @@ namespace RiverTools
                 {
                     int gx = unionAX0 + c;
                     float worldX = tPos.x + (gx / (float)(aWidth - 1)) * tSize.x;
+                    Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
 
-                    bool wasPaintedLastFrame = hasLastAlpha && (gx >= lastAX0 && gx <= lastAX1 && gz >= lastAZ0 && gz <= lastAZ1);
+                    bool wasInRiverLastFrame = false;
+                    if (lastTexSegments != null && lastTexSegments.Count > 0)
+                    {
+                        FindClosestSplinePoint(cellWorld, lastTexSegments, out _, out float lastDist, out float lastHW);
+                        wasInRiverLastFrame = (lastDist <= lastHW * texWidthRatio + texBankFalloff + 4f);
+                    }
 
                     if (!currentIntersects)
                     {
                         for (int k = 0; k < numLayers; k++)
                         {
-                            newAlphamaps[r, c, k] = wasPaintedLastFrame ? origAlpha[gz, gx, k] : liveAlpha[r, c, k];
+                            newAlphamaps[r, c, k] = wasInRiverLastFrame ? origAlpha[gz, gx, k] : liveAlpha[r, c, k];
                         }
                         continue;
                     }
 
-                    Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
                     FindClosestSplinePoint(cellWorld, texSegments, out Vector3 closestSplinePos, out float distToCenterline, out float localHalfWidth);
 
                     float texBedHalfWidth = localHalfWidth * texWidthRatio;
@@ -1212,7 +1221,7 @@ namespace RiverTools
                     {
                         for (int k = 0; k < numLayers; k++)
                         {
-                            newAlphamaps[r, c, k] = wasPaintedLastFrame ? origAlpha[gz, gx, k] : liveAlpha[r, c, k];
+                            newAlphamaps[r, c, k] = wasInRiverLastFrame ? origAlpha[gz, gx, k] : liveAlpha[r, c, k];
                         }
                         continue;
                     }
