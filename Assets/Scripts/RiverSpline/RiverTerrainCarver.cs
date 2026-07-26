@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Splines;
 using Unity.Mathematics;
@@ -24,66 +23,10 @@ namespace RiverTools
         SetHeight
     }
 
-    [System.Serializable]
-    public class SceneTerrainSnapshotEntry
-    {
-        public string TerrainName;
-        public int HeightResolution;
-        [HideInInspector] public byte[] CompressedHeightBytes;
-
-        public int AlphamapWidth;
-        public int AlphamapHeight;
-        public int AlphamapLayers;
-        [HideInInspector] public byte[] CompressedAlphaBytes;
-    }
-
-    public static class DeflateCompressor
-    {
-        public static byte[] CompressFloatArray(float[] data)
-        {
-            if (data == null || data.Length == 0) return null;
-            byte[] raw = new byte[data.Length * sizeof(float)];
-            System.Buffer.BlockCopy(data, 0, raw, 0, raw.Length);
-
-            using (var ms = new System.IO.MemoryStream())
-            {
-                using (var deflate = new System.IO.Compression.DeflateStream(ms, System.IO.Compression.CompressionLevel.Fastest))
-                {
-                    deflate.Write(raw, 0, raw.Length);
-                }
-                return ms.ToArray();
-            }
-        }
-
-        public static float[] DecompressFloatArray(byte[] compressed, int targetFloatCount)
-        {
-            if (compressed == null || compressed.Length == 0 || targetFloatCount <= 0) return null;
-            byte[] raw = new byte[targetFloatCount * sizeof(float)];
-
-            using (var ms = new System.IO.MemoryStream(compressed))
-            {
-                using (var deflate = new System.IO.Compression.DeflateStream(ms, System.IO.Compression.CompressionMode.Decompress))
-                {
-                    int read = 0;
-                    while (read < raw.Length)
-                    {
-                        int n = deflate.Read(raw, read, raw.Length - read);
-                        if (n == 0) break;
-                        read += n;
-                    }
-                }
-            }
-
-            float[] floats = new float[targetFloatCount];
-            System.Buffer.BlockCopy(raw, 0, floats, 0, raw.Length);
-            return floats;
-        }
-    }
-
     /// <summary>
     /// Fast, multithreaded terrain carver for RiverExtrude splines in Unity 6.
-    /// Operates as a dynamic non-destructive layer on top of Unity Terrains with
-    /// one-click "Bake Into Terrain" for standard sculpting brush editing.
+    /// Acts as a stateless procedural modifier that registers riverbed parameters 
+    /// with the TerrainBaseline component on target Terrains.
     /// </summary>
     [ExecuteAlways]
     [DisallowMultipleComponent]
@@ -122,7 +65,7 @@ namespace RiverTools
         [SerializeField, Min(0.1f)] private float m_SampleSpacing = 1f;
 
         [Header("Smoothing")]
-        [Tooltip("Number of post-carve smoothing passes to soften bank transitions and remove heightmap grid stepping [0 = disabled].")]
+        [Tooltip("Number of post-carve smoothing passes to soften bank transitions [0 = disabled].")]
         [SerializeField, Range(0, 5)] private int m_SmoothPasses = 1;
 
         [Tooltip("Strength of the post-carve smoothing filter [0 = no effect, 1 = maximum smooth].")]
@@ -156,338 +99,16 @@ namespace RiverTools
         [SerializeField] private bool m_AutoRebuildOnSplineChange = true;
         [SerializeField] private bool m_EnableFastMode = true;
 
-        [Header("Scene Snapshot Storage")]
-        [Tooltip("Baseline terrain snapshots compressed and stored directly on this Scene GameObject for zero asset re-import delays.")]
-        [SerializeField] private List<SceneTerrainSnapshotEntry> m_SceneSnapshots = new List<SceneTerrainSnapshotEntry>();
-
-        public List<SceneTerrainSnapshotEntry> SceneSnapshots => m_SceneSnapshots;
-
-        // Internal snapshot structure for non-destructive dynamic layer
-        private class TerrainSnapshot
-        {
-            public Terrain Terrain;
-            public int Resolution;
-            public float[,] FullOriginalHeights;
-            public bool HasLastBounds;
-            public int LastX0, LastX1, LastZ0, LastZ1;
-
-            // Alphamap / splatmap snapshot
-            public int AlphamapWidth;
-            public int AlphamapHeight;
-            public int AlphamapLayers;
-            public float[,,] FullOriginalAlphamaps;
-            public bool HasLastAlphaBounds;
-            public int LastAlphaX0, LastAlphaX1, LastAlphaZ0, LastAlphaZ1;
-
-            // Saved polyline samples from previous frame for exact channel tracking
-            public List<SplinePointSample> LastSamples;
-
-            public bool IsModified;
-        }
-
-        private readonly Dictionary<Terrain, TerrainSnapshot> m_Snapshots = new Dictionary<Terrain, TerrainSnapshot>();
         private bool m_IsDirty = true;
         private bool m_IsCarving = false;
         private bool m_IsActivelyEditing = false;
+        private float m_LastEditTime = 0f;
 
         public RiverExtrude RiverExtrude => m_RiverExtrude;
         public SplineContainer Container => m_Container;
 
-        private void SaveSnapshotToScene(Terrain terrain, TerrainSnapshot snapshot)
-        {
-            if (terrain == null || snapshot == null || snapshot.FullOriginalHeights == null) return;
-            string tName = terrain.name;
-
-            SceneTerrainSnapshotEntry entry = m_SceneSnapshots.Find(e => e != null && e.TerrainName == tName);
-            if (entry == null)
-            {
-                entry = new SceneTerrainSnapshotEntry { TerrainName = tName };
-                m_SceneSnapshots.Add(entry);
-            }
-
-            // Compress heights using Deflate
-            int hRes = snapshot.Resolution;
-            entry.HeightResolution = hRes;
-            float[] flatHeights = new float[hRes * hRes];
-            int idx = 0;
-            for (int z = 0; z < hRes; z++)
-            {
-                for (int x = 0; x < hRes; x++)
-                {
-                    flatHeights[idx++] = snapshot.FullOriginalHeights[z, x];
-                }
-            }
-            entry.CompressedHeightBytes = DeflateCompressor.CompressFloatArray(flatHeights);
-
-            // Compress alphamaps using Deflate
-            if (snapshot.FullOriginalAlphamaps != null)
-            {
-                int aH = snapshot.AlphamapHeight;
-                int aW = snapshot.AlphamapWidth;
-                int aL = snapshot.AlphamapLayers;
-                entry.AlphamapHeight = aH;
-                entry.AlphamapWidth = aW;
-                entry.AlphamapLayers = aL;
-
-                float[] flatAlpha = new float[aH * aW * aL];
-                idx = 0;
-                for (int z = 0; z < aH; z++)
-                {
-                    for (int x = 0; x < aW; x++)
-                    {
-                        for (int k = 0; k < aL; k++)
-                        {
-                            flatAlpha[idx++] = snapshot.FullOriginalAlphamaps[z, x, k];
-                        }
-                    }
-                }
-                entry.CompressedAlphaBytes = DeflateCompressor.CompressFloatArray(flatAlpha);
-            }
-
-#if UNITY_EDITOR
-            UnityEditor.EditorUtility.SetDirty(this);
-#endif
-        }
-
-        public bool TryGetSceneSnapshot(Terrain terrain, out float[,] heights, out float[,,] alphamaps, out int hRes, out int aW, out int aH, out int aL)
-        {
-            heights = null;
-            alphamaps = null;
-            hRes = aW = aH = aL = 0;
-            if (terrain == null || m_SceneSnapshots == null) return false;
-
-            SceneTerrainSnapshotEntry entry = m_SceneSnapshots.Find(e => e != null && e.TerrainName == terrain.name);
-            if (entry == null) return false;
-
-            if (entry.CompressedHeightBytes != null && entry.CompressedHeightBytes.Length > 0 && entry.HeightResolution > 0)
-            {
-                hRes = entry.HeightResolution;
-                float[] flatH = DeflateCompressor.DecompressFloatArray(entry.CompressedHeightBytes, hRes * hRes);
-                if (flatH != null && flatH.Length == hRes * hRes)
-                {
-                    heights = new float[hRes, hRes];
-                    int idx = 0;
-                    for (int z = 0; z < hRes; z++)
-                    {
-                        for (int x = 0; x < hRes; x++)
-                        {
-                            heights[z, x] = flatH[idx++];
-                        }
-                    }
-                }
-            }
-
-            if (entry.CompressedAlphaBytes != null && entry.CompressedAlphaBytes.Length > 0 && entry.AlphamapWidth > 0 && entry.AlphamapHeight > 0 && entry.AlphamapLayers > 0)
-            {
-                aW = entry.AlphamapWidth;
-                aH = entry.AlphamapHeight;
-                aL = entry.AlphamapLayers;
-                float[] flatA = DeflateCompressor.DecompressFloatArray(entry.CompressedAlphaBytes, aH * aW * aL);
-                if (flatA != null && flatA.Length == aH * aW * aL)
-                {
-                    alphamaps = new float[aH, aW, aL];
-                    int idx = 0;
-                    for (int z = 0; z < aH; z++)
-                    {
-                        for (int x = 0; x < aW; x++)
-                        {
-                            for (int k = 0; k < aL; k++)
-                            {
-                                alphamaps[z, x, k] = flatA[idx++];
-                            }
-                        }
-                    }
-                }
-            }
-
-            return heights != null;
-        }
-
-        public void CaptureFreshBaseline()
-        {
-            EnsureReferences();
-            List<Terrain> targets = GetTargetTerrains();
-            foreach (var terrain in targets)
-            {
-                if (terrain == null || terrain.terrainData == null) continue;
-                TerrainData tData = terrain.terrainData;
-                int hRes = tData.heightmapResolution;
-                int aW = tData.alphamapWidth;
-                int aH = tData.alphamapHeight;
-                int aL = tData.alphamapLayers;
-
-                var snap = new TerrainSnapshot
-                {
-                    Terrain = terrain,
-                    Resolution = hRes,
-                    FullOriginalHeights = tData.GetHeights(0, 0, hRes, hRes),
-                    HasLastBounds = false,
-                    AlphamapWidth = aW,
-                    AlphamapHeight = aH,
-                    AlphamapLayers = aL,
-                    FullOriginalAlphamaps = tData.GetAlphamaps(0, 0, aW, aH),
-                    HasLastAlphaBounds = false
-                };
-                m_Snapshots[terrain] = snap;
-                SaveSnapshotToScene(terrain, snap);
-            }
-
-            RequestCarve();
-        }
-
-        /// <summary>
-        /// Captures and syncs all manual terrain sculpting and brush painting edits 
-        /// into the baseline snapshot by temporarily un-applying the river channel carve/texture 
-        /// to capture clean ground data, then re-applying dynamic carving.
-        /// </summary>
-        public void SyncSculptingIntoSnapshot()
-        {
-            EnsureReferences();
-            List<Terrain> targets = GetTargetTerrains();
-            SamplePolyline(out var samples, out float maxHalfWidth, out float maxInfluence);
-
-            foreach (var terrain in targets)
-            {
-                if (terrain == null || terrain.terrainData == null) continue;
-                TerrainData tData = terrain.terrainData;
-                Vector3 tPos = terrain.transform.position;
-                Vector3 tSize = tData.size;
-                int hRes = tData.heightmapResolution;
-                int aW = tData.alphamapWidth;
-                int aH = tData.alphamapHeight;
-                int aL = tData.alphamapLayers;
-
-                // 1. Temporarily restore river channel cells back to previous baseline on TerrainData 
-                // so procedural riverbed texture and height carve are temporarily removed
-                if (m_Snapshots.TryGetValue(terrain, out var snapshot) && snapshot.FullOriginalHeights != null && snapshot.FullOriginalAlphamaps != null)
-                {
-                    float restorePadding = m_BankFalloff + 8f;
-                    var heightSegments = PrepareSplineSegments(samples, restorePadding);
-                    float[,] origH = snapshot.FullOriginalHeights;
-                    float[,] currentH = tData.GetHeights(0, 0, hRes, hRes);
-
-                    for (int z = 0; z < hRes; z++)
-                    {
-                        float worldZ = tPos.z + (z / (float)(hRes - 1)) * tSize.z;
-                        for (int x = 0; x < hRes; x++)
-                        {
-                            float worldX = tPos.x + (x / (float)(hRes - 1)) * tSize.x;
-                            Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
-                            FindClosestSplinePoint(cellWorld, heightSegments, out _, out float distToCenterline, out float localHalfWidth);
-                            float bedHalfWidth = localHalfWidth * m_BedWidthRatio;
-                            float totalInfluence = bedHalfWidth + restorePadding;
-
-                            if (distToCenterline <= totalInfluence)
-                            {
-                                currentH[z, x] = origH[z, x];
-                            }
-                        }
-                    }
-                    tData.SetHeightsDelayLOD(0, 0, currentH);
-                    tData.SyncHeightmap();
-
-                    float texRestorePadding = m_TextureBankFalloff + 8f;
-                    var texSegments = PrepareSplineSegments(samples, texRestorePadding);
-                    float[,,] origA = snapshot.FullOriginalAlphamaps;
-                    float[,,] currentA = tData.GetAlphamaps(0, 0, aW, aH);
-
-                    for (int z = 0; z < aH; z++)
-                    {
-                        float worldZ = tPos.z + (z / (float)(aH - 1)) * tSize.z;
-                        for (int x = 0; x < aW; x++)
-                        {
-                            float worldX = tPos.x + (x / (float)(aW - 1)) * tSize.x;
-                            Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
-                            FindClosestSplinePoint(cellWorld, texSegments, out _, out float distToCenterline, out float localHalfWidth);
-                            float texBedHalfWidth = localHalfWidth * m_TextureWidthRatio;
-                            float totalTexInfluence = texBedHalfWidth + texRestorePadding;
-
-                            if (distToCenterline <= totalTexInfluence)
-                            {
-                                for (int k = 0; k < aL; k++)
-                                {
-                                    currentA[z, x, k] = origA[z, x, k];
-                                }
-                            }
-                        }
-                    }
-                    tData.SetAlphamaps(0, 0, currentA);
-                }
-
-                // 2. TerrainData is now 100% clean ground + all user brush edits (zero river texture, zero black lines!)
-                // Capture this pure ground state as the new baseline Ground Zero.
-                int finalHRes = tData.heightmapResolution;
-                int finalAW = tData.alphamapWidth;
-                int finalAH = tData.alphamapHeight;
-                int finalAL = tData.alphamapLayers;
-
-                var newSnap = new TerrainSnapshot
-                {
-                    Terrain = terrain,
-                    Resolution = finalHRes,
-                    FullOriginalHeights = tData.GetHeights(0, 0, finalHRes, finalHRes),
-                    HasLastBounds = false,
-                    AlphamapWidth = finalAW,
-                    AlphamapHeight = finalAH,
-                    AlphamapLayers = finalAL,
-                    FullOriginalAlphamaps = tData.GetAlphamaps(0, 0, finalAW, finalAH),
-                    HasLastAlphaBounds = false
-                };
-                m_Snapshots[terrain] = newSnap;
-                SaveSnapshotToScene(terrain, newSnap);
-            }
-
-            // 3. Re-apply dynamic carving cleanly on top of the newly captured baseline!
-            m_EnableDynamicCarve = true;
-            CarveDynamicInternal();
-        }
-
-        public bool EnableDynamicCarve
-        {
-            get => m_EnableDynamicCarve;
-            set
-            {
-                if (m_EnableDynamicCarve != value)
-                {
-                    m_EnableDynamicCarve = value;
-                    if (!m_EnableDynamicCarve)
-                        RestoreAllSnapshots();
-                    else
-                        RequestCarve();
-                }
-            }
-        }
-
-        public bool AutoRebuildOnSplineChange
-        {
-            get => m_AutoRebuildOnSplineChange;
-            set => m_AutoRebuildOnSplineChange = value;
-        }
-
-        public bool EnableFastMode
-        {
-            get => m_EnableFastMode;
-            set => m_EnableFastMode = value;
-        }
-
-        public bool IsActivelyEditing
-        {
-            get => m_IsActivelyEditing;
-            set
-            {
-                if (m_IsActivelyEditing != value)
-                {
-                    m_IsActivelyEditing = value;
-                    if (!m_IsActivelyEditing)
-                    {
-                        // Editing completed: request high-quality final pass
-                        RequestCarve();
-                    }
-                }
-            }
-        }
-
         public BedProfileMode BedProfile { get => m_BedProfile; set { m_BedProfile = value; RequestCarve(); } }
+        public AnimationCurve CustomBedCurve => m_CustomBedCurve;
         public float BedDepth { get => m_BedDepth; set { m_BedDepth = Mathf.Max(0f, value); RequestCarve(); } }
         public float BedWidthRatio { get => m_BedWidthRatio; set { m_BedWidthRatio = Mathf.Clamp(value, 0.1f, 1.0f); RequestCarve(); } }
         public float BankFalloff { get => m_BankFalloff; set { m_BankFalloff = Mathf.Max(0.1f, value); RequestCarve(); } }
@@ -503,6 +124,22 @@ namespace RiverTools
         public float TextureBankFalloff { get => m_TextureBankFalloff; set { m_TextureBankFalloff = Mathf.Max(0.1f, value); RequestCarve(); } }
         public AnimationCurve TextureBlendCurve => m_TextureBlendCurve;
 
+        public bool EnableDynamicCarve
+        {
+            get => m_EnableDynamicCarve;
+            set
+            {
+                if (m_EnableDynamicCarve != value)
+                {
+                    m_EnableDynamicCarve = value;
+                    if (m_EnableDynamicCarve)
+                        RequestCarve();
+                    else
+                        RestoreAllSnapshots();
+                }
+            }
+        }
+
         private void OnEnable()
         {
             EnsureReferences();
@@ -513,7 +150,7 @@ namespace RiverTools
         private void OnDisable()
         {
             Spline.Changed -= OnSplineChanged;
-            // Removed automatic RestoreAllSnapshots() on disable to preserve manual terrain brush edits.
+            UnregisterFromAllTerrains();
         }
 
         private void OnValidate()
@@ -545,8 +182,6 @@ namespace RiverTools
             }
         }
 
-        private float m_LastEditTime = 0f;
-
         private void OnSplineChanged(Spline spline, int knotIndex, SplineModification modification)
         {
             if (!m_AutoRebuildOnSplineChange || m_Container == null)
@@ -554,11 +189,6 @@ namespace RiverTools
 
             if (spline == m_Container.Spline)
             {
-                if (!m_IsActivelyEditing)
-                {
-                    SyncSculptingIntoSnapshot();
-                }
-
                 if (m_EnableFastMode)
                 {
                     m_IsActivelyEditing = true;
@@ -581,11 +211,6 @@ namespace RiverTools
                 transform.hasChanged = false;
                 if (m_EnableDynamicCarve && m_AutoRebuildOnSplineChange)
                 {
-                    if (!m_IsActivelyEditing)
-                    {
-                        SyncSculptingIntoSnapshot();
-                    }
-
                     if (m_EnableFastMode)
                     {
                         m_IsActivelyEditing = true;
@@ -618,28 +243,16 @@ namespace RiverTools
                 }
                 if (valid.Count > 0) return valid;
             }
-            return FindOverlappingTerrains();
-        }
 
-        public List<Terrain> FindOverlappingTerrains()
-        {
             var result = new List<Terrain>();
-            EnsureReferences();
-
-            if (m_Container == null || m_Container.Spline == null || m_Container.Spline.Count < 2)
-                return result;
-
-            Bounds splineBounds = CalculateSplineWorldBounds(m_BankFalloff + GetMaxBaseWidth());
-
+            Bounds bounds = CalculateSplineWorldBounds(m_BankFalloff + 10f);
             foreach (var terrain in Terrain.activeTerrains)
             {
                 if (terrain == null || terrain.terrainData == null) continue;
-
-                Vector3 terrainPos = terrain.transform.position;
-                Vector3 terrainSize = terrain.terrainData.size;
-                Bounds terrainBounds = new Bounds(terrainPos + terrainSize * 0.5f, terrainSize);
-
-                if (splineBounds.Intersects(terrainBounds))
+                Vector3 tPos = terrain.transform.position;
+                Vector3 tSize = terrain.terrainData.size;
+                Bounds tBounds = new Bounds(tPos + tSize * 0.5f, tSize);
+                if (bounds.Intersects(tBounds))
                 {
                     result.Add(terrain);
                 }
@@ -647,31 +260,25 @@ namespace RiverTools
             return result;
         }
 
-        private float GetMaxBaseWidth()
+        public Bounds CalculateSplineWorldBounds(float margin)
         {
-            if (m_RiverExtrude != null)
-                return m_RiverExtrude.BaseWidth * 2f;
-            return 8f;
-        }
+            EnsureReferences();
+            if (m_Container == null || m_Container.Spline == null || m_Container.Spline.Count == 0)
+                return new Bounds(transform.position, Vector3.one * 10f);
 
-        private Bounds CalculateSplineWorldBounds(float padding)
-        {
-            Bounds b = new Bounds(transform.position, Vector3.zero);
-            if (m_Container == null || m_Container.Spline == null) return b;
+            float3 min = new float3(float.MaxValue);
+            float3 max = new float3(float.MinValue);
 
-            float length = m_Container.CalculateLength();
-            int samples = Mathf.Max(10, Mathf.CeilToInt(length / 2f));
-
-            for (int i = 0; i <= samples; i++)
+            foreach (var knot in m_Container.Spline.Knots)
             {
-                float t = i / (float)samples;
-                m_Container.Evaluate(t, out float3 worldP, out float3 tangent, out float3 up);
-                if (i == 0) b = new Bounds(worldP, Vector3.zero);
-                else b.Encapsulate(worldP);
+                float3 worldPos = math.transform(m_Container.transform.localToWorldMatrix, knot.Position);
+                min = math.min(min, worldPos);
+                max = math.max(max, worldPos);
             }
 
-            b.Expand(padding * 2f);
-            return b;
+            Vector3 center = (Vector3)(min + max) * 0.5f;
+            Vector3 size = (Vector3)(max - min) + Vector3.one * (margin * 2f);
+            return new Bounds(center, size);
         }
 
         public void CarveDynamic()
@@ -694,9 +301,40 @@ namespace RiverTools
                 List<Terrain> targets = GetTargetTerrains();
                 SamplePolyline(out var samples, out float maxHalfWidth, out float maxInfluence);
 
+                string riverID = GetInstanceID().ToString();
+
                 foreach (var terrain in targets)
                 {
-                    CarveSingleTerrain(terrain, samples, maxInfluence);
+                    if (terrain == null || terrain.terrainData == null) continue;
+
+                    TerrainBaseline baseline = TerrainBaseline.GetOrCreate(terrain);
+
+                    int targetTexIdx = -1;
+                    if (m_EnableTexturePainting && m_TargetTerrainLayer != null)
+                    {
+                        targetTexIdx = FindOrAddTerrainLayer(terrain.terrainData, m_TargetTerrainLayer);
+                    }
+
+                    var modifier = new TerrainBaseline.RiverCarveModifier
+                    {
+                        SourceID = riverID,
+                        Samples = samples,
+                        BedDepth = m_BedDepth,
+                        BedWidthRatio = m_BedWidthRatio,
+                        BankFalloff = m_BankFalloff,
+                        BankEdgeOffset = m_BankEdgeOffset,
+                        Mode = m_CarveMode,
+                        ProfileMode = m_BedProfile,
+                        CustomCurve = m_CustomBedCurve,
+                        EnableTexturePainting = m_EnableTexturePainting,
+                        TargetLayerIndex = targetTexIdx,
+                        TextureOpacity = m_TextureOpacity,
+                        TextureWidthRatio = m_TextureWidthRatio,
+                        TextureBankFalloff = m_TextureBankFalloff,
+                        TextureBlendCurve = m_TextureBlendCurve
+                    };
+
+                    baseline.RegisterModifier(riverID, modifier);
                 }
             }
             finally
@@ -770,6 +408,26 @@ namespace RiverTools
             }
         }
 
+        private float GetMaxBaseWidth()
+        {
+            if (m_RiverExtrude != null)
+            {
+                float width = m_RiverExtrude.Width;
+                if (m_RiverExtrude.EnableWidthCurve && m_RiverExtrude.WidthCurve != null)
+                {
+                    float maxCurveVal = 0f;
+                    for (int i = 0; i <= 20; i++)
+                    {
+                        float val = Mathf.Abs(m_RiverExtrude.WidthCurve.Evaluate(i / 20f));
+                        if (val > maxCurveVal) maxCurveVal = val;
+                    }
+                    width *= maxCurveVal;
+                }
+                return Mathf.Max(0.1f, width);
+            }
+            return 4f;
+        }
+
         private int FindOrAddTerrainLayer(TerrainData tData, TerrainLayer targetLayer)
         {
             if (tData == null || targetLayer == null) return -1;
@@ -793,7 +451,6 @@ namespace RiverTools
                     return i;
             }
 
-            // Layer not present on terrain: auto-add it!
 #if UNITY_EDITOR
             Undo.RecordObject(tData, "Auto Add Terrain Layer");
 #endif
@@ -807,479 +464,18 @@ namespace RiverTools
             return layers.Length;
         }
 
-        private void CarveSingleTerrain(Terrain terrain, List<SplinePointSample> samples, float maxInfluenceRadius)
+        public struct SegmentData
         {
-            TerrainData tData = terrain.terrainData;
-            if (tData == null) return;
-
-            Vector3 tPos = terrain.transform.position;
-            Vector3 tSize = tData.size;
-            int hRes = tData.heightmapResolution;
-
-            int aWidth = tData.alphamapWidth;
-            int aHeight = tData.alphamapHeight;
-            int aLayers = tData.alphamapLayers;
-
-            // Manage base height snapshot for non-destructive dynamic editing (full heightmap + alphamap)
-            if (!m_Snapshots.TryGetValue(terrain, out var snapshot) || snapshot.FullOriginalHeights == null || snapshot.Resolution != hRes ||
-                snapshot.FullOriginalAlphamaps == null || snapshot.AlphamapWidth != aWidth || snapshot.AlphamapHeight != aHeight || snapshot.AlphamapLayers != aLayers)
-            {
-                bool loaded = false;
-
-                // 1. Try loading from Scene component compressed byte array (Fastest, zero disk asset re-import delays!)
-                if (TryGetSceneSnapshot(terrain, out float[,] sHeights, out float[,,] sAlpha, out int sHRes, out int sAW, out int sAH, out int sAL))
-                {
-                    if (sHRes == hRes && sAW == aWidth && sAH == aHeight && sAL == aLayers)
-                    {
-                        snapshot = new TerrainSnapshot
-                        {
-                            Terrain = terrain,
-                            Resolution = hRes,
-                            FullOriginalHeights = sHeights,
-                            HasLastBounds = false,
-                            AlphamapWidth = aWidth,
-                            AlphamapHeight = aHeight,
-                            AlphamapLayers = aLayers,
-                            FullOriginalAlphamaps = sAlpha,
-                            HasLastAlphaBounds = false
-                        };
-                        m_Snapshots[terrain] = snapshot;
-                        loaded = true;
-                    }
-                }
-
-                // 2. If missing in scene snapshot, capture fresh baseline and save to Scene component
-                if (!loaded)
-                {
-                    snapshot = new TerrainSnapshot
-                    {
-                        Terrain = terrain,
-                        Resolution = hRes,
-                        FullOriginalHeights = tData.GetHeights(0, 0, hRes, hRes),
-                        HasLastBounds = false,
-                        AlphamapWidth = aWidth,
-                        AlphamapHeight = aHeight,
-                        AlphamapLayers = aLayers,
-                        FullOriginalAlphamaps = tData.GetAlphamaps(0, 0, aWidth, aHeight),
-                        HasLastAlphaBounds = false
-                    };
-                    m_Snapshots[terrain] = snapshot;
-                    SaveSnapshotToScene(terrain, snapshot);
-                }
-            }
-
-            Bounds splineBounds = CalculateSplineWorldBounds(maxInfluenceRadius);
-            Bounds terrainBounds = new Bounds(tPos + tSize * 0.5f, tSize);
-
-            int currX0 = 0, currX1 = 0, currZ0 = 0, currZ1 = 0;
-            bool currentIntersects = splineBounds.Intersects(terrainBounds);
-
-            if (currentIntersects)
-            {
-                Vector3 minLocal = splineBounds.min - tPos;
-                Vector3 maxLocal = splineBounds.max - tPos;
-
-                currX0 = Mathf.Clamp(Mathf.FloorToInt((minLocal.x / tSize.x) * (hRes - 1)), 0, hRes - 1);
-                currX1 = Mathf.Clamp(Mathf.CeilToInt((maxLocal.x / tSize.x) * (hRes - 1)), 0, hRes - 1);
-                currZ0 = Mathf.Clamp(Mathf.FloorToInt((minLocal.z / tSize.z) * (hRes - 1)), 0, hRes - 1);
-                currZ1 = Mathf.Clamp(Mathf.CeilToInt((maxLocal.z / tSize.z) * (hRes - 1)), 0, hRes - 1);
-            }
-
-            if (currentIntersects || snapshot.HasLastBounds)
-            {
-                int unionX0 = currX0;
-                int unionX1 = currX1;
-                int unionZ0 = currZ0;
-                int unionZ1 = currZ1;
-
-                if (snapshot.HasLastBounds)
-                {
-                    if (!currentIntersects)
-                    {
-                        unionX0 = snapshot.LastX0;
-                        unionX1 = snapshot.LastX1;
-                        unionZ0 = snapshot.LastZ0;
-                        unionZ1 = snapshot.LastZ1;
-                    }
-                    else
-                    {
-                        unionX0 = Mathf.Min(currX0, snapshot.LastX0);
-                        unionX1 = Mathf.Max(currX1, snapshot.LastX1);
-                        unionZ0 = Mathf.Min(currZ0, snapshot.LastZ0);
-                        unionZ1 = Mathf.Max(currZ1, snapshot.LastZ1);
-                    }
-                }
-
-                int width = unionX1 - unionX0 + 1;
-                int height = unionZ1 - unionZ0 + 1;
-
-                if (width > 0 && height > 0)
-                {
-                    float[,] fullOrig = snapshot.FullOriginalHeights;
-                    float[,] liveHeights = tData.GetHeights(unionX0, unionZ0, width, height);
-                    float[,] newHeights = new float[height, width];
-
-                    bool hasLast = snapshot.HasLastBounds;
-                    int lastX0 = snapshot.LastX0;
-                    int lastX1 = snapshot.LastX1;
-                    int lastZ0 = snapshot.LastZ0;
-                    int lastZ1 = snapshot.LastZ1;
-
-                    float bankFalloff = m_BankFalloff;
-                    float bedDepth = m_BedDepth;
-                    float bedWidthRatio = m_BedWidthRatio;
-                    float bankEdgeOffset = m_BankEdgeOffset;
-                    CarveMode mode = m_CarveMode;
-                    BedProfileMode profile = m_BedProfile;
-
-                    var segments = PrepareSplineSegments(samples, bankFalloff + 2f);
-                    var lastSegments = (snapshot.LastSamples != null && snapshot.LastSamples.Count >= 2) ? PrepareSplineSegments(snapshot.LastSamples, bankFalloff + 6f) : null;
-
-                    // Multithreaded height calculation over rows
-                    Parallel.For(0, height, r =>
-                    {
-                        int gz = unionZ0 + r;
-                        float worldZ = tPos.z + (gz / (float)(hRes - 1)) * tSize.z;
-
-                        for (int c = 0; c < width; c++)
-                        {
-                            int gx = unionX0 + c;
-                            float worldX = tPos.x + (gx / (float)(hRes - 1)) * tSize.x;
-
-                            float origNorm = fullOrig[gz, gx];
-                            float liveNorm = liveHeights[r, c];
-                            Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
-
-                            bool wasInRiverLastFrame = false;
-                            if (lastSegments != null && lastSegments.Count > 0)
-                            {
-                                FindClosestSplinePoint(cellWorld, lastSegments, out _, out float lastDist, out float lastHW);
-                                wasInRiverLastFrame = (lastDist <= lastHW * bedWidthRatio + bankFalloff + 4f);
-                            }
-
-                            if (!currentIntersects)
-                            {
-                                newHeights[r, c] = wasInRiverLastFrame ? origNorm : liveNorm;
-                                continue;
-                            }
-
-                            FindClosestSplinePoint(cellWorld, segments, out Vector3 closestSplinePos, out float distToCenterline, out float localHalfWidth);
-
-                            float bedHalfWidth = localHalfWidth * bedWidthRatio;
-                            float totalInfluence = bedHalfWidth + bankFalloff;
-
-                            if (distToCenterline > totalInfluence)
-                            {
-                                // Restore only cells that were actually inside the river channel in the previous frame.
-                                // Preserve liveNorm for un-carved cells inside the bounding box rectangle.
-                                newHeights[r, c] = wasInRiverLastFrame ? origNorm : liveNorm;
-                                continue;
-                            }
-
-                            float origWorldY = tPos.y + (origNorm * tSize.y);
-
-                            float splineWorldY = closestSplinePos.y;
-                            float finalWorldY;
-
-                            if (distToCenterline <= bedHalfWidth)
-                            {
-                                float u = distToCenterline / bedHalfWidth;
-                                float depthMult = EvaluateBedProfile(profile, u);
-                                float targetBedY = splineWorldY + (bankEdgeOffset * u) - (bedDepth * depthMult);
-
-                                if (mode == CarveMode.CarveDown)
-                                {
-                                    float upperLimitY = (bankEdgeOffset > 0f) ? Mathf.Max(origWorldY, splineWorldY + bankEdgeOffset * u) : origWorldY;
-                                    finalWorldY = Mathf.Min(upperLimitY, targetBedY);
-                                }
-                                else
-                                {
-                                    finalWorldY = targetBedY;
-                                }
-                            }
-                            else
-                            {
-                                float bankFrac = (distToCenterline - bedHalfWidth) / bankFalloff;
-                                float smoothBank = SmoothStep(0f, 1f, bankFrac);
-
-                                float edgeDepthMult = EvaluateBedProfile(profile, 1f);
-                                float bedEdgeY = splineWorldY + bankEdgeOffset - (bedDepth * edgeDepthMult);
-
-                                float blendBankY = Mathf.Lerp(bedEdgeY, origWorldY, smoothBank);
-
-                                if (mode == CarveMode.CarveDown)
-                                {
-                                    float targetLipY = Mathf.Lerp(splineWorldY + bankEdgeOffset, origWorldY, smoothBank);
-                                    float upperLimitY = (bankEdgeOffset > 0f) ? Mathf.Max(origWorldY, targetLipY) : origWorldY;
-                                    finalWorldY = Mathf.Min(upperLimitY, blendBankY);
-                                }
-                                else
-                                {
-                                    finalWorldY = blendBankY;
-                                }
-                            }
-
-                            newHeights[r, c] = Mathf.Clamp01((finalWorldY - tPos.y) / tSize.y);
-                        }
-                    });
-
-                    int effectiveSmoothPasses = (m_EnableFastMode && m_IsActivelyEditing) ? 0 : m_SmoothPasses;
-
-                    if (effectiveSmoothPasses > 0 && m_SmoothStrength > 0f && height > 2 && width > 2)
-                    {
-                        float[,] tempHeights = new float[height, width];
-                        float strength = m_SmoothStrength;
-
-                        for (int pass = 0; pass < effectiveSmoothPasses; pass++)
-                        {
-                            System.Array.Copy(newHeights, tempHeights, newHeights.Length);
-
-                            Parallel.For(1, height - 1, r =>
-                            {
-                                for (int c = 1; c < width - 1; c++)
-                                {
-                                    float center = tempHeights[r, c];
-                                    float sum = tempHeights[r - 1, c - 1] * 1f + tempHeights[r - 1, c] * 2f + tempHeights[r - 1, c + 1] * 1f +
-                                                tempHeights[r,     c - 1] * 2f + tempHeights[r,     c] * 4f + tempHeights[r,     c + 1] * 2f +
-                                                tempHeights[r + 1, c - 1] * 1f + tempHeights[r + 1, c] * 2f + tempHeights[r + 1, c + 1] * 1f;
-
-                                    float smoothed = sum / 16f;
-                                    newHeights[r, c] = Mathf.Lerp(center, smoothed, strength);
-                                }
-                            });
-                        }
-                    }
-
-                    tData.SetHeightsDelayLOD(unionX0, unionZ0, newHeights);
-                    if (!(m_EnableFastMode && m_IsActivelyEditing))
-                    {
-                        tData.SyncHeightmap();
-                    }
-
-                    if (currentIntersects)
-                    {
-                        snapshot.HasLastBounds = true;
-                        snapshot.LastX0 = currX0;
-                        snapshot.LastX1 = currX1;
-                        snapshot.LastZ0 = currZ0;
-                        snapshot.LastZ1 = currZ1;
-                        snapshot.LastSamples = samples;
-                    }
-                    else
-                    {
-                        snapshot.HasLastBounds = false;
-                        snapshot.LastSamples = null;
-                    }
-                }
-            }
-
-            // Texture painting pass (deferred during active drag in Fast Mode for maximum edit responsiveness)
-            if (m_EnableTexturePainting && !(m_EnableFastMode && m_IsActivelyEditing))
-            {
-                PaintSingleTerrainAlphamaps(terrain, snapshot, samples, splineBounds, currentIntersects);
-            }
-            else if (snapshot.HasLastAlphaBounds && snapshot.FullOriginalAlphamaps != null)
-            {
-                // Texture painting was toggled OFF: revert alphamap snapshot
-                tData.SetAlphamaps(0, 0, snapshot.FullOriginalAlphamaps);
-                snapshot.HasLastAlphaBounds = false;
-            }
+            public Vector3 P0;
+            public Vector3 P1;
+            public float HalfWidth0;
+            public float HalfWidth1;
+            public Bounds BoundingBox;
         }
 
-        private void PaintSingleTerrainAlphamaps(Terrain terrain, TerrainSnapshot snapshot, List<SplinePointSample> samples, Bounds splineBounds, bool currentIntersects)
+        public static List<SegmentData> PrepareSplineSegments(List<SplinePointSample> samples, float maxInfluenceMargin)
         {
-            TerrainData tData = terrain.terrainData;
-            if (tData == null) return;
-
-            int targetLayerIdx = FindOrAddTerrainLayer(tData, m_TargetTerrainLayer);
-
-            int aWidth = tData.alphamapWidth;
-            int aHeight = tData.alphamapHeight;
-            int aLayers = tData.alphamapLayers;
-
-            if (snapshot.FullOriginalAlphamaps == null || snapshot.AlphamapWidth != aWidth || snapshot.AlphamapHeight != aHeight || snapshot.AlphamapLayers != aLayers)
-            {
-                snapshot.AlphamapWidth = aWidth;
-                snapshot.AlphamapHeight = aHeight;
-                snapshot.AlphamapLayers = aLayers;
-                snapshot.FullOriginalAlphamaps = tData.GetAlphamaps(0, 0, aWidth, aHeight);
-                snapshot.HasLastAlphaBounds = false;
-            }
-
-            if (targetLayerIdx < 0 || targetLayerIdx >= snapshot.AlphamapLayers) return;
-
-            Vector3 tPos = terrain.transform.position;
-            Vector3 tSize = tData.size;
-
-            int currAX0 = 0, currAX1 = 0, currAZ0 = 0, currAZ1 = 0;
-
-            if (currentIntersects)
-            {
-                Vector3 minLocal = splineBounds.min - tPos;
-                Vector3 maxLocal = splineBounds.max - tPos;
-
-                currAX0 = Mathf.Clamp(Mathf.FloorToInt((minLocal.x / tSize.x) * (aWidth - 1)), 0, aWidth - 1);
-                currAX1 = Mathf.Clamp(Mathf.CeilToInt((maxLocal.x / tSize.x) * (aWidth - 1)), 0, aWidth - 1);
-                currAZ0 = Mathf.Clamp(Mathf.FloorToInt((minLocal.z / tSize.z) * (aHeight - 1)), 0, aHeight - 1);
-                currAZ1 = Mathf.Clamp(Mathf.CeilToInt((maxLocal.z / tSize.z) * (aHeight - 1)), 0, aHeight - 1);
-            }
-
-            if (!currentIntersects && !snapshot.HasLastAlphaBounds)
-                return;
-
-            int unionAX0 = currAX0;
-            int unionAX1 = currAX1;
-            int unionAZ0 = currAZ0;
-            int unionAZ1 = currAZ1;
-
-            if (snapshot.HasLastAlphaBounds)
-            {
-                if (!currentIntersects)
-                {
-                    unionAX0 = snapshot.LastAlphaX0;
-                    unionAX1 = snapshot.LastAlphaX1;
-                    unionAZ0 = snapshot.LastAlphaZ0;
-                    unionAZ1 = snapshot.LastAlphaZ1;
-                }
-                else
-                {
-                    unionAX0 = Mathf.Min(currAX0, snapshot.LastAlphaX0);
-                    unionAX1 = Mathf.Max(currAX1, snapshot.LastAlphaX1);
-                    unionAZ0 = Mathf.Min(currAZ0, snapshot.LastAlphaZ0);
-                    unionAZ1 = Mathf.Max(currAZ1, snapshot.LastAlphaZ1);
-                }
-            }
-
-            int regionWidth = unionAX1 - unionAX0 + 1;
-            int regionHeight = unionAZ1 - unionAZ0 + 1;
-
-            if (regionWidth <= 0 || regionHeight <= 0) return;
-
-            float[,,] origAlpha = snapshot.FullOriginalAlphamaps;
-            float[,,] liveAlpha = tData.GetAlphamaps(unionAX0, unionAZ0, regionWidth, regionHeight);
-            int numLayers = snapshot.AlphamapLayers;
-            float[,,] newAlphamaps = new float[regionHeight, regionWidth, numLayers];
-
-            bool hasLastAlpha = snapshot.HasLastAlphaBounds;
-            int lastAX0 = snapshot.LastAlphaX0;
-            int lastAX1 = snapshot.LastAlphaX1;
-            int lastAZ0 = snapshot.LastAlphaZ0;
-            int lastAZ1 = snapshot.LastAlphaZ1;
-
-            float texWidthRatio = m_TextureWidthRatio;
-            float texBankFalloff = m_TextureBankFalloff;
-            float texOpacity = m_TextureOpacity;
-
-            var texSegments = PrepareSplineSegments(samples, texBankFalloff + 2f);
-            var lastTexSegments = (snapshot.LastSamples != null && snapshot.LastSamples.Count >= 2) ? PrepareSplineSegments(snapshot.LastSamples, texBankFalloff + 6f) : null;
-
-            Parallel.For(0, regionHeight, r =>
-            {
-                int gz = unionAZ0 + r;
-                float worldZ = tPos.z + (gz / (float)(aHeight - 1)) * tSize.z;
-
-                for (int c = 0; c < regionWidth; c++)
-                {
-                    int gx = unionAX0 + c;
-                    float worldX = tPos.x + (gx / (float)(aWidth - 1)) * tSize.x;
-                    Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
-
-                    bool wasInRiverLastFrame = false;
-                    if (lastTexSegments != null && lastTexSegments.Count > 0)
-                    {
-                        FindClosestSplinePoint(cellWorld, lastTexSegments, out _, out float lastDist, out float lastHW);
-                        wasInRiverLastFrame = (lastDist <= lastHW * texWidthRatio + texBankFalloff + 4f);
-                    }
-
-                    if (!currentIntersects)
-                    {
-                        for (int k = 0; k < numLayers; k++)
-                        {
-                            newAlphamaps[r, c, k] = wasInRiverLastFrame ? origAlpha[gz, gx, k] : liveAlpha[r, c, k];
-                        }
-                        continue;
-                    }
-
-                    FindClosestSplinePoint(cellWorld, texSegments, out Vector3 closestSplinePos, out float distToCenterline, out float localHalfWidth);
-
-                    float texBedHalfWidth = localHalfWidth * texWidthRatio;
-                    float totalTexInfluence = texBedHalfWidth + texBankFalloff;
-
-                    if (distToCenterline > totalTexInfluence)
-                    {
-                        for (int k = 0; k < numLayers; k++)
-                        {
-                            newAlphamaps[r, c, k] = wasInRiverLastFrame ? origAlpha[gz, gx, k] : liveAlpha[r, c, k];
-                        }
-                        continue;
-                    }
-
-                    float blendRatio = 0f;
-                    if (distToCenterline <= texBedHalfWidth)
-                    {
-                        blendRatio = texOpacity;
-                    }
-                    else
-                    {
-                        float bankFrac = (distToCenterline - texBedHalfWidth) / texBankFalloff;
-                        float curveVal = Mathf.Clamp01(m_TextureBlendCurve.Evaluate(bankFrac));
-                        blendRatio = texOpacity * curveVal;
-                    }
-
-                    if (blendRatio <= 0.0001f)
-                    {
-                        for (int k = 0; k < numLayers; k++)
-                        {
-                            newAlphamaps[r, c, k] = wasInRiverLastFrame ? origAlpha[gz, gx, k] : liveAlpha[r, c, k];
-                        }
-                        continue;
-                    }
-
-                    for (int k = 0; k < numLayers; k++)
-                    {
-                        float baseW = liveAlpha[r, c, k];
-                        if (k == targetLayerIdx)
-                        {
-                            newAlphamaps[r, c, k] = baseW + (1f - baseW) * blendRatio;
-                        }
-                        else
-                        {
-                            newAlphamaps[r, c, k] = baseW * (1f - blendRatio);
-                        }
-                    }
-                }
-            });
-
-            tData.SetAlphamaps(unionAX0, unionAZ0, newAlphamaps);
-
-            if (currentIntersects)
-            {
-                snapshot.HasLastAlphaBounds = true;
-                snapshot.LastAlphaX0 = currAX0;
-                snapshot.LastAlphaX1 = currAX1;
-                snapshot.LastAlphaZ0 = currAZ0;
-                snapshot.LastAlphaZ1 = currAZ1;
-            }
-            else
-            {
-                snapshot.HasLastAlphaBounds = false;
-            }
-        }
-
-        public struct SplineSegment
-        {
-            public Vector2 P0;
-            public Vector2 P1;
-            public Vector3 Pos0;
-            public Vector3 Pos1;
-            public float HW0;
-            public float HW1;
-            public float MinX, MaxX, MinZ, MaxZ;
-        }
-
-        private static List<SplineSegment> PrepareSplineSegments(List<SplinePointSample> samples, float padding)
-        {
-            var segments = new List<SplineSegment>();
+            var segments = new List<SegmentData>();
             if (samples == null || samples.Count < 2) return segments;
 
             for (int i = 0; i < samples.Count - 1; i++)
@@ -1287,149 +483,144 @@ namespace RiverTools
                 var s0 = samples[i];
                 var s1 = samples[i + 1];
 
-                Vector2 p0 = new Vector2(s0.Position.x, s0.Position.z);
-                Vector2 p1 = new Vector2(s1.Position.x, s1.Position.z);
+                Vector3 min = Vector3.Min(s0.Position, s1.Position) - Vector3.one * maxInfluenceMargin;
+                Vector3 max = Vector3.Max(s0.Position, s1.Position) + Vector3.one * maxInfluenceMargin;
 
-                float maxHW = Mathf.Max(s0.HalfWidth, s1.HalfWidth) + padding;
-
-                segments.Add(new SplineSegment
+                segments.Add(new SegmentData
                 {
-                    P0 = p0,
-                    P1 = p1,
-                    Pos0 = s0.Position,
-                    Pos1 = s1.Position,
-                    HW0 = s0.HalfWidth,
-                    HW1 = s1.HalfWidth,
-                    MinX = Mathf.Min(p0.x, p1.x) - maxHW,
-                    MaxX = Mathf.Max(p0.x, p1.x) + maxHW,
-                    MinZ = Mathf.Min(p0.y, p1.y) - maxHW,
-                    MaxZ = Mathf.Max(p0.y, p1.y) + maxHW
+                    P0 = s0.Position,
+                    P1 = s1.Position,
+                    HalfWidth0 = s0.HalfWidth,
+                    HalfWidth1 = s1.HalfWidth,
+                    BoundingBox = new Bounds((min + max) * 0.5f, max - min)
                 });
             }
+
             return segments;
         }
 
-        private static void FindClosestSplinePoint(Vector3 cellWorld, List<SplineSegment> segments, out Vector3 closestPos, out float minDist, out float halfWidth)
+        public static void FindClosestSplinePoint(Vector3 worldPos, List<SegmentData> segments, out Vector3 closestPoint, out float distanceToCenterline, out float localHalfWidth)
         {
-            closestPos = Vector3.zero;
-            minDist = float.MaxValue;
-            halfWidth = 2f;
+            closestPoint = Vector3.zero;
+            distanceToCenterline = float.MaxValue;
+            localHalfWidth = 1f;
 
             if (segments == null || segments.Count == 0) return;
 
-            Vector2 cell2D = new Vector2(cellWorld.x, cellWorld.z);
+            float minSqDist = float.MaxValue;
 
             for (int i = 0; i < segments.Count; i++)
             {
                 var seg = segments[i];
-                if (cell2D.x < seg.MinX || cell2D.x > seg.MaxX || cell2D.y < seg.MinZ || cell2D.y > seg.MaxZ)
+
+                if (!seg.BoundingBox.Contains(new Vector3(worldPos.x, seg.BoundingBox.center.y, worldPos.z)))
                     continue;
 
-                Vector2 v = seg.P1 - seg.P0;
-                float sqrLen = v.sqrMagnitude;
+                Vector3 v = seg.P1 - seg.P0;
+                Vector3 w = worldPos - seg.P0;
 
-                float t = 0f;
-                if (sqrLen > 0.0001f)
+                float c1 = Vector3.Dot(w, v);
+                float c2 = Vector3.Dot(v, v);
+                float t = (c2 <= 0.00001f) ? 0f : Mathf.Clamp01(c1 / c2);
+
+                Vector3 proj = seg.P0 + t * v;
+
+                float dx = worldPos.x - proj.x;
+                float dz = worldPos.z - proj.z;
+                float sqDist = dx * dx + dz * dz;
+
+                if (sqDist < minSqDist)
                 {
-                    t = Mathf.Clamp01(Vector2.Dot(cell2D - seg.P0, v) / sqrLen);
-                }
-
-                Vector2 proj2D = seg.P0 + v * t;
-                float dist = Vector2.Distance(cell2D, proj2D);
-
-                if (dist < minDist)
-                {
-                    minDist = dist;
-                    closestPos = Vector3.Lerp(seg.Pos0, seg.Pos1, t);
-                    halfWidth = Mathf.Lerp(seg.HW0, seg.HW1, t);
+                    minSqDist = sqDist;
+                    closestPoint = proj;
+                    localHalfWidth = Mathf.Lerp(seg.HalfWidth0, seg.HalfWidth1, t);
                 }
             }
+
+            if (minSqDist == float.MaxValue)
+            {
+                for (int i = 0; i < segments.Count; i++)
+                {
+                    var seg = segments[i];
+                    Vector3 v = seg.P1 - seg.P0;
+                    Vector3 w = worldPos - seg.P0;
+                    float c1 = Vector3.Dot(w, v);
+                    float c2 = Vector3.Dot(v, v);
+                    float t = (c2 <= 0.00001f) ? 0f : Mathf.Clamp01(c1 / c2);
+                    Vector3 proj = seg.P0 + t * v;
+
+                    float dx = worldPos.x - proj.x;
+                    float dz = worldPos.z - proj.z;
+                    float sqDist = dx * dx + dz * dz;
+
+                    if (sqDist < minSqDist)
+                    {
+                        minSqDist = sqDist;
+                        closestPoint = proj;
+                        localHalfWidth = Mathf.Lerp(seg.HalfWidth0, seg.HalfWidth1, t);
+                    }
+                }
+            }
+
+            distanceToCenterline = Mathf.Sqrt(minSqDist);
         }
 
-        private float EvaluateBedProfile(BedProfileMode mode, float u)
+        public static float EvaluateBedProfile(BedProfileMode profileMode, float u, AnimationCurve customCurve)
         {
             u = Mathf.Clamp01(u);
-            switch (mode)
+            switch (profileMode)
             {
                 case BedProfileMode.UShapeCurved:
-                    return 0.5f * (1f + Mathf.Cos(u * Mathf.PI));
+                    return Mathf.Cos(u * Mathf.PI * 0.5f);
                 case BedProfileMode.Flat:
-                    return 1f;
+                    return 1.0f;
                 case BedProfileMode.VShape:
-                    return 1f - u;
+                    return 1.0f - u;
                 case BedProfileMode.CustomCurve:
-                    return Mathf.Clamp01(m_CustomBedCurve.Evaluate(u));
+                    return customCurve != null ? Mathf.Clamp01(customCurve.Evaluate(u)) : (1.0f - u);
                 default:
-                    return 1f - u * u;
+                    return Mathf.Cos(u * Mathf.PI * 0.5f);
             }
-        }
-
-        private static float SmoothStep(float from, float to, float t)
-        {
-            t = Mathf.Clamp01((t - from) / (to - from));
-            return t * t * (3f - 2f * t);
         }
 
         public void RestoreAllSnapshots()
         {
-            List<Terrain> targets = GetTargetTerrains();
-            foreach (var terrain in targets)
-            {
-                if (terrain != null && terrain.terrainData != null)
-                {
-                    float[,] heightsToRestore = null;
-                    float[,,] alphaToRestore = null;
-
-                    if (m_Snapshots.TryGetValue(terrain, out var snap) && snap.FullOriginalHeights != null)
-                    {
-                        heightsToRestore = snap.FullOriginalHeights;
-                        alphaToRestore = snap.FullOriginalAlphamaps;
-                    }
-                    else if (TryGetSceneSnapshot(terrain, out float[,] sH, out float[,,] sA, out _, out _, out _, out _))
-                    {
-                        heightsToRestore = sH;
-                        alphaToRestore = sA;
-                    }
-
-                    if (heightsToRestore != null)
-                    {
-                        terrain.terrainData.SetHeightsDelayLOD(0, 0, heightsToRestore);
-                        terrain.terrainData.SyncHeightmap();
-                    }
-                    if (alphaToRestore != null)
-                    {
-                        terrain.terrainData.SetAlphamaps(0, 0, alphaToRestore);
-                    }
-                }
-            }
-            m_Snapshots.Clear();
+            UnregisterFromAllTerrains();
+            m_EnableDynamicCarve = false;
         }
 
-        /// <summary>
-        /// Permanently bakes the dynamic carve layer into the terrain heightmaps and alphamaps.
-        /// After baking, standard Unity Terrain sculpting and painting brushes can edit the riverbed directly.
-        /// </summary>
+        private void UnregisterFromAllTerrains()
+        {
+            string riverID = GetInstanceID().ToString();
+            foreach (var terrain in Terrain.activeTerrains)
+            {
+                if (terrain == null) continue;
+                var baseline = terrain.GetComponent<TerrainBaseline>();
+                if (baseline != null)
+                {
+                    baseline.UnregisterModifier(riverID);
+                }
+            }
+        }
+
         public void BakeIntoTerrain()
         {
             CarveDynamicInternal();
 
-#if UNITY_EDITOR
-            foreach (var kvp in m_Snapshots)
+            string riverID = GetInstanceID().ToString();
+            List<Terrain> targets = GetTargetTerrains();
+
+            foreach (var terrain in targets)
             {
-                var terrain = kvp.Key;
-                if (terrain != null && terrain.terrainData != null)
+                if (terrain == null) continue;
+                var baseline = terrain.GetComponent<TerrainBaseline>();
+                if (baseline != null)
                 {
-                    Undo.RegisterCompleteObjectUndo(terrain.terrainData, "Bake River Spline Terrain Carving & Texturing");
-                    EditorUtility.SetDirty(terrain.terrainData);
+                    baseline.UnregisterModifier(riverID);
+                    baseline.EnsureLoaded();
                 }
             }
 
-            m_SceneSnapshots.Clear();
-            EditorUtility.SetDirty(this);
-#endif
-
-            // Clear snapshots so the baked state becomes the new base terrain state
-            m_Snapshots.Clear();
             m_EnableDynamicCarve = false;
         }
     }
