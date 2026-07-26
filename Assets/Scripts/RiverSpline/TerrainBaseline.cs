@@ -19,7 +19,7 @@ namespace RiverTools
 
             using (var ms = new MemoryStream())
             {
-                using (var deflate = new DeflateStream(ms, CompressionLevel.Fastest))
+                using (var deflate = new DeflateStream(ms, System.IO.Compression.CompressionLevel.Fastest))
                 {
                     deflate.Write(raw, 0, raw.Length);
                 }
@@ -34,7 +34,7 @@ namespace RiverTools
 
             using (var ms = new MemoryStream(compressed))
             {
-                using (var deflate = new DeflateStream(ms, CompressionMode.Decompress))
+                using (var deflate = new DeflateStream(ms, System.IO.Compression.CompressionMode.Decompress))
                 {
                     int read = 0;
                     while (read < raw.Length)
