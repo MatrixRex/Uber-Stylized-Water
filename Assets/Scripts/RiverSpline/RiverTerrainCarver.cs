@@ -1375,10 +1375,10 @@ namespace RiverTools
                         heightsToRestore = snap.FullOriginalHeights;
                         alphaToRestore = snap.FullOriginalAlphamaps;
                     }
-                    else if (m_SnapshotAsset != null && m_SnapshotAsset.TryGetSnapshot(terrain, out float[,] loadedH, out float[,,] loadedA, out _, out _, out _, out _))
+                    else if (TryGetSceneSnapshot(terrain, out float[,] sH, out float[,,] sA, out _, out _, out _, out _))
                     {
-                        heightsToRestore = loadedH;
-                        alphaToRestore = loadedA;
+                        heightsToRestore = sH;
+                        alphaToRestore = sA;
                     }
 
                     if (heightsToRestore != null)
@@ -1414,12 +1414,8 @@ namespace RiverTools
                 }
             }
 
-            if (m_SnapshotAsset != null)
-            {
-                m_SnapshotAsset.Clear();
-                EditorUtility.SetDirty(m_SnapshotAsset);
-                UnityEditor.AssetDatabase.SaveAssets();
-            }
+            m_SceneSnapshots.Clear();
+            EditorUtility.SetDirty(this);
 #endif
 
             // Clear snapshots so the baked state becomes the new base terrain state
