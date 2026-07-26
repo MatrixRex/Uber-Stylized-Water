@@ -228,6 +228,125 @@ namespace RiverTools
 
             RequestCarve();
         }
+
+        /// <summary>
+        /// Captures and syncs all manual terrain sculpting and brush painting edits 
+        /// into the baseline snapshot asset by temporarily un-applying the river channel carve/texture 
+        /// to capture clean ground data, then re-applying dynamic carving.
+        /// </summary>
+        public void SyncSculptingIntoSnapshot()
+        {
+            EnsureReferences();
+            List<Terrain> targets = GetTargetTerrains();
+            SamplePolyline(out var samples, out float maxHalfWidth, out float maxInfluence);
+
+            foreach (var terrain in targets)
+            {
+                if (terrain == null || terrain.terrainData == null) continue;
+                TerrainData tData = terrain.terrainData;
+                Vector3 tPos = terrain.transform.position;
+                Vector3 tSize = tData.size;
+                int hRes = tData.heightmapResolution;
+                int aW = tData.alphamapWidth;
+                int aH = tData.alphamapHeight;
+                int aL = tData.alphamapLayers;
+
+                // 1. Temporarily restore river channel cells back to previous baseline on TerrainData 
+                // so procedural riverbed texture and height carve are temporarily removed
+                if (m_Snapshots.TryGetValue(terrain, out var snapshot) && snapshot.FullOriginalHeights != null && snapshot.FullOriginalAlphamaps != null)
+                {
+                    float restorePadding = m_BankFalloff + 8f;
+                    var heightSegments = PrepareSplineSegments(samples, restorePadding);
+                    float[,] origH = snapshot.FullOriginalHeights;
+                    float[,] currentH = tData.GetHeights(0, 0, hRes, hRes);
+
+                    for (int z = 0; z < hRes; z++)
+                    {
+                        float worldZ = tPos.z + (z / (float)(hRes - 1)) * tSize.z;
+                        for (int x = 0; x < hRes; x++)
+                        {
+                            float worldX = tPos.x + (x / (float)(hRes - 1)) * tSize.x;
+                            Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
+                            FindClosestSplinePoint(cellWorld, heightSegments, out _, out float distToCenterline, out float localHalfWidth);
+                            float bedHalfWidth = localHalfWidth * m_BedWidthRatio;
+                            float totalInfluence = bedHalfWidth + restorePadding;
+
+                            if (distToCenterline <= totalInfluence)
+                            {
+                                currentH[z, x] = origH[z, x];
+                            }
+                        }
+                    }
+                    tData.SetHeightsDelayLOD(0, 0, currentH);
+                    tData.SyncHeightmap();
+
+                    float texRestorePadding = m_TextureBankFalloff + 8f;
+                    var texSegments = PrepareSplineSegments(samples, texRestorePadding);
+                    float[,,] origA = snapshot.FullOriginalAlphamaps;
+                    float[,,] currentA = tData.GetAlphamaps(0, 0, aW, aH);
+
+                    for (int z = 0; z < aH; z++)
+                    {
+                        float worldZ = tPos.z + (z / (float)(aH - 1)) * tSize.z;
+                        for (int x = 0; x < aW; x++)
+                        {
+                            float worldX = tPos.x + (x / (float)(aW - 1)) * tSize.x;
+                            Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
+                            FindClosestSplinePoint(cellWorld, texSegments, out _, out float distToCenterline, out float localHalfWidth);
+                            float texBedHalfWidth = localHalfWidth * m_TextureWidthRatio;
+                            float totalTexInfluence = texBedHalfWidth + texRestorePadding;
+
+                            if (distToCenterline <= totalTexInfluence)
+                            {
+                                for (int k = 0; k < aL; k++)
+                                {
+                                    currentA[z, x, k] = origA[z, x, k];
+                                }
+                            }
+                        }
+                    }
+                    tData.SetAlphamaps(0, 0, currentA);
+                }
+
+                // 2. TerrainData is now 100% clean ground + all user brush edits (zero river texture, zero black lines!)
+                // Capture this pure ground state as the new baseline Ground Zero.
+                int finalHRes = tData.heightmapResolution;
+                int finalAW = tData.alphamapWidth;
+                int finalAH = tData.alphamapHeight;
+                int finalAL = tData.alphamapLayers;
+
+                var newSnap = new TerrainSnapshot
+                {
+                    Terrain = terrain,
+                    Resolution = finalHRes,
+                    FullOriginalHeights = tData.GetHeights(0, 0, finalHRes, finalHRes),
+                    HasLastBounds = false,
+                    AlphamapWidth = finalAW,
+                    AlphamapHeight = finalAH,
+                    AlphamapLayers = finalAL,
+                    FullOriginalAlphamaps = tData.GetAlphamaps(0, 0, finalAW, finalAH),
+                    HasLastAlphaBounds = false
+                };
+                m_Snapshots[terrain] = newSnap;
+
+#if UNITY_EDITOR
+                SaveSnapshotToAsset(terrain, newSnap);
+#endif
+            }
+
+#if UNITY_EDITOR
+            if (m_SnapshotAsset != null)
+            {
+                UnityEditor.EditorUtility.SetDirty(m_SnapshotAsset);
+                UnityEditor.AssetDatabase.SaveAssets();
+            }
+#endif
+
+            // 3. Re-apply dynamic carving cleanly on top of the newly captured baseline!
+            m_EnableDynamicCarve = true;
+            CarveDynamicInternal();
+        }
+
         public bool EnableDynamicCarve
         {
             get => m_EnableDynamicCarve;
@@ -299,7 +418,7 @@ namespace RiverTools
         private void OnDisable()
         {
             Spline.Changed -= OnSplineChanged;
-            RestoreAllSnapshots();
+            // Removed automatic RestoreAllSnapshots() on disable to preserve manual terrain brush edits.
         }
 
         private void OnValidate()
@@ -691,7 +810,14 @@ namespace RiverTools
                 if (width > 0 && height > 0)
                 {
                     float[,] fullOrig = snapshot.FullOriginalHeights;
+                    float[,] liveHeights = tData.GetHeights(unionX0, unionZ0, width, height);
                     float[,] newHeights = new float[height, width];
+
+                    bool hasLast = snapshot.HasLastBounds;
+                    int lastX0 = snapshot.LastX0;
+                    int lastX1 = snapshot.LastX1;
+                    int lastZ0 = snapshot.LastZ0;
+                    int lastZ1 = snapshot.LastZ1;
 
                     float bankFalloff = m_BankFalloff;
                     float bedDepth = m_BedDepth;
@@ -714,15 +840,16 @@ namespace RiverTools
                             float worldX = tPos.x + (gx / (float)(hRes - 1)) * tSize.x;
 
                             float origNorm = fullOrig[gz, gx];
+                            float liveNorm = liveHeights[r, c];
+                            bool wasCarvedLastFrame = hasLast && (gx >= lastX0 && gx <= lastX1 && gz >= lastZ0 && gz <= lastZ1);
 
                             if (!currentIntersects)
                             {
-                                newHeights[r, c] = origNorm;
+                                newHeights[r, c] = wasCarvedLastFrame ? origNorm : liveNorm;
                                 continue;
                             }
 
                             Vector3 cellWorld = new Vector3(worldX, 0f, worldZ);
-                            float origWorldY = tPos.y + (origNorm * tSize.y);
 
                             FindClosestSplinePoint(cellWorld, segments, out Vector3 closestSplinePos, out float distToCenterline, out float localHalfWidth);
 
@@ -731,9 +858,13 @@ namespace RiverTools
 
                             if (distToCenterline > totalInfluence)
                             {
-                                newHeights[r, c] = origNorm;
+                                // If the cell was carved by the river in the previous frame, restore it to origNorm baseline.
+                                // Otherwise, preserve liveNorm so user sculpting inside the bounding box is not wiped out.
+                                newHeights[r, c] = wasCarvedLastFrame ? origNorm : liveNorm;
                                 continue;
                             }
+
+                            float origWorldY = tPos.y + (origNorm * tSize.y);
 
                             float splineWorldY = closestSplinePos.y;
                             float finalWorldY;
@@ -911,8 +1042,15 @@ namespace RiverTools
             if (regionWidth <= 0 || regionHeight <= 0) return;
 
             float[,,] origAlpha = snapshot.FullOriginalAlphamaps;
+            float[,,] liveAlpha = tData.GetAlphamaps(unionAX0, unionAZ0, regionWidth, regionHeight);
             int numLayers = snapshot.AlphamapLayers;
             float[,,] newAlphamaps = new float[regionHeight, regionWidth, numLayers];
+
+            bool hasLastAlpha = snapshot.HasLastAlphaBounds;
+            int lastAX0 = snapshot.LastAlphaX0;
+            int lastAX1 = snapshot.LastAlphaX1;
+            int lastAZ0 = snapshot.LastAlphaZ0;
+            int lastAZ1 = snapshot.LastAlphaZ1;
 
             float texWidthRatio = m_TextureWidthRatio;
             float texBankFalloff = m_TextureBankFalloff;
@@ -930,11 +1068,13 @@ namespace RiverTools
                     int gx = unionAX0 + c;
                     float worldX = tPos.x + (gx / (float)(aWidth - 1)) * tSize.x;
 
+                    bool wasPaintedLastFrame = hasLastAlpha && (gx >= lastAX0 && gx <= lastAX1 && gz >= lastAZ0 && gz <= lastAZ1);
+
                     if (!currentIntersects)
                     {
                         for (int k = 0; k < numLayers; k++)
                         {
-                            newAlphamaps[r, c, k] = origAlpha[gz, gx, k];
+                            newAlphamaps[r, c, k] = wasPaintedLastFrame ? origAlpha[gz, gx, k] : liveAlpha[r, c, k];
                         }
                         continue;
                     }
@@ -949,7 +1089,7 @@ namespace RiverTools
                     {
                         for (int k = 0; k < numLayers; k++)
                         {
-                            newAlphamaps[r, c, k] = origAlpha[gz, gx, k];
+                            newAlphamaps[r, c, k] = wasPaintedLastFrame ? origAlpha[gz, gx, k] : liveAlpha[r, c, k];
                         }
                         continue;
                     }
@@ -970,21 +1110,21 @@ namespace RiverTools
                     {
                         for (int k = 0; k < numLayers; k++)
                         {
-                            newAlphamaps[r, c, k] = origAlpha[gz, gx, k];
+                            newAlphamaps[r, c, k] = wasPaintedLastFrame ? origAlpha[gz, gx, k] : liveAlpha[r, c, k];
                         }
                         continue;
                     }
 
                     for (int k = 0; k < numLayers; k++)
                     {
-                        float origW = origAlpha[gz, gx, k];
+                        float baseW = liveAlpha[r, c, k];
                         if (k == targetLayerIdx)
                         {
-                            newAlphamaps[r, c, k] = origW + (1f - origW) * blendRatio;
+                            newAlphamaps[r, c, k] = baseW + (1f - baseW) * blendRatio;
                         }
                         else
                         {
-                            newAlphamaps[r, c, k] = origW * (1f - blendRatio);
+                            newAlphamaps[r, c, k] = baseW * (1f - blendRatio);
                         }
                     }
                 }

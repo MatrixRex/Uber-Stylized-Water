@@ -55,7 +55,30 @@ namespace RiverTools
 
             EditorGUILayout.Space(6);
 
-            // 3. Manual Carve & Revert Buttons
+            // 3. Sync & Snapshot Actions
+            using (new GUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("Sync Sculpting into Baseline", GUILayout.Height(30)))
+                {
+                    carver.SyncSculptingIntoSnapshot();
+                    EditorUtility.SetDirty(carver);
+                }
+
+                if (GUILayout.Button("Recapture Fresh Baseline", GUILayout.Height(30)))
+                {
+                    if (EditorUtility.DisplayDialog("Recapture Baseline",
+                        "This will replace the baseline snapshot with the terrain's CURRENT state as Ground Zero.\n\nProceed?",
+                        "Recapture", "Cancel"))
+                    {
+                        carver.CaptureFreshBaseline();
+                        EditorUtility.SetDirty(carver);
+                    }
+                }
+            }
+
+            EditorGUILayout.Space(4);
+
+            // 4. Manual Carve & Revert Buttons
             using (new GUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("Manual Recarve Now", GUILayout.Height(30)))
@@ -64,7 +87,7 @@ namespace RiverTools
                     EditorUtility.SetDirty(carver);
                 }
 
-                if (GUILayout.Button("Revert to Original", GUILayout.Height(30)))
+                if (GUILayout.Button("Revert to Baseline", GUILayout.Height(30)))
                 {
                     carver.RestoreAllSnapshots();
                     carver.EnableDynamicCarve = false;
