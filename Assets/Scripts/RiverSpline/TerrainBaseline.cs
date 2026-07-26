@@ -9,6 +9,49 @@ using UnityEditor;
 
 namespace RiverTools
 {
+    public static class DeflateCompressor
+    {
+        public static byte[] CompressFloatArray(float[] data)
+        {
+            if (data == null || data.Length == 0) return null;
+            byte[] raw = new byte[data.Length * sizeof(float)];
+            System.Buffer.BlockCopy(data, 0, raw, 0, raw.Length);
+
+            using (var ms = new MemoryStream())
+            {
+                using (var deflate = new DeflateStream(ms, CompressionLevel.Fastest))
+                {
+                    deflate.Write(raw, 0, raw.Length);
+                }
+                return ms.ToArray();
+            }
+        }
+
+        public static float[] DecompressFloatArray(byte[] compressed, int targetFloatCount)
+        {
+            if (compressed == null || compressed.Length == 0 || targetFloatCount <= 0) return null;
+            byte[] raw = new byte[targetFloatCount * sizeof(float)];
+
+            using (var ms = new MemoryStream(compressed))
+            {
+                using (var deflate = new DeflateStream(ms, CompressionMode.Decompress))
+                {
+                    int read = 0;
+                    while (read < raw.Length)
+                    {
+                        int n = deflate.Read(raw, read, raw.Length - read);
+                        if (n == 0) break;
+                        read += n;
+                    }
+                }
+            }
+
+            float[] floats = new float[targetFloatCount];
+            System.Buffer.BlockCopy(raw, 0, floats, 0, raw.Length);
+            return floats;
+        }
+    }
+
     /// <summary>
     /// Lightweight component attached to Terrain GameObjects that maintains the pure user ground baseline 
     /// (heights & alphamaps) and acts as the SINGLE WRITER to TerrainData for all procedural river carvers.

@@ -412,18 +412,7 @@ namespace RiverTools
         {
             if (m_RiverExtrude != null)
             {
-                float width = m_RiverExtrude.Width;
-                if (m_RiverExtrude.EnableWidthCurve && m_RiverExtrude.WidthCurve != null)
-                {
-                    float maxCurveVal = 0f;
-                    for (int i = 0; i <= 20; i++)
-                    {
-                        float val = Mathf.Abs(m_RiverExtrude.WidthCurve.Evaluate(i / 20f));
-                        if (val > maxCurveVal) maxCurveVal = val;
-                    }
-                    width *= maxCurveVal;
-                }
-                return Mathf.Max(0.1f, width);
+                return Mathf.Max(0.1f, m_RiverExtrude.BaseWidth);
             }
             return 4f;
         }
