@@ -838,29 +838,7 @@ namespace RiverTools
                     }
                 }
 
-                // 2. Try loading from ScriptableObject asset fallback
-                if (!loaded && m_SnapshotAsset != null && m_SnapshotAsset.TryGetSnapshot(terrain, out float[,] loadedH, out float[,,] loadedA, out int lHRes, out int lAW, out int lAH, out int lAL))
-                {
-                    if (lHRes == hRes && lAW == aWidth && lAH == aHeight && lAL == aLayers)
-                    {
-                        snapshot = new TerrainSnapshot
-                        {
-                            Terrain = terrain,
-                            Resolution = hRes,
-                            FullOriginalHeights = loadedH,
-                            HasLastBounds = false,
-                            AlphamapWidth = aWidth,
-                            AlphamapHeight = aHeight,
-                            AlphamapLayers = aLayers,
-                            FullOriginalAlphamaps = loadedA,
-                            HasLastAlphaBounds = false
-                        };
-                        m_Snapshots[terrain] = snapshot;
-                        loaded = true;
-                    }
-                }
-
-                // 3. If missing everywhere, capture fresh baseline and save to Scene component
+                // 2. If missing in scene snapshot, capture fresh baseline and save to Scene component
                 if (!loaded)
                 {
                     snapshot = new TerrainSnapshot
@@ -1242,7 +1220,7 @@ namespace RiverTools
                     {
                         for (int k = 0; k < numLayers; k++)
                         {
-                            newAlphamaps[r, c, k] = wasPaintedLastFrame ? origAlpha[gz, gx, k] : liveAlpha[r, c, k];
+                            newAlphamaps[r, c, k] = wasInRiverLastFrame ? origAlpha[gz, gx, k] : liveAlpha[r, c, k];
                         }
                         continue;
                     }
