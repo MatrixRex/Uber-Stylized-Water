@@ -198,7 +198,7 @@ namespace RiverTools
             set { m_SnapshotAsset = value; RequestCarve(); }
         }
 
-        public void SaveSnapshotToScene(Terrain terrain, TerrainSnapshot snapshot)
+        private void SaveSnapshotToScene(Terrain terrain, TerrainSnapshot snapshot)
         {
             if (terrain == null || snapshot == null || snapshot.FullOriginalHeights == null) return;
             string tName = terrain.name;
