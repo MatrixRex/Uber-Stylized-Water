@@ -408,41 +408,18 @@ namespace RiverTools
         public float TextureBankFalloff { get => m_TextureBankFalloff; set { m_TextureBankFalloff = Mathf.Max(0.1f, value); RequestCarve(); } }
         public AnimationCurve TextureBlendCurve => m_TextureBlendCurve;
 
-        private bool m_NeedsBaselineSync = false;
-
         private void OnEnable()
         {
             EnsureReferences();
             Spline.Changed += OnSplineChanged;
-#if UNITY_EDITOR
-            TerrainCallbacks.heightmapChanged += OnTerrainHeightmapChanged;
-            TerrainCallbacks.textureChanged += OnTerrainTextureChanged;
-#endif
             m_IsDirty = true;
         }
 
         private void OnDisable()
         {
             Spline.Changed -= OnSplineChanged;
-#if UNITY_EDITOR
-            TerrainCallbacks.heightmapChanged -= OnTerrainHeightmapChanged;
-            TerrainCallbacks.textureChanged -= OnTerrainTextureChanged;
-#endif
+            // Removed automatic RestoreAllSnapshots() on disable to preserve manual terrain brush edits.
         }
-
-#if UNITY_EDITOR
-        private void OnTerrainHeightmapChanged(Terrain terrain, RectInt region, bool synched)
-        {
-            if (m_IsCarving) return;
-            m_NeedsBaselineSync = true;
-        }
-
-        private void OnTerrainTextureChanged(Terrain terrain, string textureName, RectInt region, bool synched)
-        {
-            if (m_IsCarving) return;
-            m_NeedsBaselineSync = true;
-        }
-#endif
 
         private void OnValidate()
         {
@@ -482,12 +459,6 @@ namespace RiverTools
 
             if (spline == m_Container.Spline)
             {
-                if (m_NeedsBaselineSync)
-                {
-                    m_NeedsBaselineSync = false;
-                    SyncSculptingIntoSnapshot();
-                }
-
                 if (m_EnableFastMode)
                 {
                     m_IsActivelyEditing = true;
@@ -510,12 +481,6 @@ namespace RiverTools
                 transform.hasChanged = false;
                 if (m_EnableDynamicCarve && m_AutoRebuildOnSplineChange)
                 {
-                    if (m_NeedsBaselineSync)
-                    {
-                        m_NeedsBaselineSync = false;
-                        SyncSculptingIntoSnapshot();
-                    }
-
                     if (m_EnableFastMode)
                     {
                         m_IsActivelyEditing = true;
@@ -527,12 +492,6 @@ namespace RiverTools
 
             if (m_IsDirty && m_EnableDynamicCarve)
             {
-                if (m_NeedsBaselineSync)
-                {
-                    m_NeedsBaselineSync = false;
-                    SyncSculptingIntoSnapshot();
-                }
-
                 CarveDynamicInternal();
                 m_IsDirty = false;
             }
