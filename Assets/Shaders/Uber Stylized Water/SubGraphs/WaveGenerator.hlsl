@@ -21,8 +21,9 @@ void GerstnerWavesWorld_float(
     float3 finalOffset = float3(0, 0, 0);
     float3 derivatives = float3(0, 0, 0);
 
+    // Fixed wavelength in world units (meters) independent of object scale
     float currentWavelength = max(Wavelength, 0.001);
-    float currentSteepness = Steepness;
+    float currentSteepness = max(Steepness, 0.0);
     float currentSpeed = Speed;
     float baseAngle = Direction * (pi / 180.0);
     float goldenAngle = 2.39996323;
@@ -54,16 +55,16 @@ void GerstnerWavesWorld_float(
         currentSpeed *= 1.2;
     }
 
-    // Transform world-space offset to object space so displacement
-    // is consistent regardless of mesh rotation
+    // Transform world-space offset to object space for vertex displacement
     Offset = mul((float3x3)unity_WorldToObject, finalOffset);
-    // Transform world-space normal to object space
+    
+    // Output true World Space Normal
     float3 worldNrm = normalize(float3(
         -derivatives.x,
         1.0 - derivatives.y,
         -derivatives.z
     ));
-    WorldNormal = normalize(mul((float3x3)unity_WorldToObject, worldNrm));
+    WorldNormal = worldNrm;
 }
 
 // GERSTNER WAVES - UV SPACE VERSION
@@ -83,38 +84,50 @@ void GerstnerWavesUV_float(
 )
 {
     float3 finalOffset = float3(0, 0, 0);
-    float dHdU = 0.0;
-    float dHdV = 0.0;
+    float3 derivatives = float3(0, 0, 0);
 
+    // Fixed wavelength in world units (meters) independent of object scale
     float currentWavelength = max(Wavelength, 0.001);
-    float currentSteepness = clamp(Steepness, 0.0, 0.9);
+    float currentSteepness = max(Steepness, 0.0);
     float currentSpeed = Speed;
     float baseAngle = Direction * (pi / 180.0);
     float goldenAngle = 2.39996323;
 
+    // Calculate physical world meter scaling per UV unit
+    float scaleU = max(length(TangentWS), 0.0001);
+    float scaleV = max(length(BitangentWS), 0.0001);
+
+    // Normalize vectors for orientation
+    float3 normWS = normalize(NormalWS);
+    float3 tangWS = TangentWS / scaleU;
+    float3 bitangWS = BitangentWS / scaleV;
+
+    // Convert UV to physical world meters
+    float2 worldUV = UV * float2(scaleU, scaleV);
+
     for (int i = 0; i < (int)Iterations; i++)
     {
         float angle = baseAngle + i * goldenAngle;
-        float2 dir = float2(sin(angle), cos(angle));
+        float2 dir = float2(cos(angle), sin(angle));
 
         float k = 2.0 * pi / currentWavelength;
-        float phase = dot(dir, UV) * k + Time * currentSpeed * k;
+        float phase = dot(dir, worldUV) * k + Time * currentSpeed * k;
 
         float valCos = cos(phase);
         float valSin = sin(phase);
         float amplitude = currentSteepness / k;
 
         // Height displacement along surface normal
-        finalOffset += NormalWS * (amplitude * valSin);
+        finalOffset += normWS * (amplitude * valSin);
 
         // Horizontal displacement along Tangent (U) and Bitangent (V)
-        float horizAmp = amplitude * currentSteepness;
-        finalOffset += TangentWS   * (dir.x * horizAmp * valCos);
-        finalOffset += BitangentWS * (dir.y * horizAmp * valCos);
+        finalOffset += tangWS   * (dir.x * amplitude * valCos);
+        finalOffset += bitangWS * (dir.y * amplitude * valCos);
 
         float wa = k * amplitude;
-        dHdU += dir.x * wa * valCos;
-        dHdV += dir.y * wa * valCos;
+        derivatives.x += dir.x * wa * valSin;
+        derivatives.z += dir.y * wa * valSin;
+        derivatives.y += wa * valCos;
 
         // Next octave
         currentWavelength *= 0.618;
@@ -122,10 +135,12 @@ void GerstnerWavesUV_float(
         currentSpeed      *= 1.2;
     }
 
+    // Transform world-space offset to object space for vertex displacement
     Offset = mul((float3x3)unity_WorldToObject, finalOffset);
 
-    float3 worldNrm = normalize(NormalWS - (TangentWS * dHdU) - (BitangentWS * dHdV));
-    WorldNormal = normalize(mul((float3x3)unity_WorldToObject, worldNrm));
+    // Output true World Space Normal
+    float3 worldNrm = normalize(normWS * (1.0 - derivatives.y) - tangWS * derivatives.x - bitangWS * derivatives.z);
+    WorldNormal = worldNrm;
 }
 
 // HALF PRECISION OVERLOADS FOR SHADER GRAPH
@@ -174,5 +189,3 @@ void GerstnerWavesUV_half(
 }
 
 #endif
-
-
