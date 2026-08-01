@@ -19,14 +19,8 @@
 void ReconstructGroundWS_float(float2 ScreenUV, float RawDepth,
                                out float3 GroundWorldPos, out float IsValid)
 {
-    if (RawDepth == UNITY_RAW_FAR_CLIP_VALUE)
-    {
-        GroundWorldPos = float3(0, 0, 0);
-        IsValid = 0.0;
-        return;
-    }
     GroundWorldPos = ComputeWorldSpacePosition(ScreenUV, RawDepth, UNITY_MATRIX_I_VP);
-    IsValid = 1.0;
+    IsValid = (RawDepth == UNITY_RAW_FAR_CLIP_VALUE) ? 0.0 : 1.0;
 }
 
 void ReconstructGroundWS_half(float2 ScreenUV, float RawDepth,
