@@ -93,16 +93,25 @@ void GerstnerWavesUV_float(
     float baseAngle = Direction * (pi / 180.0);
     float goldenAngle = 2.39996323;
 
-    // Calculate physical world meter scaling per UV unit
-    float scaleU = max(length(TangentWS), 0.0001);
-    float scaleV = max(length(BitangentWS), 0.0001);
-
-    // Normalize vectors for orientation
+    // Orientation frame. Shader Graph hands these over already normalized, so their
+    // lengths carry no scale information - normalizing again only guards against
+    // interpolation drift.
     float3 normWS = normalize(NormalWS);
-    float3 tangWS = TangentWS / scaleU;
-    float3 bitangWS = BitangentWS / scaleV;
+    float3 tangWS = normalize(TangentWS);
+    float3 bitangWS = normalize(BitangentWS);
 
-    // Convert UV to physical world meters
+    // Recover the object scale that the normalized tangent frame threw away.
+    // Pushing a unit-length world direction back into object space yields a vector of
+    // length 1/scale along that direction, so the reciprocal is world units per object
+    // unit along U and V. Correct under rotation and non-uniform scale alike.
+    float lenU = length(mul((float3x3)unity_WorldToObject, tangWS));
+    float lenV = length(mul((float3x3)unity_WorldToObject, bitangWS));
+    float scaleU = 1.0 / max(lenU, 0.0001);
+    float scaleV = 1.0 / max(lenV, 0.0001);
+
+    // Convert UV to physical world meters, so wavelength, amplitude and speed all stay
+    // anchored to world units no matter how the object is scaled. Assumes the mesh maps
+    // 1 UV unit to 1 object unit; bake any other ratio into Wavelength.
     float2 worldUV = UV * float2(scaleU, scaleV);
 
     for (int i = 0; i < (int)Iterations; i++)

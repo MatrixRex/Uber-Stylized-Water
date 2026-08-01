@@ -27,6 +27,7 @@ Material:
   m_ValidKeywords:
   - _ENABLECAUSTICS
   - _ENABLEREFRACTION
+  - _ENABLEWAVE
   - _ENABLE_FOAMSHADOW
   - _REFLECTIONTYPE_SSR
   m_InvalidKeywords:
@@ -84,7 +85,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal_Map:
-        m_Texture: {fileID: 2800000, guid: 6840629b1017eef4d97d428f11c51573, type: 3}
+        m_Texture: {fileID: 2800000, guid: c69caf43660380d4dae6230c82b2b51f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Normal_Map_Macro:
+        m_Texture: {fileID: 2800000, guid: 21ca1cd73d124f84f865f7d4358ffc3e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ParallaxMapping_3e1fcc83888a4187b62a584859a1136c_Heightmap_1_Texture2D:
@@ -233,8 +238,8 @@ Material:
     - _Depth_Smoothness: 1
     - _DistanceMaskFade: 15
     - _DistanceMaskStart: 17
-    - _DistanceMask_Fade: 5
-    - _DistanceMask_Start: 15
+    - _DistanceMask_Fade: 50
+    - _DistanceMask_Start: 25
     - _DistanceNormalStrength: 0.01
     - _DistanceNormalTile: 5.54
     - _DistortionScale: 2
@@ -247,7 +252,7 @@ Material:
     - _ENABLESHORELINE: 0
     - _ENABLESURFACEFOAM: 1
     - _ENABLEUNDERWATERLAYER: 1
-    - _ENABLEWAVE: 0
+    - _ENABLEWAVE: 1
     - _ENABLE_FOAMSHADOW: 1
     - _ENABLE_UNDERWATERLAYER: 1
     - _ENVIRONMENTREFLECTIONS_OFF: 1
@@ -318,10 +323,13 @@ Material:
     - _NormalPan: 0.1
     - _NormalStrength: 0.2
     - _NormalTile: 4
-    - _Normal_DistanceStrength: 1
-    - _Normal_Pan: -2
-    - _Normal_Scale: 10.95
+    - _Normal_DistanceStrength: 0.2
+    - _Normal_Pan: 3
+    - _Normal_Pan_Macro: 3.5
+    - _Normal_Scale: 15
+    - _Normal_Scale_Macro: 2
     - _Normal_Strength: 1
+    - _Normal_Strength_Macro: 0.2
     - _Normal_Tile: 5
     - _OrthoSunToogle: 1
     - _OrthoSun_Altitude: 0
@@ -439,7 +447,7 @@ Material:
     - _UseMeshUV: 1
     - _WORLDSPACEDEPTH: 1
     - _WaterDepth: 0.6
-    - _Water_Depth: 1.5
+    - _Water_Depth: 23.28
     - _WaveHeight: 0.01
     - _WaveHeight2nd: 0.01
     - _WaveLength: 10
@@ -448,11 +456,11 @@ Material:
     - _WaveSharpness2nd: 0.3
     - _WaveSpeed: 0.3
     - _WaveSpeed2nd: 0.2
-    - _Wave_Detail: 3
+    - _Wave_Detail: 1
     - _Wave_Direction: 0
-    - _Wave_Length: 5
-    - _Wave_Speed: 1.24
-    - _Wave_Steep: 0.38
+    - _Wave_Length: 0.43
+    - _Wave_Speed: 0
+    - _Wave_Steep: 4.64
     - _WorkflowMode: 1
     - _WorldSpaceDepth: 1
     - _ZTest: 4
@@ -485,7 +493,7 @@ Material:
     m_Colors:
     - _1st_Wave_Direction: {r: 1, g: 0, b: 0, a: 0}
     - _2nd_Wave_Direction: {r: -1, g: 0, b: 1, a: 0}
-    - _Color_Deep: {r: 0.01249553, g: 0.079006314, b: 0.24528301, a: 0.8352941}
+    - _Color_Deep: {r: 0.01249553, g: 0.079006314, b: 0.24528301, a: 1}
     - _Color_Shallow: {r: 0.09115692, g: 0.81886786, b: 0.57766026, a: 0.5294118}
     - _Deep_Color: {r: 0, g: 0.15303946, b: 1, a: 1}
     - _DistanceColor: {r: 1, g: 1, b: 1, a: 1}
