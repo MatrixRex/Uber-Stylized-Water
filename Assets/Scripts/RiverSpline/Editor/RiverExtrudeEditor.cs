@@ -36,14 +36,18 @@ namespace RiverTools
 
             DrawDefaultInspector();
 
-            var carver = extrude.GetComponent<RiverTerrainCarver>();
+            var carver = extrude.GetComponent("RiverTerrainCarver");
             if (carver == null)
             {
-                GUILayout.Space(15);
-                GUILayout.Label("Terrain Carving Tools", EditorStyles.boldLabel);
-                if (GUILayout.Button("Add River Terrain Carver", GUILayout.Height(30)))
+                var carverType = FindType("RiverTerrainCarver");
+                if (carverType != null)
                 {
-                    Undo.AddComponent<RiverTerrainCarver>(extrude.gameObject);
+                    GUILayout.Space(15);
+                    GUILayout.Label("Terrain Carving Tools", EditorStyles.boldLabel);
+                    if (GUILayout.Button("Add River Terrain Carver", GUILayout.Height(30)))
+                    {
+                        Undo.AddComponent(extrude.gameObject, carverType);
+                    }
                 }
             }
 
@@ -402,6 +406,17 @@ namespace RiverTools
             }
 
             return sb.ToString();
+        }
+
+        private static System.Type FindType(string typeName)
+        {
+            foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+            {
+                var type = assembly.GetType(typeName) ?? assembly.GetType("RiverTools." + typeName);
+                if (type != null)
+                    return type;
+            }
+            return null;
         }
     }
 }

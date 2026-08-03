@@ -91,13 +91,13 @@ namespace RiverTools
         public RiverOrientationMode OrientationMode
         {
             get => m_OrientationMode;
-            set { m_OrientationMode = value; m_RebuildRequested = true; NotifyCarver(); }
+            set { m_OrientationMode = value; m_RebuildRequested = true; NotifyListeners(); }
         }
 
         public float BaseWidth
         {
             get => m_BaseWidth;
-            set { m_BaseWidth = Mathf.Max(0f, value); m_RebuildRequested = true; NotifyCarver(); }
+            set { m_BaseWidth = Mathf.Max(0f, value); m_RebuildRequested = true; NotifyListeners(); }
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace RiverTools
             EnsureKnotWidthListSize(knotIndex + 1);
             m_KnotWidthMultipliers[knotIndex] = Mathf.Max(0f, multiplier);
             m_RebuildRequested = true;
-            NotifyCarver();
+            NotifyListeners();
         }
 
         void EnsureKnotWidthListSize(int count)
@@ -132,7 +132,7 @@ namespace RiverTools
         public float TargetQuadSize
         {
             get => m_TargetQuadSize;
-            set { m_TargetQuadSize = Mathf.Max(0.05f, value); m_RebuildRequested = true; NotifyCarver(); }
+            set { m_TargetQuadSize = Mathf.Max(0.05f, value); m_RebuildRequested = true; NotifyListeners(); }
         }
 
         public float UTexelSize
@@ -159,6 +159,24 @@ namespace RiverTools
             Spline.Changed -= OnSplineChanged;
         }
 
+        /// <summary>
+        /// Raised whenever this river extrude instance is modified or rebuilt.
+        /// </summary>
+        public event System.Action<RiverExtrude> OnRiverChanged;
+
+        /// <summary>
+        /// Global event raised whenever ANY RiverExtrude instance in the scene is modified or rebuilt.
+        /// </summary>
+        public static event System.Action<RiverExtrude> OnAnyRiverChanged;
+
+        [SerializeField]
+        private UnityEngine.Events.UnityEvent<RiverExtrude> m_OnRiverChanged = new UnityEngine.Events.UnityEvent<RiverExtrude>();
+
+        /// <summary>
+        /// UnityEvent exposed for Inspector binding or code subscription.
+        /// </summary>
+        public UnityEngine.Events.UnityEvent<RiverExtrude> onRiverChanged => m_OnRiverChanged;
+
         void OnValidate()
         {
             m_BaseWidth = Mathf.Max(0f, m_BaseWidth);
@@ -168,16 +186,25 @@ namespace RiverTools
             m_UTexelSize = Mathf.Max(0.01f, m_UTexelSize);
             m_VTexelSize = Mathf.Max(0.01f, m_VTexelSize);
             m_RebuildRequested = true;
-            NotifyCarver();
+            NotifyListeners();
         }
 
-        public void NotifyCarver()
+        /// <summary>
+        /// Broadcasts an update signal to C# event subscribers, UnityEvents, and attached components without hard dependencies.
+        /// </summary>
+        public void NotifyListeners()
         {
-            if (TryGetComponent<RiverTerrainCarver>(out var carver))
-            {
-                carver.RequestCarve();
-            }
+            OnRiverChanged?.Invoke(this);
+            OnAnyRiverChanged?.Invoke(this);
+            m_OnRiverChanged?.Invoke(this);
+
+            // Broadcast message to attached components on the same GameObject
+            SendMessage("OnRiverChanged", this, SendMessageOptions.DontRequireReceiver);
+            SendMessage("RequestCarve", SendMessageOptions.DontRequireReceiver);
         }
+
+        [System.Obsolete("Use NotifyListeners() or OnRiverChanged event instead.")]
+        public void NotifyCarver() => NotifyListeners();
 
         void OnSplineChanged(Spline spline, int knotIndex, SplineModification modification)
         {
@@ -260,7 +287,7 @@ namespace RiverTools
             }
 
             m_RebuildRequested = true;
-            NotifyCarver();
+            NotifyListeners();
         }
 
         /// <summary>
@@ -481,6 +508,8 @@ namespace RiverTools
 
             if (m_UpdateMeshCollider && TryGetComponent<MeshCollider>(out var collider))
                 collider.sharedMesh = m_Mesh;
+
+            NotifyListeners();
         }
     }
 }
