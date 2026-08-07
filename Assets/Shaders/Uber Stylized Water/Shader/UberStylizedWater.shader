@@ -848,7 +848,7 @@ Shader "UberStylizedWater"
         // Graph Includes
         #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ParallaxMapping.hlsl"
         #include_with_pragmas "../SubGraphs/CubeMap.hlsl"
-        #include_with_pragmas "Assets/Shaders/Uber Stylized Water/Third Party/URP_ShaderGraphCustomLighting-main/CustomLighting.hlsl"
+        #include_with_pragmas "../Third Party/URP_ShaderGraphCustomLighting-main/CustomLighting.hlsl"
         
         // -- Property used by ScenePickingPass
         #ifdef SCENEPICKINGPASS
@@ -8810,7 +8810,7 @@ Shader "UberStylizedWater"
         // Graph Includes
         #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ParallaxMapping.hlsl"
         #include_with_pragmas "../SubGraphs/CubeMap.hlsl"
-        #include_with_pragmas "Assets/Shaders/Uber Stylized Water/Third Party/URP_ShaderGraphCustomLighting-main/CustomLighting.hlsl"
+        #include_with_pragmas "../Third Party/URP_ShaderGraphCustomLighting-main/CustomLighting.hlsl"
         
         // -- Property used by ScenePickingPass
         #ifdef SCENEPICKINGPASS
@@ -14521,7 +14521,7 @@ Shader "UberStylizedWater"
         // Graph Includes
         #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ParallaxMapping.hlsl"
         #include_with_pragmas "../SubGraphs/CubeMap.hlsl"
-        #include_with_pragmas "Assets/Shaders/Uber Stylized Water/Third Party/URP_ShaderGraphCustomLighting-main/CustomLighting.hlsl"
+        #include_with_pragmas "../Third Party/URP_ShaderGraphCustomLighting-main/CustomLighting.hlsl"
         
         // -- Property used by ScenePickingPass
         #ifdef SCENEPICKINGPASS
