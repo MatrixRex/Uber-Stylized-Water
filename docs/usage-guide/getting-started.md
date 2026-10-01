@@ -53,6 +53,9 @@ Get started quickly with the provided **Demo Scene**:
 2. Explore a fully set up environment featuring:
    - **8 Water Presets**
    - A complete **Planar Reflection Setup**
+3. Press **Play** and use the buttons at the bottom of the screen to switch between the water presets. The layout adapts to desktop and mobile portrait screens.
+
+> The switcher is the `WaterPresetSwitcher` component on the **Water Preset UI** object. It lists every child of the **Water Templates** object, so a preset you add there gets its own button automatically.
 
 ---
 
