@@ -5,9 +5,6 @@
     "m_Properties": [],
     "m_Keywords": [
         {
-            "m_Id": "9965cfbcf05548a2aacadd783da7c456"
-        },
-        {
             "m_Id": "5fb2bfc60eac4072845d4bd7a044aa91"
         }
     ],
@@ -253,38 +250,11 @@
 }
 
 {
-    "m_SGVersion": 1,
-    "m_Type": "UnityEditor.ShaderGraph.ShaderKeyword",
-    "m_ObjectId": "9965cfbcf05548a2aacadd783da7c456",
-    "m_Guid": {
-        "m_GuidSerialized": "05277912-186f-484b-931b-b7272aafa0a0"
-    },
-    "m_Name": "SHADOWS_SHADOWMASK",
-    "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "SHADOWS_SHADOWMASK",
-    "m_DefaultReferenceName": "_SHADOWS_SHADOWMASK",
-    "m_OverrideReferenceName": "SHADOWS_SHADOWMASK",
-    "m_GeneratePropertyBlock": true,
-    "m_UseCustomSlotLabel": false,
-    "m_CustomSlotLabel": "",
-    "m_KeywordType": 0,
-    "m_KeywordDefinition": 1,
-    "m_KeywordScope": 1,
-    "m_KeywordStages": 63,
-    "m_Entries": [],
-    "m_Value": 0,
-    "m_IsEditable": true
-}
-
-{
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.CategoryData",
     "m_ObjectId": "a2d9442fde024d6882d835968e6aeeac",
     "m_Name": "",
     "m_ChildObjectList": [
-        {
-            "m_Id": "9965cfbcf05548a2aacadd783da7c456"
-        },
         {
             "m_Id": "5fb2bfc60eac4072845d4bd7a044aa91"
         }

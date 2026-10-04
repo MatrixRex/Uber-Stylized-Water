@@ -1,3 +1,26 @@
+// Version-neutral Forward+ check: URP 17.0 (Unity 6.0) uses USE_FORWARD_PLUS,
+// URP 17.1+ (Unity 6.1+) renamed it to USE_CLUSTER_LIGHT_LOOP.
+#ifndef UBER_USE_FORWARD_PLUS
+#if defined(USE_CLUSTER_LIGHT_LOOP)
+#define UBER_USE_FORWARD_PLUS USE_CLUSTER_LIGHT_LOOP
+#elif defined(USE_FORWARD_PLUS)
+#define UBER_USE_FORWARD_PLUS USE_FORWARD_PLUS
+#else
+#define UBER_USE_FORWARD_PLUS 0
+#endif
+#endif
+
+// FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK was renamed to CLUSTER_LIGHT_LOOP_SUBTRACTIVE_LIGHT_CHECK in 6.1+
+#ifndef UBER_SUBTRACTIVE_LIGHT_CHECK
+#if defined(CLUSTER_LIGHT_LOOP_SUBTRACTIVE_LIGHT_CHECK)
+#define UBER_SUBTRACTIVE_LIGHT_CHECK CLUSTER_LIGHT_LOOP_SUBTRACTIVE_LIGHT_CHECK
+#elif defined(FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK)
+#define UBER_SUBTRACTIVE_LIGHT_CHECK FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
+#else
+#define UBER_SUBTRACTIVE_LIGHT_CHECK
+#endif
+#endif
+
 #ifndef CUSTOM_LIGHTING_INCLUDED
 #define CUSTOM_LIGHTING_INCLUDED
 
@@ -217,9 +240,9 @@ void AdditionalLights_float(float3 SpecColor, float Smoothness, float3 WorldPosi
 	uint pixelLightCount = GetAdditionalLightsCount();
 	uint meshRenderingLayers = GetMeshRenderingLayer();
 
-	#if USE_FORWARD_PLUS
+	#if UBER_USE_FORWARD_PLUS
 	for (uint lightIndex = 0; lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS); lightIndex++) {
-		FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
+		UBER_SUBTRACTIVE_LIGHT_CHECK
 		Light light = GetAdditionalLight(lightIndex, WorldPosition, Shadowmask);
 	#ifdef _LIGHT_LAYERS
 		if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
@@ -272,7 +295,7 @@ AdditionalLights_float(SpecColor, Smoothness, WorldPosition, WorldNormal, WorldV
 */
 #ifndef SHADERGRAPH_PREVIEW
 float ToonAttenuation(int lightIndex, float3 positionWS, float pointBands, float spotBands){
-	#if !USE_FORWARD_PLUS
+	#if !UBER_USE_FORWARD_PLUS
 		lightIndex = GetPerObjectLightIndex(lightIndex);
 	#endif
 	#if USE_STRUCTURED_BUFFER_FOR_LIGHT_DATA
@@ -325,9 +348,9 @@ void AdditionalLightsToon_float(float3 SpecColor, float Smoothness, float3 World
 	uint pixelLightCount = GetAdditionalLightsCount();
 	uint meshRenderingLayers = GetMeshRenderingLayer();
 
-	#if USE_FORWARD_PLUS
+	#if UBER_USE_FORWARD_PLUS
 	for (uint lightIndex = 0; lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS); lightIndex++) {
-		FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
+		UBER_SUBTRACTIVE_LIGHT_CHECK
 		Light light = GetAdditionalLight(lightIndex, WorldPosition, Shadowmask);
 	#ifdef _LIGHT_LAYERS
 		if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
