@@ -2,6 +2,8 @@
 
 Refraction creates the illusion of light bending through water, distorting the geometry beneath the surface.
 
+!> Refraction needs **Opaque Texture** enabled on your URP Asset (in addition to Depth Texture). See [Required URP Settings](usage-guide/getting-started?id=required-urp-settings).
+
 ## ![alt text](../../assets/images/shader-prop-refraction-show.webp)
 
 ## Unique Parameters
