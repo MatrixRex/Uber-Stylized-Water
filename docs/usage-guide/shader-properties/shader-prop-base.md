@@ -2,6 +2,8 @@
 
 This section controls the base water color, depth calculation, and shore fade settings.
 
+!> Depth color and Shore Fade need **Depth Texture** enabled on your URP Asset. If the water is invisible or looks like one flat color, see [Required URP Settings](usage-guide/getting-started?id=required-urp-settings).
+
 ![alt text](../../assets/images/shader-prop-base-show.png)
 
 ---
